@@ -12,16 +12,26 @@ import './NewOrderModal.css';
  * Modal for creating new orders with product selection
  */
 const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
-  const { data: products } = useApiQuery(getAllProducts, {}, []);
+  const { data: products, loading } = useApiQuery(getAllProducts, {}, []);
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const availableProducts = products?.filter(p => p.status === 'AVAILABLE') || [];
+  // Filter available products (status: Available or AVAILABLE)
+  const availableProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(p => 
+      p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available')
+    );
+  }, [products]);
 
+  // Filter products by search term
   const filteredProducts = useMemo(() => {
+    if (!searchTerm.trim()) return availableProducts;
+    
+    const search = searchTerm.toLowerCase().trim();
     return availableProducts.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      product.name?.toLowerCase().includes(search) ||
+      product.category?.toLowerCase().includes(search)
     );
   }, [availableProducts, searchTerm]);
 
@@ -110,15 +120,23 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
               className="search-input"
             />
             <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <div key={product.id} className="product-card" onClick={() => addItem(product)}>
-                  <div className="product-info">
-                    <h4>{product.name}</h4>
-                    <span className="product-category">{product.category}</span>
-                  </div>
-                  <div className="product-price">{formatCurrency(product.price)}</div>
+              {loading ? (
+                <div className="loading-products">Loading products...</div>
+              ) : filteredProducts.length === 0 ? (
+                <div className="no-products">
+                  {searchTerm ? 'No products found matching your search' : 'No available products'}
                 </div>
-              ))}
+              ) : (
+                filteredProducts.map((product) => (
+                  <div key={product.id} className="product-card" onClick={() => addItem(product)}>
+                    <div className="product-info">
+                      <h4>{product.name}</h4>
+                      <span className="product-category">{product.category}</span>
+                    </div>
+                    <div className="product-price">{formatCurrency(product.price)}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 

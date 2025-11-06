@@ -15,6 +15,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navItems = [
     { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '📊' },
     { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒' },
+    { path: ROUTES.MENU, label: 'Menu', icon: '☕' },
     { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦' },
     { path: ROUTES.EMPLOYEES, label: 'Employees', icon: '👥' },
     { path: ROUTES.REPORTS, label: 'Reports', icon: '📈' },

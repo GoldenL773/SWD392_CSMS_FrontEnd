@@ -1,21 +1,19 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ROUTES } from '../utils/constants.jsx';
-import ProtectedRoute from './ProtectedRoute.jsx';
+import { ROUTES } from '../utils/constants.tsx';
+import ProtectedRoute from './ProtectedRoute.tsx';
 
 // Lazy load pages
-const HomePage = React.lazy(() => import('../pages/HomePage.tsx'));
-const LoginPage = React.lazy(() => import('../pages/LoginPage.jsx'));
-const DashboardPage = React.lazy(() => import('../pages/DashboardPage.jsx'));
-const InventoryPage = React.lazy(() => import('../pages/InventoryPage.jsx'));
-const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.jsx'));
-const OrdersPage = React.lazy(() => import('../pages/OrdersPage.jsx'));
-const MenuPage = React.lazy(() => import('../pages/MenuPage.jsx'));
-const ReportsPage = React.lazy(() => import('../pages/ReportsPage.jsx'));
-const AdminPage = React.lazy(() => import('../pages/AdminPage.jsx'));
-const FinancePage = React.lazy(() => import('../pages/FinancePage.jsx'));
-const SettingsPage = React.lazy(() => import('../pages/SettingsPage.jsx'));
-const NotFoundPage = React.lazy(() => import('../pages/NotFoundPage.jsx'));
+const LoginPage = React.lazy(() => import('../pages/LoginPage.tsx'));
+const DashboardPage = React.lazy(() => import('../pages/DashboardPage.tsx'));
+const InventoryPage = React.lazy(() => import('../pages/InventoryPage.tsx'));
+const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.tsx'));
+const OrdersPage = React.lazy(() => import('../pages/OrdersPage.tsx'));
+const ReportsPage = React.lazy(() => import('../pages/ReportsPage.tsx'));
+const AdminPage = React.lazy(() => import('../pages/AdminPage.tsx'));
+const FinancePage = React.lazy(() => import('../pages/FinancePage.tsx'));
+const SettingsPage = React.lazy(() => import('../pages/SettingsPage.tsx'));
+const NotFoundPage = React.lazy(() => import('../pages/NotFoundPage.tsx'));
 
 /**
  * AppRoutes Component
@@ -25,7 +23,6 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path={ROUTES.HOME} element={<HomePage />} />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
 
       {/* Protected Routes */}
@@ -34,7 +31,6 @@ const AppRoutes = () => {
         <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
         <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
         <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
-        <Route path={ROUTES.MENU} element={<MenuPage />} />
         <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         

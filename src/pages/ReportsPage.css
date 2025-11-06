@@ -79,6 +79,41 @@
   color: var(--color-text-secondary);
 }
 
+/* Export Date Selector */
+.export-date-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  max-width: 300px;
+}
+
+.export-date-selector label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.date-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.date-input:hover {
+  border-color: var(--primary-color);
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
 /* Mobile */
 @media (max-width: 767px) {
   .stats-grid {
@@ -88,5 +123,13 @@
 
   .stat-value {
     font-size: var(--font-size-2xl);
+  }
+  
+  .tabs {
+    overflow-x: auto;
+  }
+  
+  .export-date-selector {
+    max-width: 100%;
   }
 }

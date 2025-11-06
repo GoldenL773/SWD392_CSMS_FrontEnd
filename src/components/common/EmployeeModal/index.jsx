@@ -18,7 +18,8 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     email: '',
     hireDate: new Date().toISOString().split('T')[0],
     salary: '',
-    status: EMPLOYEE_STATUS.ACTIVE
+    status: EMPLOYEE_STATUS.ACTIVE,
+    password: '' // Only for new employees
   });
   const [errors, setErrors] = useState({});
 
@@ -41,7 +42,8 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
         email: '',
         hireDate: new Date().toISOString().split('T')[0],
         salary: '',
-        status: EMPLOYEE_STATUS.ACTIVE
+        status: EMPLOYEE_STATUS.ACTIVE,
+        password: ''
       });
     }
     setErrors({});
@@ -70,6 +72,12 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     }
     if (!formData.salary || parseFloat(formData.salary) <= 0) {
       newErrors.salary = 'Valid salary is required';
+    }
+    // Password validation (only for new employees)
+    if (!employee) {
+      if (!formData.password || formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -151,6 +159,23 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
           </div>
+
+          {!employee && (
+            <div className="form-group">
+              <label htmlFor="password">Password *</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={errors.password ? 'error' : ''}
+                placeholder="Minimum 6 characters"
+                minLength="6"
+              />
+              {errors.password && <span className="error-message">{errors.password}</span>}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="hireDate">Hire Date *</label>
