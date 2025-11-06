@@ -40,6 +40,27 @@
   gap: var(--spacing-lg);
 }
 
+.form-group--full {
+  grid-column: 1 / -1;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .empty-message {
   text-align: center;
   color: var(--color-text-secondary);
@@ -71,6 +92,18 @@
   border-radius: var(--radius-sm);
   color: var(--color-text-primary);
   font-size: var(--font-size-base);
+}
+
+.ingredient-select option {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  padding: var(--spacing-sm);
+}
+
+.ingredient-select option:hover,
+.ingredient-select option:checked {
+  background-color: var(--color-primary);
+  color: white;
 }
 
 .ingredient-select:focus,

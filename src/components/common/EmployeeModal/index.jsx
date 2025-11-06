@@ -19,6 +19,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     hireDate: new Date().toISOString().split('T')[0],
     salary: '',
     status: EMPLOYEE_STATUS.ACTIVE,
+    username: '', // Only for new employees
     password: '' // Only for new employees
   });
   const [errors, setErrors] = useState({});
@@ -43,6 +44,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
         hireDate: new Date().toISOString().split('T')[0],
         salary: '',
         status: EMPLOYEE_STATUS.ACTIVE,
+        username: '',
         password: ''
       });
     }
@@ -73,8 +75,11 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     if (!formData.salary || parseFloat(formData.salary) <= 0) {
       newErrors.salary = 'Valid salary is required';
     }
-    // Password validation (only for new employees)
+    // Username and Password validation (only for new employees)
     if (!employee) {
+      if (!formData.username || formData.username.trim().length < 3) {
+        newErrors.username = 'Username must be at least 3 characters';
+      }
       if (!formData.password || formData.password.length < 6) {
         newErrors.password = 'Password must be at least 6 characters';
       }
@@ -161,20 +166,37 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
           </div>
 
           {!employee && (
-            <div className="form-group">
-              <label htmlFor="password">Password *</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={errors.password ? 'error' : ''}
-                placeholder="Minimum 6 characters"
-                minLength="6"
-              />
-              {errors.password && <span className="error-message">{errors.password}</span>}
-            </div>
+            <>
+              <div className="form-group">
+                <label htmlFor="username">Username *</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  className={errors.username ? 'error' : ''}
+                  placeholder="Minimum 3 characters"
+                  minLength="3"
+                />
+                {errors.username && <span className="error-message">{errors.username}</span>}
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="password">Password *</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={errors.password ? 'error' : ''}
+                  placeholder="Minimum 6 characters"
+                  minLength="6"
+                />
+                {errors.password && <span className="error-message">{errors.password}</span>}
+              </div>
+            </>
           )}
 
           <div className="form-group">

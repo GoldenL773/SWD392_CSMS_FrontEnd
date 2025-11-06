@@ -1,36 +1,89 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Custom hook for API queries with loading and error states
  * Simplifies data fetching in components
+ * @param {Function} apiFunction - API function to call
+ * @param {Object} params - Parameters to pass to API function
+ * @param {Array} dependencies - Dependencies array for useEffect
+ * @param {Object} options - Additional options (enabled: boolean, retry: number, retryDelay: number)
  */
-export const useApiQuery = (apiFunction, params = {}, dependencies = []) => {
+export const useApiQuery = (apiFunction, params = {}, dependencies = [], options = {}) => {
+  const { enabled = true, retry = 0, retryDelay = 1000 } = options;
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState(null);
+  const retryCountRef = useRef(0);
+  const mountedRef = useRef(true);
+  const paramsRef = useRef(params);
+  
+  // Update params ref when params change
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
 
-  const fetchData = useCallback(async () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const fetchData = useCallback(async (isRetry = false) => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+    
+    // Prevent infinite retries
+    if (isRetry && retryCountRef.current >= retry) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
       setError(null);
-      const result = await apiFunction(params);
-      setData(result);
+      const result = await apiFunction(paramsRef.current);
+      
+      if (mountedRef.current) {
+        setData(result);
+        retryCountRef.current = 0; // Reset retry count on success
+      }
     } catch (err) {
-      setError(err.message || 'An error occurred');
+      if (!mountedRef.current) return;
+      
+      const errorMessage = err.message || 'An error occurred';
+      setError(errorMessage);
       console.error('API Query Error:', err);
+      
+      // Retry logic
+      if (retry > 0 && retryCountRef.current < retry) {
+        retryCountRef.current++;
+        setTimeout(() => {
+          if (mountedRef.current) {
+            fetchData(true);
+          }
+        }, retryDelay);
+      }
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
-  }, [apiFunction, ...dependencies]);
+  }, [apiFunction, enabled, retry, retryDelay]);
 
   useEffect(() => {
+    retryCountRef.current = 0; // Reset retry count when dependencies change
     fetchData();
-  }, [fetchData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchData, ...dependencies]);
 
   /**
    * Refetch data manually
    */
   const refetch = () => {
+    retryCountRef.current = 0;
     fetchData();
   };
 

@@ -1,41 +1,40 @@
 // CSMS Order API
 
-import { mockOrders } from '../utils/mockData.jsx';
+import apiClient from './apiClient.jsx';
 
+/**
+ * Get all orders with optional filters and pagination
+ */
 export const getAllOrders = async (params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let orders = [...mockOrders];
-      if (params.status) {
-        orders = orders.filter(o => o.status === params.status);
-      }
-      resolve(orders);
-    }, 300);
-  });
+  const response = await apiClient.get('/orders', params);
+  // Return full response to preserve pagination metadata
+  return response;
 };
 
+/**
+ * Get order by ID
+ */
 export const getOrderById = async (id) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const order = mockOrders.find(o => o.id === parseInt(id));
-      order ? resolve(order) : reject(new Error('Order not found'));
-    }, 300);
-  });
+  return apiClient.get(`/orders/${id}`);
 };
 
+/**
+ * Create new order
+ */
 export const createOrder = async (orderData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ id: mockOrders.length + 1, ...orderData });
-    }, 500);
-  });
+  return apiClient.post('/orders', orderData);
 };
 
-export const updateOrder = async (id, orderData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const order = mockOrders.find(o => o.id === parseInt(id));
-      order ? resolve({ ...order, ...orderData }) : reject(new Error('Order not found'));
-    }, 500);
-  });
+/**
+ * Update order status
+ */
+export const updateOrderStatus = async (id, status) => {
+  return apiClient.put(`/orders/${id}/status`, { status });
+};
+
+/**
+ * Delete order
+ */
+export const deleteOrder = async (id) => {
+  return apiClient.delete(`/orders/${id}`);
 };

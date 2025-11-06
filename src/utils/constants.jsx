@@ -19,11 +19,12 @@ export const ROUTES = {
   NOT_FOUND: '/404'
 };
 
-// User Roles (matching ENTITIES.md)
+// User Roles (matching database)
 export const ROLES = {
-  MANAGER: 'ROLE_MANAGER',
-  STAFF: 'ROLE_STAFF',
-  ADMIN: 'ROLE_ADMIN'
+  MANAGER: 'MANAGER',
+  STAFF: 'STAFF',
+  ADMIN: 'ADMIN',
+  FINANCE: 'FINANCE'
 };
 
 // Product Status
@@ -32,12 +33,12 @@ export const PRODUCT_STATUS = {
   UNAVAILABLE: 'Unavailable'
 };
 
-// Order Status
+// Order Status (matching backend)
 export const ORDER_STATUS = {
-  PENDING: 'Pending',
-  PREPARING: 'Preparing',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled'
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
 };
 
 // Employee Status
@@ -114,7 +115,7 @@ export const STORAGE_KEYS = {
 // Status Colors
 export const STATUS_COLORS = {
   [ORDER_STATUS.PENDING]: '#f59e0b',
-  [ORDER_STATUS.PREPARING]: '#3b82f6',
+  [ORDER_STATUS.PROCESSING]: '#3b82f6',
   [ORDER_STATUS.COMPLETED]: '#10b981',
   [ORDER_STATUS.CANCELLED]: '#ef4444',
   [EMPLOYEE_STATUS.ACTIVE]: '#10b981',

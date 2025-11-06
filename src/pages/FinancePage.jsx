@@ -4,7 +4,7 @@ import { getAllEmployees } from '../api/employeeApi.jsx';
 import { getDailyReports } from '../api/reportApi.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
-import { formatCurrency, formatDate } from '../utils/formatters.jsx';
+import { formatCurrency, formatDate, safeNumber, formatPercentage } from '../utils/formatters.jsx';
 import './FinancePage.css';
 
 const FinancePage = () => {
@@ -16,8 +16,8 @@ const FinancePage = () => {
       return { totalRevenue: 0, totalCost: 0, profit: 0, profitMargin: 0 };
     }
 
-    const totalRevenue = reports.reduce((sum, r) => sum + r.totalRevenue, 0);
-    const totalCost = reports.reduce((sum, r) => sum + r.totalIngredientCost, 0);
+    const totalRevenue = reports.reduce((sum, r) => sum + safeNumber(r.totalRevenue), 0);
+    const totalCost = reports.reduce((sum, r) => sum + safeNumber(r.totalCost), 0);
     const profit = totalRevenue - totalCost;
     const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
@@ -63,7 +63,7 @@ const FinancePage = () => {
         <div className="stat-card">
           <div className="stat-label">Profit Margin</div>
           <div className={`stat-value ${financialSummary.profitMargin >= 0 ? 'positive' : 'negative'}`}>
-            {financialSummary.profitMargin.toFixed(1)}%
+            {formatPercentage(financialSummary.profitMargin)}
           </div>
         </div>
       </div>

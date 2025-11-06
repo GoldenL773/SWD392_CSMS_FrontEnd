@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../components/common/Button/index.jsx';
-import { formatCurrency, formatDate } from '../../utils/formatters.jsx';
+import { formatCurrency, formatDate, safeNumber } from '../../utils/formatters.jsx';
 import './DailyReportExport.css';
 
 /**
@@ -54,10 +54,12 @@ const DailyReportExport = ({ report }) => {
     );
   }
 
-  const netProfit = report.totalRevenue - report.totalIngredientCost;
-  const profitMargin = report.totalRevenue > 0 
-    ? ((netProfit / report.totalRevenue) * 100).toFixed(1) 
-    : 0;
+  const revenue = safeNumber(report.totalRevenue);
+  const cost = safeNumber(report.totalIngredientCost);
+  const netProfit = revenue - cost;
+  const profitMargin = revenue > 0 
+    ? ((netProfit / revenue) * 100).toFixed(1) 
+    : '0.0';
 
   return (
     <div className="daily-report-export">
@@ -153,10 +155,10 @@ const DailyReportExport = ({ report }) => {
 DailyReportExport.propTypes = {
   report: PropTypes.shape({
     reportDate: PropTypes.string.isRequired,
-    totalOrders: PropTypes.number.isRequired,
-    totalRevenue: PropTypes.number.isRequired,
-    totalIngredientCost: PropTypes.number.isRequired,
-    totalWorkingHours: PropTypes.number.isRequired,
+    totalOrders: PropTypes.number,
+    totalRevenue: PropTypes.number,
+    totalIngredientCost: PropTypes.number,
+    totalWorkingHours: PropTypes.number,
     notes: PropTypes.string
   })
 };

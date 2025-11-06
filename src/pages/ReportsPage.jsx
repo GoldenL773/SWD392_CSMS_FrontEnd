@@ -1,25 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
+import { getAllOrders } from '../api/orderApi.jsx';
 import { getDailyReports, getIngredientTransactions } from '../api/reportApi.jsx';
+import { ORDER_STATUS } from '../utils/constants.jsx';
 import Card from '../components/common/Card/index.jsx';
 import RevenueChart from '../features/reports/RevenueChart.jsx';
 import TransactionTable from '../features/reports/TransactionTable.jsx';
 import DailyReportExport from '../features/reports/DailyReportExport.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
-import { formatCurrency, formatNumber } from '../utils/formatters.jsx';
+import Button from '../components/common/Button/index.jsx';
+import { formatCurrency, formatNumber, safeNumber } from '../utils/formatters.jsx';
 import './ReportsPage.css';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('revenue');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   
+  // Set default date range to last 30 days
+  const getDefaultStartDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date.toISOString().split('T')[0];
+  };
+  
+  const [startDate, setStartDate] = useState(getDefaultStartDate());
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Fetch all orders with large page size to get complete data
+  const { data: ordersData, loading: ordersLoading } = useApiQuery(
+    getAllOrders, 
+    { size: 10000 }, 
+    []
+  );
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
   const { data: transactions, loading: transactionsLoading } = useApiQuery(getIngredientTransactions, {}, []);
+  
+  // Extract orders from paginated response
+  const allOrders = useMemo(() => {
+    return ordersData?.content || ordersData || [];
+  }, [ordersData]);
 
-  // Filter reports by date range
-  const filteredReports = React.useMemo(() => {
+  // Filter orders by date range and status
+  const filteredOrders = useMemo(() => {
+    if (!allOrders) return [];
+    
+    return allOrders.filter(order => {
+      // Only include completed orders
+      if (order.status !== ORDER_STATUS.COMPLETED) return false;
+      
+      const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
+      
+      if (startDate && orderDate < startDate) return false;
+      if (endDate && orderDate > endDate) return false;
+      
+      return true;
+    });
+  }, [allOrders, startDate, endDate]);
+  
+  // Group orders by date for chart
+  const dailyRevenue = useMemo(() => {
+    const revenueByDate = {};
+    
+    filteredOrders.forEach(order => {
+      const date = new Date(order.orderDate).toISOString().split('T')[0];
+      if (!revenueByDate[date]) {
+        revenueByDate[date] = {
+          reportDate: date,
+          totalRevenue: 0,
+          totalOrders: 0
+        };
+      }
+      revenueByDate[date].totalRevenue += order.totalAmount || 0;
+      revenueByDate[date].totalOrders += 1;
+    });
+    
+    return Object.values(revenueByDate).sort((a, b) => 
+      new Date(a.reportDate) - new Date(b.reportDate)
+    );
+  }, [filteredOrders]);
+  
+  // Filter reports by date range (for daily report export)
+  const filteredReports = useMemo(() => {
     if (!reports) return [];
     let filtered = [...reports];
     
@@ -33,25 +94,39 @@ const ReportsPage = () => {
     return filtered;
   }, [reports, startDate, endDate]);
 
-  // Calculate summary stats
-  const stats = React.useMemo(() => {
-    if (!filteredReports || filteredReports.length === 0) {
-      return { totalRevenue: 0, totalOrders: 0, totalCost: 0, avgRevenue: 0 };
+  // Calculate summary stats from completed orders
+  const stats = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0 };
     }
 
-    const totalRevenue = filteredReports.reduce((sum, r) => sum + r.totalRevenue, 0);
-    const totalOrders = filteredReports.reduce((sum, r) => sum + r.totalOrders, 0);
-    const totalCost = filteredReports.reduce((sum, r) => sum + r.totalIngredientCost, 0);
-    const avgRevenue = totalRevenue / filteredReports.length;
+    const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalOrders = filteredOrders.length;
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    
+    // Calculate days in range
+    const daysInRange = dailyRevenue.length;
+    const avgRevenuePerDay = daysInRange > 0 ? totalRevenue / daysInRange : 0;
 
-    return { totalRevenue, totalOrders, totalCost, avgRevenue };
-  }, [filteredReports]);
+    return { 
+      totalRevenue, 
+      totalOrders, 
+      avgOrderValue, 
+      avgRevenuePerDay,
+      daysInRange 
+    };
+  }, [filteredOrders, dailyRevenue]);
 
   // Get selected report for export
-  const selectedReport = React.useMemo(() => {
+  const selectedReport = useMemo(() => {
     if (!reports) return null;
     return reports.find(r => r.reportDate === selectedDate);
   }, [reports, selectedDate]);
+  
+  const handleClearFilters = () => {
+    setStartDate(getDefaultStartDate());
+    setEndDate(new Date().toISOString().split('T')[0]);
+  };
 
   return (
     <div className="reports-page">
@@ -64,30 +139,41 @@ const ReportsPage = () => {
         <div className="stat-card">
           <div className="stat-label">Total Revenue</div>
           <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
+          <div className="stat-note">From {stats.totalOrders} completed orders</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Total Orders</div>
+          <div className="stat-label">Completed Orders</div>
           <div className="stat-value">{formatNumber(stats.totalOrders)}</div>
+          <div className="stat-note">In selected period</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Total Cost</div>
-          <div className="stat-value">{formatCurrency(stats.totalCost)}</div>
+          <div className="stat-label">Avg Order Value</div>
+          <div className="stat-value">{formatCurrency(stats.avgOrderValue)}</div>
+          <div className="stat-note">Per order</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Avg Revenue/Day</div>
-          <div className="stat-value">{formatCurrency(stats.avgRevenue)}</div>
+          <div className="stat-value">{formatCurrency(stats.avgRevenuePerDay)}</div>
+          <div className="stat-note">{stats.daysInRange} days</div>
         </div>
       </div>
 
       {/* Date Range Filter */}
       <Card>
-        <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          label="Filter Reports by Date Range"
-        />
+        <div className="filter-section">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            label="Filter Reports by Date Range"
+          />
+          <div className="filter-actions">
+            <Button variant="secondary" onClick={handleClearFilters}>
+              Reset to Last 30 Days
+            </Button>
+          </div>
+        </div>
       </Card>
 
       <div className="tabs">
@@ -112,14 +198,18 @@ const ReportsPage = () => {
       </div>
 
       {activeTab === 'revenue' && (
-        <Card title="Daily Revenue" subtitle={`${filteredReports.length} days performance`}>
-          {reportsLoading ? (
+        <Card title="Daily Revenue" subtitle={`${dailyRevenue.length} days with completed orders`}>
+          {ordersLoading ? (
             <div className="loading-container">
               <div className="loading"></div>
-              <p>Loading reports...</p>
+              <p>Loading revenue data...</p>
+            </div>
+          ) : dailyRevenue.length === 0 ? (
+            <div className="empty-state">
+              <p>No completed orders found in the selected date range</p>
             </div>
           ) : (
-            <RevenueChart reports={filteredReports} />
+            <RevenueChart reports={dailyRevenue} />
           )}
         </Card>
       )}

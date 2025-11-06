@@ -39,7 +39,7 @@ const AppRoutes = () => {
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         
         {/* Admin Only Routes */}
-        <Route element={<ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_MANAGER']} />}>
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} />}>
           <Route path={ROUTES.ADMIN} element={<AdminPage />} />
           <Route path={ROUTES.FINANCE} element={<FinancePage />} />
         </Route>

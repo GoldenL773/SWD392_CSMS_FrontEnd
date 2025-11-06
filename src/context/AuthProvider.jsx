@@ -45,12 +45,23 @@ export const AuthProvider = ({ children }) => {
       setError(null);
 
       const response = await apiLogin(username, password);
-      
+
+      // Backend returns flat structure: { token, type, id, username, fullName, roles }
+      // Create user object from response
+      const userData = {
+        id: response.id,
+        username: response.username,
+        fullName: response.fullName,
+        roles: Array.isArray(response.roles)
+          ? response.roles.map(role => ({ name: role }))
+          : Object.values(response.roles || {}).map(role => ({ name: role }))
+      };
+
       // Store token and user data
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
-      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
-      
-      setUser(response.user);
+      localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
+
+      setUser(userData);
       return response;
     } catch (err) {
       setError(err.message || 'Login failed');

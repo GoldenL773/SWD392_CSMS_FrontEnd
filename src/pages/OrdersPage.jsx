@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useApiQuery } from '../hooks/useApiQuery.jsx';
-import { getAllOrders } from '../api/orderApi.jsx';
+import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
+import { useAuth } from '../hooks/useAuth.jsx';
+import { useToast } from '../hooks/useToast.jsx';
+import { getAllOrders, createOrder, updateOrderStatus } from '../api/orderApi.jsx';
 import { getAllEmployees } from '../api/employeeApi.jsx';
+import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import { ORDER_STATUS } from '../utils/constants.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
@@ -9,9 +12,12 @@ import StatusFilter from '../features/orders/StatusFilter.jsx';
 import OrdersTable from '../features/orders/OrdersTable.jsx';
 import NewOrderModal from '../features/orders/NewOrderModal.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
+import { formatCurrency } from '../utils/formatters.jsx';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
+  const { user } = useAuth();
+  const toast = useToast();
   const [activeStatus, setActiveStatus] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState('ALL');
@@ -19,9 +25,22 @@ const OrdersPage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
   
-  const { data: orders, loading } = useApiQuery(getAllOrders, {}, []);
+  const { data: ordersData, loading, refetch: refetchOrders } = useApiQuery(
+    getAllOrders, 
+    { page: currentPage, size: pageSize }, 
+    [currentPage]
+  );
+  
+  // Extract data from paginated response
+  const orders = ordersData?.content || ordersData || [];
+  const totalOrders = ordersData?.totalElements || orders.length;
+  const totalPages = ordersData?.totalPages || Math.ceil(totalOrders / pageSize);
   const { data: employees } = useApiQuery(getAllEmployees, {}, []);
+  const { mutate: createOrderMutation, loading: creating } = useApiMutation(createOrder);
+  const { mutate: updateStatusMutation } = useApiMutation(updateOrderStatus);
 
   // Calculate order counts by status
   const orderCounts = useMemo(() => {
@@ -91,19 +110,46 @@ const OrdersPage = () => {
     setStartDate('');
     setEndDate('');
     setSortBy('date');
+    setCurrentPage(0);
   };
 
-  const handleCreateOrder = (orderData) => {
-    console.log('Creating order:', orderData);
-    // TODO: Call API to create order
-    alert('Order created successfully! (Mock)');
-    setIsModalOpen(false);
+  const handleCreateOrder = async (orderData) => {
+    try {
+      // Get current user's employee ID
+      const currentEmployee = employees?.find(emp => emp.userId === user?.id);
+      if (!currentEmployee) {
+        toast.error('Could not find employee profile for current user');
+        return;
+      }
+
+      const requestData = {
+        employeeId: currentEmployee.id,
+        items: orderData.orderItems.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity
+        })),
+        notes: orderData.notes || ''
+      };
+
+      await createOrderMutation(requestData);
+      toast.success('Order created successfully!');
+      setIsModalOpen(false);
+      refetchOrders();
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error(`Failed to create order: ${error.message || 'Unknown error'}`);
+    }
   };
 
-  const handleUpdateStatus = (orderId, newStatus) => {
-    console.log('Updating order status:', orderId, newStatus);
-    // TODO: Call API to update order status
-    alert(`Order ${orderId} status updated to ${newStatus}! (Mock)`);
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await updateStatusMutation(orderId, newStatus);
+      toast.success(`Order status updated to ${newStatus}!`);
+      refetchOrders();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      toast.error(`Failed to update order status: ${error.message || 'Unknown error'}`);
+    }
   };
 
   return (
@@ -192,13 +238,34 @@ const OrdersPage = () => {
 
       <Card
         title="Orders"
-        subtitle={`${filteredOrders.length} order${filteredOrders.length !== 1 ? 's' : ''}`}
+        subtitle={`${filteredOrders.length} order${filteredOrders.length !== 1 ? 's' : ''} (Total: ${totalOrders})`}
       >
         <OrdersTable
           orders={filteredOrders}
           loading={loading}
           onUpdateStatus={handleUpdateStatus}
         />
+        {totalOrders > pageSize && (
+          <div className="pagination-controls">
+            <Button 
+              variant="secondary" 
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+            >
+              Previous
+            </Button>
+            <span className="page-info">
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <Button 
+              variant="secondary" 
+              onClick={() => setCurrentPage(p => p + 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </Card>
 
       <NewOrderModal
@@ -206,6 +273,8 @@ const OrdersPage = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateOrder}
       />
+      
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

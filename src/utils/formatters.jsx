@@ -167,3 +167,28 @@ export const isValidPhone = (phone) => {
 export const generateId = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
+
+/**
+ * Format percentage with % sign
+ */
+export const formatPercentage = (value) => {
+  if (value === null || value === undefined || isNaN(value)) return '0%';
+  return `${Number(value).toFixed(1)}%`;
+};
+
+/**
+ * Calculate profit margin percentage
+ */
+export const calculateProfitMargin = (revenue, cost) => {
+  if (!revenue || revenue === 0 || !cost) return 0;
+  const profit = revenue - cost;
+  return ((profit / revenue) * 100).toFixed(1);
+};
+
+/**
+ * Safe number formatter - returns 0 for null/undefined/NaN
+ */
+export const safeNumber = (value, defaultValue = 0) => {
+  if (value === null || value === undefined || isNaN(value)) return defaultValue;
+  return Number(value);
+};

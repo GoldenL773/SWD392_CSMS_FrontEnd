@@ -14,12 +14,15 @@ import './ProductFormModal.css';
  * Entity: ProductIngredient (productId, ingredientId, quantityRequired)
  */
 const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
-  const { data: ingredients } = useApiQuery(getAllIngredients, {}, []);
+  const { data: ingredientsData } = useApiQuery(getAllIngredients, { size: 1000 }, []);
+  // Extract ingredients array from paginated response
+  const ingredients = ingredientsData?.content || ingredientsData || [];
   const [formData, setFormData] = useState({
     name: '',
     category: PRODUCT_CATEGORIES[0],
     price: '',
-    status: PRODUCT_STATUS.AVAILABLE
+    status: PRODUCT_STATUS.AVAILABLE,
+    description: ''
   });
   const [productIngredients, setProductIngredients] = useState([]);
   const [errors, setErrors] = useState({});
@@ -30,7 +33,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
         name: product.name || '',
         category: product.category || PRODUCT_CATEGORIES[0],
         price: product.price?.toString() || '',
-        status: product.status || PRODUCT_STATUS.AVAILABLE
+        status: product.status || PRODUCT_STATUS.AVAILABLE,
+        description: product.description || ''
       });
       setProductIngredients(product.productIngredients || []);
     } else {
@@ -38,7 +42,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
         name: '',
         category: PRODUCT_CATEGORIES[0],
         price: '',
-        status: PRODUCT_STATUS.AVAILABLE
+        status: PRODUCT_STATUS.AVAILABLE,
+        description: ''
       });
       setProductIngredients([]);
     }
@@ -55,7 +60,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
 
   const addIngredient = () => {
     setProductIngredients([...productIngredients, {
-      ingredientId: ingredients?.[0]?.id || '',
+      ingredientId: ingredients[0]?.id || '',
       quantityRequired: ''
     }]);
   };
@@ -163,6 +168,18 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 <option value={PRODUCT_STATUS.UNAVAILABLE}>Unavailable</option>
               </select>
             </div>
+
+            <div className="form-group form-group--full">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Enter product description (optional)"
+              />
+            </div>
           </div>
         </div>
 
@@ -189,7 +206,9 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                     value={pi.ingredientId}
                     onChange={(e) => updateIngredient(index, 'ingredientId', e.target.value)}
                     className="ingredient-select"
+                    required
                   >
+                    <option value="">-- Select Ingredient --</option>
                     {ingredients?.map(ing => (
                       <option key={ing.id} value={ing.id}>
                         {ing.name} ({ing.unit})

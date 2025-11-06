@@ -12,12 +12,15 @@ import './HomePage.css';
  * Redesigned following UI-MASTER-PROMPT.md guidelines
  */
 const HomePage = () => {
-  const { data: products, loading } = useApiQuery(getAllProducts, {}, []);
+  const { data: productsData, loading } = useApiQuery(getAllProducts, { size: 1000 }, []);
 
+  // Extract products from paginated response
+  const products = productsData?.content || productsData || [];
+  
   // Filter only available products
-  const availableProducts = products?.filter(p =>
+  const availableProducts = products.filter(p =>
     p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available')
-  ) || [];
+  );
 
   const getProductsByCategory = (category) => {
     return availableProducts.filter(p => p.category === category);

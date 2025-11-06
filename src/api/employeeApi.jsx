@@ -1,72 +1,69 @@
 // CSMS Employee API
 
-import { mockEmployees, mockAttendance, mockSalaries } from '../utils/mockData.jsx';
+import apiClient from './apiClient.jsx';
 
+/**
+ * Get all employees with optional filters and pagination
+ */
 export const getAllEmployees = async (params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let employees = [...mockEmployees];
-      if (params.status) {
-        employees = employees.filter(e => e.status === params.status);
-      }
-      resolve(employees);
-    }, 300);
-  });
+  const response = await apiClient.get('/employees', params);
+  return response.content || response;
 };
 
+/**
+ * Get employee by ID
+ */
 export const getEmployeeById = async (id) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const employee = mockEmployees.find(e => e.id === parseInt(id));
-      employee ? resolve(employee) : reject(new Error('Employee not found'));
-    }, 300);
-  });
+  return apiClient.get(`/employees/${id}`);
 };
 
+/**
+ * Get employee attendance records
+ */
 export const getEmployeeAttendance = async (employeeId, params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const attendance = mockAttendance.filter(a => a.employee.id === parseInt(employeeId));
-      resolve(attendance);
-    }, 300);
-  });
+  const response = await apiClient.get(`/employees/${employeeId}/attendance`, params);
+  return response.content || response;
 };
 
+/**
+ * Get employee salary records
+ */
 export const getEmployeeSalary = async (employeeId, params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const salaries = mockSalaries.filter(s => s.employee.id === parseInt(employeeId));
-      resolve(salaries);
-    }, 300);
-  });
+  const response = await apiClient.get(`/employees/${employeeId}/salary`, params);
+  return response.content || response;
 };
 
+/**
+ * Create new employee
+ */
 export const createEmployee = async (employeeData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ id: mockEmployees.length + 1, ...employeeData });
-    }, 500);
-  });
+  return apiClient.post('/employees', employeeData);
 };
 
+/**
+ * Update employee
+ */
 export const updateEmployee = async (id, employeeData) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const employee = mockEmployees.find(e => e.id === parseInt(id));
-      employee ? resolve({ ...employee, ...employeeData }) : reject(new Error('Employee not found'));
-    }, 500);
-  });
+  return apiClient.put(`/employees/${id}`, employeeData);
 };
 
+/**
+ * Delete employee
+ */
 export const deleteEmployee = async (id) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const index = mockEmployees.findIndex(e => e.id === parseInt(id));
-      if (index !== -1) {
-        resolve({ success: true, message: 'Employee deleted successfully' });
-      } else {
-        reject(new Error('Employee not found'));
-      }
-    }, 500);
-  });
+  return apiClient.delete(`/employees/${id}`);
+};
+
+/**
+ * Add attendance record
+ */
+export const addAttendance = async (attendanceData) => {
+  return apiClient.post('/employees/attendance', attendanceData);
+};
+
+/**
+ * Add salary record
+ */
+export const addSalary = async (salaryData) => {
+  return apiClient.post('/employees/salary', salaryData);
 };

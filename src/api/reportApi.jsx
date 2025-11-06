@@ -1,44 +1,40 @@
 // CSMS Report API
 
-import { mockDailyReports, mockIngredientTransactions } from '../utils/mockData.jsx';
+import apiClient from './apiClient.jsx';
 
+/**
+ * Get daily reports with optional date range filter
+ */
 export const getDailyReports = async (params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let reports = [...mockDailyReports];
-      if (params.startDate && params.endDate) {
-        reports = reports.filter(r => r.reportDate >= params.startDate && r.reportDate <= params.endDate);
-      }
-      resolve(reports);
-    }, 300);
-  });
+  const response = await apiClient.get('/reports/daily', params);
+  return response.content || response;
 };
 
+/**
+ * Get daily report by specific date
+ */
 export const getDailyReportByDate = async (date) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const report = mockDailyReports.find(r => r.reportDate === date);
-      report ? resolve(report) : reject(new Error('Report not found'));
-    }, 300);
-  });
+  return apiClient.get(`/reports/daily/${date}`);
 };
 
-export const getIngredientTransactions = async (params = {}) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let transactions = [...mockIngredientTransactions];
-      if (params.type) {
-        transactions = transactions.filter(t => t.type === params.type);
-      }
-      resolve(transactions);
-    }, 300);
-  });
-};
-
+/**
+ * Create daily report
+ */
 export const createDailyReport = async (reportData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ id: mockDailyReports.length + 1, ...reportData });
-    }, 500);
-  });
+  return apiClient.post('/reports/daily', reportData);
+};
+
+/**
+ * Get ingredient transactions (using ingredient API)
+ */
+export const getIngredientTransactions = async (params = {}) => {
+  const response = await apiClient.get('/ingredients/transactions', params);
+  return response.content || response;
+};
+
+/**
+ * Get dashboard statistics
+ */
+export const getDashboardStats = async () => {
+  return apiClient.get('/dashboard/stats');
 };

@@ -13,7 +13,9 @@ import './TransactionModal.css';
  * Entity: IngredientTransaction (ingredient, type, quantity, transactionDate)
  */
 const TransactionModal = ({ isOpen, onClose, onSubmit }) => {
-  const { data: ingredients } = useApiQuery(getAllIngredients, {}, []);
+  const { data: ingredientsData } = useApiQuery(getAllIngredients, {}, []);
+  // Extract ingredients array from paginated response
+  const ingredients = ingredientsData?.content || ingredientsData || [];
   const [formData, setFormData] = useState({
     ingredientId: '',
     type: TRANSACTION_TYPE.IMPORT,
@@ -23,7 +25,7 @@ const TransactionModal = ({ isOpen, onClose, onSubmit }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (isOpen && ingredients && ingredients.length > 0) {
+    if (isOpen && ingredients.length > 0) {
       setFormData(prev => ({
         ...prev,
         ingredientId: prev.ingredientId || ingredients[0].id.toString()
@@ -66,7 +68,7 @@ const TransactionModal = ({ isOpen, onClose, onSubmit }) => {
     
     // Reset form
     setFormData({
-      ingredientId: ingredients?.[0]?.id.toString() || '',
+      ingredientId: ingredients[0]?.id.toString() || '',
       type: TRANSACTION_TYPE.IMPORT,
       quantity: '',
       transactionDate: new Date().toISOString().split('T')[0]

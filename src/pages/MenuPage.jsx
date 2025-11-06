@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllProducts } from '../api/productApi.jsx';
 import { PRODUCT_CATEGORIES } from '../utils/constants.jsx';
+import ProductDetailModal from '../components/common/ProductDetailModal/index.jsx';
 import './MenuPage.css';
 
 /**
@@ -10,8 +11,23 @@ import './MenuPage.css';
  * Displays products grouped by category for quick reference
  */
 const MenuPage = () => {
-  const { data: products, loading } = useApiQuery(getAllProducts, {}, []);
+  const { data: productsData, loading } = useApiQuery(getAllProducts, { size: 1000 }, []);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const handleProductClick = (productId) => {
+    setSelectedProductId(productId);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedProductId(null);
+  };
+  
+  // Extract products from paginated response
+  const products = productsData?.content || productsData || [];
 
   const filteredProducts = selectedCategory === 'All'
     ? products || []
@@ -73,7 +89,14 @@ const MenuPage = () => {
                     <h2 className="category-title">{category}</h2>
                     <div className="products-grid">
                       {categoryProducts.map(product => (
-                        <div key={product.id} className="product-card">
+                        <div 
+                          key={product.id} 
+                          className="product-card"
+                          onClick={() => handleProductClick(product.id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyPress={(e) => e.key === 'Enter' && handleProductClick(product.id)}
+                        >
                           <div className="product-image">
                             <div className="image-placeholder">
                               {product.category === 'Coffee' && '☕'}
@@ -111,7 +134,14 @@ const MenuPage = () => {
                 </div>
               ) : (
                 filteredProducts.map(product => (
-                  <div key={product.id} className="product-card">
+                  <div 
+                    key={product.id} 
+                    className="product-card"
+                    onClick={() => handleProductClick(product.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyPress={(e) => e.key === 'Enter' && handleProductClick(product.id)}
+                  >
                     <div className="product-image">
                       <div className="image-placeholder">
                         {product.category === 'Coffee' && '☕'}
@@ -140,6 +170,12 @@ const MenuPage = () => {
           )}
         </>
       )}
+
+      <ProductDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleCloseModal}
+        productId={selectedProductId}
+      />
     </div>
   );
 };

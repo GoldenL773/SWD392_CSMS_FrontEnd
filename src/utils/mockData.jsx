@@ -8,19 +8,19 @@ export const mockUsers = [
     id: 1,
     username: 'admin',
     password: '$2a$10$...', // BCrypt hash (not used in frontend)
-    roles: [{ id: 1, name: 'ROLE_ADMIN' }, { id: 2, name: 'ROLE_MANAGER' }]
+    roles: [{ id: 1, name: 'ADMIN' }, { id: 2, name: 'MANAGER' }]
   },
   {
     id: 2,
     username: 'manager01',
     password: '$2a$10$...',
-    roles: [{ id: 2, name: 'ROLE_MANAGER' }]
+    roles: [{ id: 2, name: 'MANAGER' }]
   },
   {
     id: 3,
     username: 'staff01',
     password: '$2a$10$...',
-    roles: [{ id: 3, name: 'ROLE_STAFF' }]
+    roles: [{ id: 3, name: 'STAFF' }]
   }
 ];
 
@@ -451,7 +451,7 @@ export const mockDailyReports = [
  * Mock Roles (matching Role entity)
  */
 export const mockRoles = [
-  { id: 1, name: 'ROLE_ADMIN' },
-  { id: 2, name: 'ROLE_MANAGER' },
-  { id: 3, name: 'ROLE_STAFF' }
+  { id: 1, name: 'ADMIN' },
+  { id: 2, name: 'MANAGER' },
+  { id: 3, name: 'STAFF' }
 ];

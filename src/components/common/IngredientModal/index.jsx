@@ -15,6 +15,7 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
     name: '',
     unit: INGREDIENT_UNITS[0],
     quantity: '',
+    pricePerUnit: '',
     reorderLevel: '',
     supplier: ''
   });
@@ -26,7 +27,8 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
         name: ingredient.name || '',
         unit: ingredient.unit || INGREDIENT_UNITS[0],
         quantity: ingredient.quantity?.toString() || '',
-        reorderLevel: ingredient.reorderLevel?.toString() || '',
+        pricePerUnit: ingredient.pricePerUnit?.toString() || '',
+        reorderLevel: ingredient.minimumStock?.toString() || '',
         supplier: ingredient.supplier || ''
       });
     } else {
@@ -34,6 +36,7 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
         name: '',
         unit: INGREDIENT_UNITS[0],
         quantity: '',
+        pricePerUnit: '',
         reorderLevel: '',
         supplier: ''
       });
@@ -57,6 +60,9 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
     if (!formData.quantity || parseFloat(formData.quantity) < 0) {
       newErrors.quantity = 'Valid quantity is required';
     }
+    if (!formData.pricePerUnit || parseFloat(formData.pricePerUnit) <= 0) {
+      newErrors.pricePerUnit = 'Valid price per unit is required';
+    }
     if (!formData.reorderLevel || parseFloat(formData.reorderLevel) < 0) {
       newErrors.reorderLevel = 'Valid reorder level is required';
     }
@@ -68,10 +74,14 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
     e.preventDefault();
     if (!validate()) return;
 
+    // Backend expects 'minimumStock' instead of 'reorderLevel'
     const submitData = {
-      ...formData,
+      name: formData.name,
+      unit: formData.unit,
       quantity: parseFloat(formData.quantity),
-      reorderLevel: parseFloat(formData.reorderLevel)
+      pricePerUnit: parseFloat(formData.pricePerUnit),
+      minimumStock: parseFloat(formData.reorderLevel),
+      supplier: formData.supplier
     };
 
     onSubmit(submitData);
@@ -128,6 +138,22 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
             />
             {errors.quantity && <span className="error-message">{errors.quantity}</span>}
           </div>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="pricePerUnit">Price Per Unit (VND) *</label>
+          <input
+            type="number"
+            id="pricePerUnit"
+            name="pricePerUnit"
+            value={formData.pricePerUnit}
+            onChange={handleChange}
+            min="0"
+            step="1000"
+            className={errors.pricePerUnit ? 'error' : ''}
+            placeholder="Price per unit"
+          />
+          {errors.pricePerUnit && <span className="error-message">{errors.pricePerUnit}</span>}
         </div>
 
         <div className="form-group">

@@ -18,13 +18,15 @@ const EmployeeDetailView = ({ employee }) => {
   const { data: attendance, loading: attendanceLoading } = useApiQuery(
     () => getEmployeeAttendance(employee.id),
     {},
-    [employee.id]
+    [employee.id],
+    { enabled: activeTab === 'attendance' }
   );
 
   const { data: salary, loading: salaryLoading } = useApiQuery(
     () => getEmployeeSalary(employee.id),
     {},
-    [employee.id]
+    [employee.id],
+    { enabled: activeTab === 'salary' }
   );
 
   return (

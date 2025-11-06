@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
+import { useToast } from '../hooks/useToast.jsx';
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../api/productApi.jsx';
 import { getAllIngredients, createIngredient, updateIngredient, deleteIngredient } from '../api/ingredientApi.jsx';
+import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
 import ProductsTable from '../features/inventory/ProductsTable.jsx';
@@ -13,6 +15,7 @@ import ConfirmDialog from '../components/common/ConfirmDialog/index.jsx';
 import './InventoryPage.css';
 
 const InventoryPage = () => {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('products');
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isIngredientModalOpen, setIsIngredientModalOpen] = useState(false);
@@ -20,10 +23,29 @@ const InventoryPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedIngredient, setSelectedIngredient] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null, type: null });
+  
+  // Pagination state
+  const [productPage, setProductPage] = useState(0);
+  const [ingredientPage, setIngredientPage] = useState(0);
+  const pageSize = 10;
 
-  // Fetch data
-  const { data: products, loading: productsLoading, refetch: refetchProducts } = useApiQuery(getAllProducts, {}, []);
-  const { data: ingredients, loading: ingredientsLoading, refetch: refetchIngredients } = useApiQuery(getAllIngredients, {}, []);
+  // Fetch data with pagination
+  const { data: productsData, loading: productsLoading, refetch: refetchProducts } = useApiQuery(
+    getAllProducts, 
+    { page: productPage, size: pageSize }, 
+    [productPage]
+  );
+  const { data: ingredientsData, loading: ingredientsLoading, refetch: refetchIngredients } = useApiQuery(
+    getAllIngredients, 
+    { page: ingredientPage, size: pageSize }, 
+    [ingredientPage]
+  );
+  
+  // Extract content from paginated response
+  const products = productsData?.content || productsData || [];
+  const ingredients = ingredientsData?.content || ingredientsData || [];
+  const totalProducts = productsData?.totalElements || products.length;
+  const totalIngredients = ingredientsData?.totalElements || ingredients.length;
 
   // Mutations
   const { mutate: createProductMutation, loading: creating } = useApiMutation(createProduct);
@@ -34,14 +56,16 @@ const InventoryPage = () => {
     try {
       if (selectedProduct) {
         await updateProductMutation(selectedProduct.id, data);
+        toast.success('Product updated successfully!');
       } else {
         await createProductMutation(data);
+        toast.success('Product created successfully!');
       }
       setIsProductModalOpen(false);
       setSelectedProduct(null);
       refetchProducts();
     } catch (error) {
-      alert('Error saving product: ' + error.message);
+      toast.error('Error saving product: ' + error.message);
     }
   };
 
@@ -49,14 +73,16 @@ const InventoryPage = () => {
     try {
       if (selectedIngredient) {
         await updateIngredient(selectedIngredient.id, data);
+        toast.success('Ingredient updated successfully!');
       } else {
         await createIngredient(data);
+        toast.success('Ingredient created successfully!');
       }
       setIsIngredientModalOpen(false);
       setSelectedIngredient(null);
       refetchIngredients();
     } catch (error) {
-      alert('Error saving ingredient: ' + error.message);
+      toast.error('Error saving ingredient: ' + error.message);
     }
   };
 
@@ -64,11 +90,11 @@ const InventoryPage = () => {
     try {
       console.log('Recording transaction:', data);
       // TODO: Call transaction API
-      alert('Transaction recorded successfully!');
+      toast.success('Transaction recorded successfully!');
       setIsTransactionModalOpen(false);
       refetchIngredients();
     } catch (error) {
-      alert('Error recording transaction: ' + error.message);
+      toast.error('Error recording transaction: ' + error.message);
     }
   };
 
@@ -78,16 +104,19 @@ const InventoryPage = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      if (confirmDelete.type === 'product') {
-        await deleteProductMutation(confirmDelete.id);
+      const { id, type } = confirmDelete;
+      if (type === 'product') {
+        await deleteProductMutation(id);
+        toast.success('Product deleted successfully!');
         refetchProducts();
-      } else if (confirmDelete.type === 'ingredient') {
-        await deleteIngredient(confirmDelete.id);
+      } else if (type === 'ingredient') {
+        await deleteIngredient(id);
+        toast.success('Ingredient deleted successfully!');
         refetchIngredients();
       }
       setConfirmDelete({ isOpen: false, id: null, type: null });
     } catch (error) {
-      alert('Error deleting: ' + error.message);
+      toast.error('Error deleting item: ' + error.message);
     }
   };
 
@@ -116,7 +145,7 @@ const InventoryPage = () => {
       {activeTab === 'products' && (
         <Card
           title="Products"
-          subtitle={`${products?.length || 0} products`}
+          subtitle={`${totalProducts} products total`}
           actions={
             <Button onClick={() => {
               setSelectedProduct(null);
@@ -135,13 +164,34 @@ const InventoryPage = () => {
             }}
             onDelete={(id) => handleDeleteClick(id, 'product')}
           />
+          {totalProducts > pageSize && (
+            <div className="pagination-controls">
+              <Button 
+                variant="secondary" 
+                onClick={() => setProductPage(p => Math.max(0, p - 1))}
+                disabled={productPage === 0}
+              >
+                Previous
+              </Button>
+              <span className="page-info">
+                Page {productPage + 1} of {Math.ceil(totalProducts / pageSize)}
+              </span>
+              <Button 
+                variant="secondary" 
+                onClick={() => setProductPage(p => p + 1)}
+                disabled={(productPage + 1) * pageSize >= totalProducts}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
       {activeTab === 'ingredients' && (
         <Card
           title="Ingredients"
-          subtitle={`${ingredients?.length || 0} ingredients`}
+          subtitle={`${totalIngredients} ingredients total`}
           actions={
             <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
               <Button onClick={() => setIsTransactionModalOpen(true)} variant="secondary">
@@ -165,6 +215,27 @@ const InventoryPage = () => {
             }}
             onDelete={(id) => handleDeleteClick(id, 'ingredient')}
           />
+          {totalIngredients > pageSize && (
+            <div className="pagination-controls">
+              <Button 
+                variant="secondary" 
+                onClick={() => setIngredientPage(p => Math.max(0, p - 1))}
+                disabled={ingredientPage === 0}
+              >
+                Previous
+              </Button>
+              <span className="page-info">
+                Page {ingredientPage + 1} of {Math.ceil(totalIngredients / pageSize)}
+              </span>
+              <Button 
+                variant="secondary" 
+                onClick={() => setIngredientPage(p => p + 1)}
+                disabled={(ingredientPage + 1) * pageSize >= totalIngredients}
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
@@ -203,6 +274,8 @@ const InventoryPage = () => {
         confirmText="Delete"
         variant="danger"
       />
+      
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

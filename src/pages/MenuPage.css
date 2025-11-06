@@ -90,12 +90,18 @@
   overflow: hidden;
   transition: all var(--transition-fast);
   border: 2px solid var(--color-border);
+  cursor: pointer;
 }
 
 .product-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(184, 134, 11, 0.2);
   border-color: var(--color-primary);
+}
+
+.product-card:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .product-image {

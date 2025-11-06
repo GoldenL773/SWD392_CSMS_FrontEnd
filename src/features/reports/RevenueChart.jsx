@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { formatCurrency, formatDate } from '../../utils/formatters.jsx';
+import { formatCurrency, formatDate, safeNumber } from '../../utils/formatters.jsx';
 import './RevenueChart.css';
 
 /**
@@ -18,18 +18,20 @@ const RevenueChart = ({ reports }) => {
   }
 
   // Find max revenue for scaling
-  const maxRevenue = Math.max(...reports.map(r => r.totalRevenue));
+  const maxRevenue = Math.max(...reports.map(r => safeNumber(r.totalRevenue)));
 
   return (
     <div className="revenue-chart">
       <div className="chart-bars">
         {reports.map((report) => {
-          const heightPercent = (report.totalRevenue / maxRevenue) * 100;
-          const profit = report.totalRevenue - report.totalIngredientCost;
-          const profitMargin = ((profit / report.totalRevenue) * 100).toFixed(1);
+          const revenue = safeNumber(report.totalRevenue);
+          const cost = safeNumber(report.totalIngredientCost);
+          const heightPercent = maxRevenue > 0 ? (revenue / maxRevenue) * 100 : 0;
+          const profit = revenue - cost;
+          const profitMargin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
 
           return (
-            <div key={report.id} className="chart-bar-container">
+            <div key={report.id || report.reportDate} className="chart-bar-container">
               <div className="chart-bar-wrapper">
                 <div 
                   className="chart-bar"

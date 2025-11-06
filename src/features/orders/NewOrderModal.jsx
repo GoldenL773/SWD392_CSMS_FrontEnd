@@ -12,9 +12,12 @@ import './NewOrderModal.css';
  * Modal for creating new orders with product selection
  */
 const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
-  const { data: products, loading } = useApiQuery(getAllProducts, {}, []);
+  const { data: productsData, loading } = useApiQuery(getAllProducts, { size: 1000 }, []);
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Extract products from paginated response
+  const products = productsData?.content || productsData || [];
 
   // Filter available products (status: Available or AVAILABLE)
   const availableProducts = useMemo(() => {

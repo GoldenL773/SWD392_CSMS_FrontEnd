@@ -100,9 +100,9 @@ const IngredientsTable = ({
                   {formatNumber(ingredient.quantity, 2)}
                 </span>
               </td>
-              <td className="price-cell">{formatCurrency(ingredient.pricePerUnit)}</td>
+              <td className="price-cell">{formatCurrency(ingredient.pricePerUnit || 0)}</td>
               <td className="total-value">
-                {formatCurrency(ingredient.quantity * ingredient.pricePerUnit)}
+                {formatCurrency((ingredient.quantity || 0) * (ingredient.pricePerUnit || 0))}
               </td>
               <td className="actions-cell">
                 <Button 

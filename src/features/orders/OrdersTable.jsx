@@ -26,7 +26,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
   const getStatusClass = (status) => {
     switch (status) {
       case ORDER_STATUS.PENDING: return 'status-pending';
-      case ORDER_STATUS.PREPARING: return 'status-preparing';
+      case ORDER_STATUS.PROCESSING: return 'status-processing';
       case ORDER_STATUS.COMPLETED: return 'status-completed';
       case ORDER_STATUS.CANCELLED: return 'status-cancelled';
       default: return '';
@@ -35,8 +35,8 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
 
   const getNextStatus = (currentStatus) => {
     switch (currentStatus) {
-      case ORDER_STATUS.PENDING: return ORDER_STATUS.PREPARING;
-      case ORDER_STATUS.PREPARING: return ORDER_STATUS.COMPLETED;
+      case ORDER_STATUS.PENDING: return ORDER_STATUS.PROCESSING;
+      case ORDER_STATUS.PROCESSING: return ORDER_STATUS.COMPLETED;
       default: return null;
     }
   };
@@ -92,7 +92,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
                   </button>
                 </td>
                 <td className="order-id">#{order.id}</td>
-                <td>{order.employee?.fullName || 'N/A'}</td>
+                <td>{order.employeeName || order.employee?.fullName || 'N/A'}</td>
                 <td>{formatDateTime(order.orderDate)}</td>
                 <td className="amount-cell">{formatCurrency(order.totalAmount)}</td>
                 <td>
@@ -134,13 +134,13 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {order.orderItems?.map((item) => (
+                          {(order.items || order.orderItems)?.map((item) => (
                             <tr key={item.id}>
-                              <td>{item.product?.name || 'Unknown'}</td>
+                              <td>{item.productName || item.product?.name || 'Unknown'}</td>
                               <td className="quantity-cell">{item.quantity}</td>
                               <td>{formatCurrency(item.price)}</td>
                               <td className="subtotal-cell">
-                                {formatCurrency(item.quantity * item.price)}
+                                {formatCurrency(item.subtotal || (item.quantity * item.price))}
                               </td>
                             </tr>
                           ))}
@@ -170,15 +170,18 @@ OrdersTable.propTypes = {
   orders: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number.isRequired,
     employee: PropTypes.object,
+    employeeName: PropTypes.string,
     orderDate: PropTypes.string.isRequired,
     totalAmount: PropTypes.number.isRequired,
     status: PropTypes.string.isRequired,
-    orderItems: PropTypes.arrayOf(PropTypes.shape({
+    items: PropTypes.arrayOf(PropTypes.shape({
       id: PropTypes.number.isRequired,
-      product: PropTypes.object,
+      productName: PropTypes.string,
       quantity: PropTypes.number.isRequired,
-      price: PropTypes.number.isRequired
-    }))
+      price: PropTypes.number.isRequired,
+      subtotal: PropTypes.number
+    })),
+    orderItems: PropTypes.array // Fallback for old format
   })).isRequired,
   loading: PropTypes.bool,
   onUpdateStatus: PropTypes.func

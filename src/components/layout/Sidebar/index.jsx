@@ -10,22 +10,31 @@ import './Sidebar.css';
  * Navigation sidebar for desktop
  */
 const Sidebar = ({ isOpen, onClose }) => {
-  const { hasAnyRole } = useAuth();
+  const { hasAnyRole, user } = useAuth();
 
-  const navItems = [
-    { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '📊' },
-    { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒' },
-    { path: ROUTES.MENU, label: 'Menu', icon: '☕' },
-    { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦' },
-    { path: ROUTES.EMPLOYEES, label: 'Employees', icon: '👥' },
-    { path: ROUTES.REPORTS, label: 'Reports', icon: '📈' },
-    { path: ROUTES.SETTINGS, label: 'Settings', icon: '⚙️' }
+  // Define all menu items with role requirements
+  // STAFF: Orders, Finance, Settings
+  // ADMIN/MANAGER: All items
+  // FINANCE: Dashboard, Reports, Finance, Settings
+  const allNavItems = [
+    { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
+    { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
+    { path: ROUTES.MENU, label: 'Menu', icon: '☕', roles: ['ADMIN', 'MANAGER'] },
+    { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦', roles: ['ADMIN', 'MANAGER'] },
+    { path: ROUTES.EMPLOYEES, label: 'Employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },
+    { path: ROUTES.REPORTS, label: 'Reports', icon: '📈', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
+    { path: ROUTES.FINANCE, label: 'Finance', icon: '💰', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF'] },
+    { path: ROUTES.SETTINGS, label: 'Settings', icon: '⚙️', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF'] }
   ];
 
-  const adminItems = [
-    { path: ROUTES.ADMIN, label: 'Admin', icon: '🔐' },
-    { path: ROUTES.FINANCE, label: 'Finance', icon: '💰' }
-  ];
+  // Filter items based on user roles - show all if no user or no roles
+  const navItems = user && user.roles && user.roles.length > 0
+    ? allNavItems.filter(item => hasAnyRole(item.roles))
+    : allNavItems; // Show all items if not logged in or no roles
+
+  const adminItems = hasAnyRole(['ADMIN']) ? [
+    { path: ROUTES.ADMIN, label: 'Admin', icon: '🔐' }
+  ] : [];
 
   return (
     <>
@@ -52,7 +61,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             ))}
           </div>
 
-          {hasAnyRole(['ROLE_ADMIN', 'ROLE_MANAGER']) && (
+          {adminItems.length > 0 && (
             <div className="sidebar__section">
               <div className="sidebar__section-title">Management</div>
               {adminItems.map((item) => (
