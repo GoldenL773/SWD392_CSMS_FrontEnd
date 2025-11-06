@@ -21,6 +21,34 @@
   color: var(--color-error);
 }
 
+.stat-note {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+  font-style: italic;
+}
+
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.filter-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
 .salary-table {
   width: 100%;
   min-width: 1000px;

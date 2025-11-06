@@ -33,12 +33,12 @@ export const PRODUCT_STATUS = {
   UNAVAILABLE: 'Unavailable'
 };
 
-// Order Status (matching backend)
+// Order Status (matching backend exactly)
 export const ORDER_STATUS = {
-  PENDING: 'PENDING',
-  PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED'
+  PENDING: 'Pending',
+  PROCESSING: 'Processing',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled'
 };
 
 // Employee Status

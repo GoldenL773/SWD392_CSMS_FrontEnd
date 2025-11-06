@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { formatDate, formatPhone } from '../../utils/formatters.jsx';
 import { useApiQuery } from '../../hooks/useApiQuery.jsx';
@@ -15,15 +15,26 @@ import './EmployeeDetailView.css';
 const EmployeeDetailView = ({ employee }) => {
   const [activeTab, setActiveTab] = useState('info');
 
+  // Create stable function references using useMemo
+  const fetchAttendance = useMemo(
+    () => (params) => getEmployeeAttendance(employee.id, params),
+    [employee.id]
+  );
+
+  const fetchSalary = useMemo(
+    () => (params) => getEmployeeSalary(employee.id, params),
+    [employee.id]
+  );
+
   const { data: attendance, loading: attendanceLoading } = useApiQuery(
-    () => getEmployeeAttendance(employee.id),
+    fetchAttendance,
     {},
     [employee.id],
     { enabled: activeTab === 'attendance' }
   );
 
   const { data: salary, loading: salaryLoading } = useApiQuery(
-    () => getEmployeeSalary(employee.id),
+    fetchSalary,
     {},
     [employee.id],
     { enabled: activeTab === 'salary' }

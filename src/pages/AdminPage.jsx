@@ -9,13 +9,25 @@ import { formatDate, formatPhone } from '../utils/formatters.jsx';
 import './AdminPage.css';
 
 const AdminPage = () => {
-  const { data: employees, loading, refetch } = useApiQuery(getAllEmployees, {}, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, employeeId: null });
+  const [currentPage, setCurrentPage] = useState(0);
+  const pageSize = 10;
+  
+  const { data: employeesData, loading, refetch } = useApiQuery(
+    getAllEmployees, 
+    { page: currentPage, size: pageSize }, 
+    [currentPage]
+  );
+  
+  // Extract data from paginated response
+  const allEmployees = employeesData?.content || employeesData || [];
+  const totalEmployees = employeesData?.totalElements || allEmployees.length;
+  const totalPages = employeesData?.totalPages || Math.ceil(totalEmployees / pageSize);
 
-  const filteredEmployees = employees?.filter(emp =>
+  const filteredEmployees = allEmployees?.filter(emp =>
     emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.phone.includes(searchTerm)
   ) || [];
@@ -130,6 +142,27 @@ const AdminPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {totalEmployees > pageSize && (
+          <div className="pagination-controls">
+            <Button 
+              variant="secondary" 
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+            >
+              Previous
+            </Button>
+            <span className="page-info">
+              Page {currentPage + 1} of {totalPages}
+            </span>
+            <Button 
+              variant="secondary" 
+              onClick={() => setCurrentPage(p => p + 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Next
+            </Button>
           </div>
         )}
       </Card>
