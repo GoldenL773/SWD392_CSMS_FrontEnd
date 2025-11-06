@@ -11,7 +11,7 @@ const BottomNav = () => {
   const navItems = [
     { path: ROUTES.DASHBOARD, label: 'Home', icon: '🏠' },
     { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒' },
-    { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦' },
+    { path: ROUTES.ATTENDANCE, label: 'Attendance', icon: '⏰' },
     { path: ROUTES.REPORTS, label: 'Reports', icon: '📈' }
   ];
 

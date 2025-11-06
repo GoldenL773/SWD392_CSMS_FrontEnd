@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ROUTES } from '../utils/constants.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
+import RoleBasedRedirect from './RoleBasedRedirect.jsx';
 
 // Lazy load pages
 const HomePage = React.lazy(() => import('../pages/HomePage.tsx'));
@@ -12,6 +13,7 @@ const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.jsx'));
 const OrdersPage = React.lazy(() => import('../pages/OrdersPage.jsx'));
 const MenuPage = React.lazy(() => import('../pages/MenuPage.jsx'));
 const ReportsPage = React.lazy(() => import('../pages/ReportsPage.jsx'));
+const AttendancePage = React.lazy(() => import('../pages/AttendancePage.jsx'));
 const AdminPage = React.lazy(() => import('../pages/AdminPage.jsx'));
 const FinancePage = React.lazy(() => import('../pages/FinancePage.jsx'));
 const SettingsPage = React.lazy(() => import('../pages/SettingsPage.jsx'));
@@ -30,18 +32,24 @@ const AppRoutes = () => {
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
-        <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
-        <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
-        <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
+        {/* Common routes - accessible by all authenticated users */}
         <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
         <Route path={ROUTES.MENU} element={<MenuPage />} />
-        <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+        <Route path={ROUTES.ATTENDANCE} element={<AttendancePage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         
-        {/* Admin Only Routes */}
-        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} />}>
-          <Route path={ROUTES.ADMIN} element={<AdminPage />} />
+        {/* Dashboard - Manager/Finance only */}
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'FINANCE']} />}>
+          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+          <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
           <Route path={ROUTES.FINANCE} element={<FinancePage />} />
+        </Route>
+        
+        {/* Manager only routes */}
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} />}>
+          <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
+          <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
+          <Route path={ROUTES.ADMIN} element={<AdminPage />} />
         </Route>
       </Route>
 

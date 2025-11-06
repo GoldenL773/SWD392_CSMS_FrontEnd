@@ -43,7 +43,8 @@ class ApiClient {
       headers: {
         ...this.getHeaders(),
         ...options.headers
-      }
+      },
+      credentials: 'include' // Enable sending cookies and credentials
     };
 
     try {

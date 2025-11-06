@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from '../hooks/useToast.jsx';
+import { useOrderNotifications } from '../hooks/useOrderNotifications.jsx';
 import { getAllOrders, createOrder, updateOrderStatus } from '../api/orderApi.jsx';
 import { getAllEmployees } from '../api/employeeApi.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
+import OrderNotificationToast from '../components/common/OrderNotificationToast/index.jsx';
 import { ORDER_STATUS } from '../utils/constants.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
@@ -28,11 +30,48 @@ const OrdersPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
   
-  const { data: ordersData, loading, refetch: refetchOrders } = useApiQuery(
+  // Real-time order notification state
+  const [newOrderNotification, setNewOrderNotification] = useState(null);
+  const [showNotificationToast, setShowNotificationToast] = useState(false);
+  
+  // Fetch data
+  const { data: ordersData, loading: ordersLoading, refetch: refetchOrders } = useApiQuery(
     getAllOrders, 
     { page: currentPage, size: pageSize }, 
     [currentPage]
   );
+  
+  // Handle new order notification
+  const handleNewOrder = useCallback((order) => {
+    setNewOrderNotification(order);
+    setShowNotificationToast(true);
+    
+    // Auto-hide notification after 10 seconds
+    setTimeout(() => {
+      setShowNotificationToast(false);
+    }, 10000);
+    
+    // Refetch orders to update the list
+    refetchOrders();
+    
+    // Show toast message
+    toast.addToast(`New order #${order.id} received!`, 'info');
+  }, [refetchOrders, toast]);
+  
+  // Initialize real-time notifications for Barista/Staff
+  useOrderNotifications({
+    enabled: true,
+    pollingInterval: 5000, // Check every 5 seconds
+    onNewOrder: handleNewOrder,
+    userRole: user?.role
+  });
+  
+  // Handle notification toast click
+  const handleNotificationClick = useCallback(() => {
+    setShowNotificationToast(false);
+    // Optionally scroll to top or highlight the new order
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   
   // Extract data from paginated response
   const orders = ordersData?.content || ordersData || [];
@@ -242,7 +281,7 @@ const OrdersPage = () => {
       >
         <OrdersTable
           orders={filteredOrders}
-          loading={loading}
+          loading={ordersLoading}
           onUpdateStatus={handleUpdateStatus}
         />
         {totalOrders > pageSize && (
@@ -275,6 +314,15 @@ const OrdersPage = () => {
       />
       
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+      
+      {/* Real-time Order Notification */}
+      {showNotificationToast && newOrderNotification && (
+        <OrderNotificationToast
+          order={newOrderNotification}
+          onClose={() => setShowNotificationToast(false)}
+          onClick={handleNotificationClick}
+        />
+      )}
     </div>
   );
 };

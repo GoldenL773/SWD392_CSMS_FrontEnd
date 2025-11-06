@@ -32,8 +32,22 @@ const LoginPage = () => {
     setLoginError('');
 
     try {
-      await login(formData.username, formData.password);
-      navigate(ROUTES.DASHBOARD);
+      const userData = await login(formData.username, formData.password);
+      
+      // Redirect based on user role
+      if (userData?.roles) {
+        if (userData.roles.includes('STAFF')) {
+          navigate(ROUTES.ATTENDANCE);
+        } else if (userData.roles.includes('BARISTA')) {
+          navigate(ROUTES.ORDERS);
+        } else if (userData.roles.includes('FINANCE')) {
+          navigate(ROUTES.FINANCE);
+        } else {
+          navigate(ROUTES.DASHBOARD);
+        }
+      } else {
+        navigate(ROUTES.DASHBOARD);
+      }
     } catch (err) {
       setLoginError(err.message || 'Login failed. Please try again.');
     }

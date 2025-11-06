@@ -10,7 +10,7 @@ import AppLayout from '../components/layout/AppLayout/index.jsx';
  * Wraps routes that require authentication and optional role-based access
  */
 const ProtectedRoute = ({ requiredRoles = [] }) => {
-  const { isAuthenticated, hasAnyRole, loading } = useAuth();
+  const { isAuthenticated, hasAnyRole, user, loading } = useAuth();
 
   // Show loading state while checking auth
   if (loading) {
@@ -28,7 +28,17 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
 
   // Check role-based access if required
   if (requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
+    // Redirect to appropriate default page based on role
+    if (hasAnyRole(['STAFF'])) {
+      return <Navigate to={ROUTES.ATTENDANCE} replace />;
+    }
+    if (hasAnyRole(['BARISTA'])) {
+      return <Navigate to={ROUTES.ORDERS} replace />;
+    }
+    if (hasAnyRole(['FINANCE'])) {
+      return <Navigate to={ROUTES.FINANCE} replace />;
+    }
+    return <Navigate to={ROUTES.ATTENDANCE} replace />;
   }
 
   // Render with AppLayout wrapper

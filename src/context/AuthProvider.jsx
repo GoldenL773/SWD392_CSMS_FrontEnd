@@ -53,16 +53,23 @@ export const AuthProvider = ({ children }) => {
         username: response.username,
         fullName: response.fullName,
         roles: Array.isArray(response.roles)
-          ? response.roles.map(role => ({ name: role }))
-          : Object.values(response.roles || {}).map(role => ({ name: role }))
+          ? response.roles.map(role => 
+              typeof role === 'string' ? { name: role } : role
+            )
+          : Object.values(response.roles || {}).map(role => 
+              typeof role === 'string' ? { name: role } : role
+            )
       };
+
+      console.log('Login successful - User data:', userData);
+      console.log('User roles:', userData.roles);
 
       // Store token and user data
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
 
       setUser(userData);
-      return response;
+      return userData;
     } catch (err) {
       setError(err.message || 'Login failed');
       throw err;
@@ -97,7 +104,10 @@ export const AuthProvider = ({ children }) => {
    */
   const hasRole = (roleName) => {
     if (!user || !user.roles) return false;
-    return user.roles.some(role => role.name === roleName);
+    // Handle both string array and object array formats
+    return user.roles.some(role => 
+      typeof role === 'string' ? role === roleName : role.name === roleName
+    );
   };
 
   /**

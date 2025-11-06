@@ -12,27 +12,33 @@ import './Sidebar.css';
 const Sidebar = ({ isOpen, onClose }) => {
   const { hasAnyRole, user } = useAuth();
 
+  // Debug: Log user and roles
+  console.log('Sidebar - Current user:', user);
+  console.log('Sidebar - User roles:', user?.roles);
+
   // Define all menu items with role requirements
-  // STAFF: Orders, Finance, Settings
-  // ADMIN/MANAGER: All items
-  // FINANCE: Dashboard, Reports, Finance, Settings
+  // Manager (MANAGER): All navigation links
+  // Staff (STAFF): /menu, /orders, /attendance, /settings
+  // Finance (FINANCE): /finance, /dashboard, /reports, /attendance, /settings
+  // Barista (BARISTA): /orders, /attendance, /settings
   const allNavItems = [
     { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
-    { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
-    { path: ROUTES.MENU, label: 'Menu', icon: '☕', roles: ['ADMIN', 'MANAGER'] },
+    { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒', roles: ['ADMIN', 'MANAGER', 'STAFF', 'BARISTA'] },
+    { path: ROUTES.MENU, label: 'Menu', icon: '☕', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦', roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.EMPLOYEES, label: 'Employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.REPORTS, label: 'Reports', icon: '📈', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
-    { path: ROUTES.FINANCE, label: 'Finance', icon: '💰', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF'] },
-    { path: ROUTES.SETTINGS, label: 'Settings', icon: '⚙️', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF'] }
+    { path: ROUTES.ATTENDANCE, label: 'Attendance', icon: '⏰', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF', 'BARISTA'] },
+    { path: ROUTES.FINANCE, label: 'Finance', icon: '💰', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
+    { path: ROUTES.SETTINGS, label: 'Settings', icon: '⚙️', roles: ['ADMIN', 'MANAGER', 'FINANCE', 'STAFF', 'BARISTA'] }
   ];
 
-  // Filter items based on user roles - show all if no user or no roles
+  // Filter items based on user roles - only show items user has access to
   const navItems = user && user.roles && user.roles.length > 0
     ? allNavItems.filter(item => hasAnyRole(item.roles))
-    : allNavItems; // Show all items if not logged in or no roles
+    : []; // Show nothing if not logged in or no roles
 
-  const adminItems = hasAnyRole(['ADMIN']) ? [
+  const adminItems = user && hasAnyRole(['ADMIN']) ? [
     { path: ROUTES.ADMIN, label: 'Admin', icon: '🔐' }
   ] : [];
 

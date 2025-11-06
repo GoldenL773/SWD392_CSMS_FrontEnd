@@ -13,6 +13,7 @@ export const ROUTES = {
   ORDERS: '/orders',
   MENU: '/menu',
   REPORTS: '/reports',
+  ATTENDANCE: '/attendance',
   ADMIN: '/admin',
   FINANCE: '/finance',
   SETTINGS: '/settings',
