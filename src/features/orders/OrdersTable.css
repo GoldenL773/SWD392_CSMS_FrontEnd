@@ -1,0 +1,157 @@
+/* OrdersTable Component Styles */
+
+.orders-table {
+  width: 100%;
+  min-width: 800px;
+}
+
+.order-row {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.order-row:hover {
+  background-color: rgba(184, 134, 11, 0.05);
+}
+
+.order-row.expanded {
+  background-color: rgba(184, 134, 11, 0.1);
+}
+
+.expand-cell {
+  text-align: center;
+  padding: var(--spacing-sm) !important;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  transition: transform var(--transition-fast);
+}
+
+.order-row.expanded .expand-btn {
+  transform: rotate(0deg);
+}
+
+.order-id {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.amount-cell {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
+
+.status-completed {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.status-cancelled {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
+/* Order Items Expandable Row */
+.order-items-row {
+  background-color: var(--color-background);
+}
+
+.order-items-row td {
+  padding: 0 !important;
+}
+
+.order-items-container {
+  padding: var(--spacing-lg);
+  animation: slideDown var(--transition-base);
+}
+
+.order-items-container h4 {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.order-items-table {
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.order-items-table thead {
+  background-color: rgba(184, 134, 11, 0.1);
+}
+
+.order-items-table th,
+.order-items-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order-items-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.quantity-cell {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.subtotal-cell {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.order-items-table tfoot {
+  background-color: rgba(184, 134, 11, 0.05);
+  font-weight: var(--font-weight-bold);
+}
+
+.order-items-table tfoot td {
+  border-bottom: none;
+}
+
+.total-label {
+  text-align: right;
+  color: var(--color-text-primary);
+}
+
+.total-amount {
+  font-size: var(--font-size-lg);
+  color: var(--color-primary);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .orders-table {
+    font-size: var(--font-size-sm);
+  }
+
+  .order-items-table th,
+  .order-items-table td {
+    padding: var(--spacing-sm);
+  }
+}

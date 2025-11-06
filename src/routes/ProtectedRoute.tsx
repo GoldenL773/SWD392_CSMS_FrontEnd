@@ -1,0 +1,46 @@
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { useAuth } from '../hooks/useAuth.tsx';
+import { ROUTES } from '../utils/constants.tsx';
+import AppLayout from '../components/layout/AppLayout/index.tsx';
+
+/**
+ * ProtectedRoute Component
+ * Wraps routes that require authentication and optional role-based access
+ */
+const ProtectedRoute = ({ requiredRoles = [] }) => {
+  const { isAuthenticated, hasAnyRole, loading } = useAuth();
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: '100vh' }}>
+        <div className="loading"></div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated()) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+
+  // Check role-based access if required
+  if (requiredRoles.length > 0 && !hasAnyRole(requiredRoles)) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
+
+  // Render with AppLayout wrapper
+  return (
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  );
+};
+
+ProtectedRoute.propTypes = {
+  requiredRoles: PropTypes.arrayOf(PropTypes.string)
+};
+
+export default ProtectedRoute;

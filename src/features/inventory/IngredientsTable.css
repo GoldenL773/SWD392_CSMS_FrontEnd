@@ -1,0 +1,56 @@
+/* IngredientsTable Component Styles */
+
+.ingredients-table {
+  width: 100%;
+  min-width: 700px;
+}
+
+.ingredients-table th.sortable {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.ingredients-table th.sortable:hover {
+  background-color: rgba(184, 134, 11, 0.1);
+}
+
+.ingredient-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.quantity {
+  font-weight: var(--font-weight-medium);
+}
+
+.quantity.in-stock {
+  color: var(--color-success);
+}
+
+.quantity.low-stock {
+  color: var(--color-warning);
+}
+
+.quantity.out-of-stock {
+  color: var(--color-error);
+}
+
+.price-cell {
+  color: var(--color-text-secondary);
+}
+
+.total-value {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .ingredients-table {
+    font-size: var(--font-size-sm);
+  }
+
+  .actions-cell {
+    flex-direction: column;
+  }
+}

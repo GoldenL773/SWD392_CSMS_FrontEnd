@@ -1,0 +1,26 @@
+/* AttendanceTable Component Styles */
+
+.attendance-table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.hours-cell {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.status-present {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-success);
+}
+
+.status-absent {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+}
+
+.status-late {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-warning);
+}
