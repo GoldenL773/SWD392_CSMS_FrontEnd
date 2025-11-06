@@ -7,7 +7,7 @@
 **Project Structure & Setup:**
 - ✅ React project initialized with Vite
 - ✅ Folder structure following `file-structure.md`
-- ✅ All files use `.tsx` extension (universal TSX convention)
+- ✅ All files use `.jsx` extension (universal jsx convention)
 - ✅ Package.json with dependencies
 - ✅ Global styles and CSS variables (dark mode theme)
 - ✅ Utility functions and constants
@@ -65,10 +65,10 @@ The application will open at `http://localhost:3000`
 
 #### 3.1 Inventory Page (`/inventory`)
 **Components to create:**
-- `src/features/inventory/ProductsTable.tsx` - Display products with CRUD
-- `src/features/inventory/IngredientsTable.tsx` - Display ingredients with CRUD
-- `src/features/inventory/ProductForm.tsx` - Add/Edit product form
-- `src/features/inventory/IngredientForm.tsx` - Add/Edit ingredient form
+- `src/features/inventory/ProductsTable.jsx` - Display products with CRUD
+- `src/features/inventory/IngredientsTable.jsx` - Display ingredients with CRUD
+- `src/features/inventory/ProductForm.jsx` - Add/Edit product form
+- `src/features/inventory/IngredientForm.jsx` - Add/Edit ingredient form
 
 **Entity mapping:**
 - Products: `id`, `name`, `category`, `price`, `status`
@@ -76,10 +76,10 @@ The application will open at `http://localhost:3000`
 
 #### 3.2 Employees Page (`/employees`)
 **Components to create:**
-- `src/features/employees/EmployeeCard.tsx` - Employee grid card
-- `src/features/employees/EmployeeDetailView.tsx` - Split-screen detail view
-- `src/features/employees/AttendanceTable.tsx` - Attendance records
-- `src/features/employees/SalaryView.tsx` - Salary information
+- `src/features/employees/EmployeeCard.jsx` - Employee grid card
+- `src/features/employees/EmployeeDetailView.jsx` - Split-screen detail view
+- `src/features/employees/AttendanceTable.jsx` - Attendance records
+- `src/features/employees/SalaryView.jsx` - Salary information
 
 **Entity mapping:**
 - Employee: `id`, `fullName`, `dob`, `gender`, `phone`, `position`, `hireDate`, `status`
@@ -88,9 +88,9 @@ The application will open at `http://localhost:3000`
 
 #### 3.3 Orders Page (`/orders`)
 **Components to create:**
-- `src/features/orders/StatusFilter.tsx` - Filter by order status
-- `src/features/orders/OrdersTable.tsx` - Orders table with expandable rows
-- `src/features/orders/OrderForm.tsx` - Create new order
+- `src/features/orders/StatusFilter.jsx` - Filter by order status
+- `src/features/orders/OrdersTable.jsx` - Orders table with expandable rows
+- `src/features/orders/OrderForm.jsx` - Create new order
 
 **Entity mapping:**
 - Order: `id`, `employee`, `orderDate`, `totalAmount`, `status`, `orderItems`
@@ -98,9 +98,9 @@ The application will open at `http://localhost:3000`
 
 #### 3.4 Reports Page (`/reports`)
 **Components to create:**
-- `src/features/reports/DailyReportChart.tsx` - Bar/pie charts using CSS
-- `src/features/reports/IngredientTransactionTable.tsx` - Transaction logs
-- `src/features/reports/ReportFilters.tsx` - Date range filters
+- `src/features/reports/DailyReportChart.jsx` - Bar/pie charts using CSS
+- `src/features/reports/IngredientTransactionTable.jsx` - Transaction logs
+- `src/features/reports/ReportFilters.jsx` - Date range filters
 
 **Entity mapping:**
 - DailyReport: `id`, `reportDate`, `totalOrders`, `totalRevenue`, `totalIngredientCost`, `totalWorkingHours`
@@ -108,8 +108,8 @@ The application will open at `http://localhost:3000`
 
 #### 3.5 Admin Page (`/admin`) - Protected
 **Components to create:**
-- `src/features/admin/EmployeeForm.tsx` - Create/edit employees
-- `src/features/admin/UserRoleManager.tsx` - Manage user roles
+- `src/features/admin/EmployeeForm.jsx` - Create/edit employees
+- `src/features/admin/UserRoleManager.jsx` - Manage user roles
 
 **Entity mapping:**
 - Employee creation/update
@@ -118,8 +118,8 @@ The application will open at `http://localhost:3000`
 
 #### 3.6 Finance Page (`/finance`) - Protected
 **Components to create:**
-- `src/features/finance/FinancialDashboard.tsx` - Financial overview
-- `src/features/finance/SalaryPayoutTable.tsx` - Salary management
+- `src/features/finance/FinancialDashboard.jsx` - Financial overview
+- `src/features/finance/SalaryPayoutTable.jsx` - Salary management
 
 **Entity mapping:**
 - Salary records with employee data
@@ -127,8 +127,8 @@ The application will open at `http://localhost:3000`
 
 #### 3.7 Settings Page (`/settings`)
 **Components to create:**
-- `src/features/settings/ProfileSettings.tsx` - User profile
-- `src/features/settings/AuditLog.tsx` - View SalaryUpdatedHistory
+- `src/features/settings/ProfileSettings.jsx` - User profile
+- `src/features/settings/AuditLog.jsx` - View SalaryUpdatedHistory
 
 ### Phase 4: Additional Common Components
 
@@ -197,8 +197,8 @@ src/
 ├── routes/                # ✅ AppRoutes, ProtectedRoute
 ├── styles/                # ✅ global.css, variables.css
 ├── utils/                 # ✅ constants, formatters, mockData
-├── App.tsx                # ✅ Root component
-└── index.tsx              # ✅ Entry point
+├── App.jsx                # ✅ Root component
+└── index.jsx              # ✅ Entry point
 ```
 
 ## Development Guidelines
@@ -211,7 +211,7 @@ Always verify that component props and form fields match ENTITIES.md exactly:
 - Handle relationships properly
 
 ### 2. Component Structure
-```tsx
+```jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import './ComponentName.css';
@@ -234,7 +234,7 @@ export default ComponentName;
 
 ### 3. API Integration
 Replace mock implementations in API files with actual backend calls:
-```tsx
+```jsx
 // Current (mock)
 return new Promise((resolve) => {
   setTimeout(() => resolve(mockData), 300);
@@ -274,7 +274,7 @@ Implement proper error handling:
 
 ## Known Issues / Notes
 
-1. **TypeScript Errors:** The project uses JavaScript in `.tsx` files, so TypeScript errors are expected and won't affect runtime.
+1. **TypeScript Errors:** The project uses JavaScript in `.jsx` files, so TypeScript errors are expected and won't affect runtime.
 
 2. **Mock Data:** All API calls currently use mock data. Replace with actual backend integration.
 

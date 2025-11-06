@@ -47,6 +47,43 @@
   color: var(--color-text-primary);
 }
 
+.actions-cell {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
+
+.status-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.status-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.status-btn.cancel-btn {
+  background-color: var(--color-error);
+}
+
+.status-btn.cancel-btn:hover {
+  background-color: #c53030;
+}
+
+.status-preparing {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
 .status-pending {
   background-color: rgba(245, 158, 11, 0.1);
   color: var(--color-warning);
