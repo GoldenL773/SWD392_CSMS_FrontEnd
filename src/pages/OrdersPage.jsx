@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import { useToast } from '../hooks/useToast.jsx';
 import { useOrderNotifications } from '../hooks/useOrderNotifications.jsx';
 import { getAllOrders, createOrder, updateOrderStatus } from '../api/orderApi.jsx';
-import { getAllEmployees } from '../api/employeeApi.jsx';
+import { getAllEmployees, getEmployeeForUser } from '../api/employeeApi.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import OrderNotificationToast from '../components/common/OrderNotificationToast/index.jsx';
 import { ORDER_STATUS } from '../utils/constants.jsx';
@@ -77,7 +77,17 @@ const OrdersPage = () => {
   const orders = ordersData?.content || ordersData || [];
   const totalOrders = ordersData?.totalElements || orders.length;
   const totalPages = ordersData?.totalPages || Math.ceil(totalOrders / pageSize);
-  const { data: employees } = useApiQuery(getAllEmployees, {}, []);
+
+  // Only fetch employees if user has ADMIN or MANAGER role (STAFF users can't access this endpoint)
+  const hasEmployeeAccess = user?.roles?.some(role =>
+    role.name === 'ROLE_ADMIN' || role.name === 'ROLE_MANAGER'
+  );
+  const { data: employees } = useApiQuery(
+    getAllEmployees,
+    {},
+    [],
+    { enabled: hasEmployeeAccess }
+  );
   const { mutate: createOrderMutation, loading: creating } = useApiMutation(createOrder);
   const { mutate: updateStatusMutation } = useApiMutation(updateOrderStatus);
 
@@ -158,10 +168,21 @@ const OrdersPage = () => {
   const handleCreateOrder = async (orderData) => {
     try {
       // Get current user's employee ID
-      const currentEmployee = employees?.find(emp => emp.userId === user?.id);
+      let currentEmployee = employees?.find(emp => emp.userId === user?.id);
+
+      // If we couldn't find it in the employees list (or list was not accessible), try a dedicated API helper
       if (!currentEmployee) {
-        toast.error('Could not find employee profile for current user');
-        return;
+        try {
+          currentEmployee = await getEmployeeForUser(user);
+        } catch (err) {
+          // Distinguish permission problem vs missing profile
+          const msg = err.message && /not found/i.test(err.message) ?
+            'Could not find employee profile for current user' :
+            'Unable to resolve employee profile (possible permission issue)';
+          toast.error(msg);
+          console.error('Employee resolution error:', err);
+          return;
+        }
       }
 
       const requestData = {
@@ -227,22 +248,25 @@ const OrdersPage = () => {
         {showFilters && (
           <div className="advanced-filters">
             <div className="filter-row">
-              <div className="filter-group">
-                <label htmlFor="employee-filter">Employee</label>
-                <select
-                  id="employee-filter"
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="ALL">All Employees</option>
-                  {employees?.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Only show employee filter for ADMIN/MANAGER users */}
+              {hasEmployeeAccess && (
+                <div className="filter-group">
+                  <label htmlFor="employee-filter">Employee</label>
+                  <select
+                    id="employee-filter"
+                    value={selectedEmployee}
+                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">All Employees</option>
+                    {employees?.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.fullName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="filter-group">
                 <label htmlFor="sort-filter">Sort By</label>

@@ -18,6 +18,53 @@ export const getEmployeeById = async (id) => {
 };
 
 /**
+ * Attempt to resolve the employee profile for the given user.
+ * Tries a few endpoints/filters in a best-effort order:
+ * 1) GET /employees?userId={user.id} (via getAllEmployees)
+ * 2) GET /employees/user/{userId}
+ * 3) GET /employees/me
+ * 4) GET /employees/{userId}
+ * Throws if none of the attempts succeed.
+ */
+export const getEmployeeForUser = async (user) => {
+  if (!user) throw new Error('No user provided');
+
+  // 1) Try filtered list (many backends support query filters)
+  try {
+    const list = await getAllEmployees({ userId: user.id });
+    if (Array.isArray(list) && list.length > 0) return list[0];
+  } catch (err) {
+    // ignore and try next
+  }
+
+  // 2) Try a user-scoped endpoint
+  try {
+    const byUser = await apiClient.get(`/employees/user/${user.id}`);
+    if (byUser) return byUser;
+  } catch (err) {
+    // ignore and try next
+  }
+
+  // 3) Try a "me" endpoint
+  try {
+    const me = await apiClient.get('/employees/me');
+    if (me) return me;
+  } catch (err) {
+    // ignore and try next
+  }
+
+  // 4) As a last resort try by id (some systems use same id for user/employee)
+  try {
+    const byId = await getEmployeeById(user.id);
+    if (byId) return byId;
+  } catch (err) {
+    // ignore
+  }
+
+  throw new Error('Employee profile not found for user');
+};
+
+/**
  * Get employee attendance records
  */
 export const getEmployeeAttendance = async (employeeId, params = {}) => {
