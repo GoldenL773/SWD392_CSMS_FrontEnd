@@ -34,17 +34,20 @@ const LoginPage = () => {
     try {
       const userData = await login(formData.username, formData.password);
       
-      // Redirect based on user role
-      if (userData?.roles) {
-        if (userData.roles.includes('STAFF')) {
-          navigate(ROUTES.ATTENDANCE);
-        } else if (userData.roles.includes('BARISTA')) {
-          navigate(ROUTES.ORDERS);
-        } else if (userData.roles.includes('FINANCE')) {
-          navigate(ROUTES.FINANCE);
-        } else {
-          navigate(ROUTES.DASHBOARD);
-        }
+      // Redirect based on user role - normalize role checks to support both string and object shapes
+      const hasRole = (r) => {
+        if (!userData?.roles) return false;
+        const normalize = (x) => (x || '').toString().toUpperCase().replace(/^ROLE_/, '');
+        const target = normalize(r);
+        return userData.roles.some(role => normalize(typeof role === 'string' ? role : role.name) === target);
+      };
+
+      if (hasRole('STAFF')) {
+        navigate(ROUTES.ATTENDANCE);
+      } else if (hasRole('BARISTA')) {
+        navigate(ROUTES.ORDERS);
+      } else if (hasRole('FINANCE')) {
+        navigate(ROUTES.FINANCE);
       } else {
         navigate(ROUTES.DASHBOARD);
       }

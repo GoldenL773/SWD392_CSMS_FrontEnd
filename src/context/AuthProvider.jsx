@@ -22,7 +22,18 @@ export const AuthProvider = ({ children }) => {
         const userData = localStorage.getItem(STORAGE_KEYS.USER_DATA);
 
         if (token && userData) {
-          setUser(JSON.parse(userData));
+          // Normalize stored user data so roles are consistently objects with a `name` property
+          const parsed = JSON.parse(userData);
+          const normalizedRoles = Array.isArray(parsed?.roles)
+            ? parsed.roles.map(role => {
+                if (!role) return role;
+                if (typeof role === 'string') return { name: role };
+                // If object, prefer `name` or `role` or `authority` fields
+                return { name: role.name || role.role || role.authority || '' };
+              })
+            : [];
+
+          setUser({ ...parsed, roles: normalizedRoles });
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
@@ -104,10 +115,11 @@ export const AuthProvider = ({ children }) => {
    */
   const hasRole = (roleName) => {
     if (!user || !user.roles) return false;
-    // Handle both string array and object array formats
-    return user.roles.some(role => 
-      typeof role === 'string' ? role === roleName : role.name === roleName
-    );
+    // Normalize comparison: accept strings or objects, case-insensitive, and strip common prefix 'ROLE_'
+    const normalize = (r) => (r || '').toString().toUpperCase().replace(/^ROLE_/, '');
+    const target = normalize(roleName);
+
+    return user.roles.some(role => normalize(typeof role === 'string' ? role : role.name) === target);
   };
 
   /**

@@ -16,11 +16,16 @@ export const useApiQuery = (apiFunction, params = {}, dependencies = [], options
   const retryCountRef = useRef(0);
   const mountedRef = useRef(true);
   const paramsRef = useRef(params);
-  
-  // Update params ref when params change
+  const apiFunctionRef = useRef(apiFunction);
+
+  // Update refs when params or apiFunction change
   useEffect(() => {
     paramsRef.current = params;
   }, [params]);
+
+  useEffect(() => {
+    apiFunctionRef.current = apiFunction;
+  }, [apiFunction]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -29,34 +34,36 @@ export const useApiQuery = (apiFunction, params = {}, dependencies = [], options
     };
   }, []);
 
-  const fetchData = useCallback(async (isRetry = false) => {
+  // Stable fetch function that reads the latest apiFunction and params from refs
+  const fetchData = async (isRetry = false) => {
     if (!enabled) {
       setLoading(false);
       return;
     }
-    
+
     // Prevent infinite retries
     if (isRetry && retryCountRef.current >= retry) {
       setLoading(false);
       return;
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      const result = await apiFunction(paramsRef.current);
-      
+      const fn = apiFunctionRef.current;
+      const result = await fn(paramsRef.current);
+
       if (mountedRef.current) {
         setData(result);
         retryCountRef.current = 0; // Reset retry count on success
       }
     } catch (err) {
       if (!mountedRef.current) return;
-      
+
       const errorMessage = err.message || 'An error occurred';
       setError(errorMessage);
       console.error('API Query Error:', err);
-      
+
       // Retry logic
       if (retry > 0 && retryCountRef.current < retry) {
         retryCountRef.current++;
@@ -71,13 +78,13 @@ export const useApiQuery = (apiFunction, params = {}, dependencies = [], options
         setLoading(false);
       }
     }
-  }, [apiFunction, enabled, retry, retryDelay]);
+  };
 
   useEffect(() => {
     retryCountRef.current = 0; // Reset retry count when dependencies change
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchData, ...dependencies]);
+  }, [enabled, retry, retryDelay, ...dependencies]);
 
   /**
    * Refetch data manually

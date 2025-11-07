@@ -63,11 +63,11 @@ const AttendancePage = () => {
   const handleCheckIn = useCallback(async () => {
     try {
       await performCheckIn(user?.id);
-      toast.addToast('Checked in successfully!', 'success');
+      toast.success('Checked in successfully!');
       refetchToday();
       refetchHistory();
     } catch (error) {
-      toast.addToast(error.message || 'Failed to check in', 'error');
+      toast.error(error.message || 'Failed to check in');
     }
   }, [user?.id, performCheckIn, toast, refetchToday, refetchHistory]);
   
@@ -75,11 +75,11 @@ const AttendancePage = () => {
   const handleCheckOut = useCallback(async () => {
     try {
       await performCheckOut(user?.id);
-      toast.addToast('Checked out successfully!', 'success');
+      toast.success('Checked out successfully!');
       refetchToday();
       refetchHistory();
     } catch (error) {
-      toast.addToast(error.message || 'Failed to check out', 'error');
+      toast.error(error.message || 'Failed to check out');
     }
   }, [user?.id, performCheckOut, toast, refetchToday, refetchHistory]);
   

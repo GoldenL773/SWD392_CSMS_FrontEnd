@@ -26,14 +26,14 @@ export const getAttendanceById = (id) => {
 
 // Get all attendance for an employee
 export const getEmployeeAttendance = (employeeId, params = {}) => {
-  return apiClient.get(`/attendance/employee/${employeeId}`, { params });
+  // apiClient.get expects a plain params object as the second argument
+  return apiClient.get(`/attendance/employee/${employeeId}`, params);
 };
 
 // Get attendance by date range
 export const getEmployeeAttendanceByDateRange = (employeeId, startDate, endDate) => {
-  return apiClient.get(`/attendance/employee/${employeeId}/range`, {
-    params: { startDate, endDate }
-  });
+  // send startDate and endDate as query params (plain object)
+  return apiClient.get(`/attendance/employee/${employeeId}/range`, { startDate, endDate });
 };
 
 // Get attendance for a specific date
@@ -53,7 +53,5 @@ export const deleteAttendance = (id) => {
 
 // Get total working hours
 export const getTotalWorkingHours = (employeeId, startDate, endDate) => {
-  return apiClient.get(`/attendance/employee/${employeeId}/total-hours`, {
-    params: { startDate, endDate }
-  });
+  return apiClient.get(`/attendance/employee/${employeeId}/total-hours`, { startDate, endDate });
 };

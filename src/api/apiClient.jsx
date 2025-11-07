@@ -37,7 +37,21 @@ class ApiClient {
    * Make HTTP request
    */
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    // Normalize baseURL and endpoint to avoid duplicate path segments like '/api/api/...'
+    const base = (this.baseURL || '').toString().replace(/\/+$/, ''); // remove trailing slashes
+    let endpointNormalized = endpoint || '';
+
+    // Ensure endpoint starts with a single '/'
+    endpointNormalized = endpointNormalized.toString().replace(/^\/*/, '/');
+
+    // If base already ends with '/api' and endpoint also begins with '/api', strip the leading '/api' from endpoint
+    if (base.toLowerCase().endsWith('/api') && endpointNormalized.toLowerCase().startsWith('/api')) {
+      endpointNormalized = endpointNormalized.replace(/^\/api/i, '');
+      // ensure single leading slash
+      endpointNormalized = endpointNormalized.replace(/^\/*/, '/');
+    }
+
+    const url = `${base}${endpointNormalized}`;
     const config = {
       ...options,
       headers: {
@@ -67,7 +81,8 @@ class ApiClient {
 
       return data;
     } catch (error) {
-      console.error('API Request Error:', error);
+      // Log the final URL to help debug duplicate-prefix issues
+      console.error('API Request Error:', error, 'Request URL:', url);
       throw error;
     }
   }
