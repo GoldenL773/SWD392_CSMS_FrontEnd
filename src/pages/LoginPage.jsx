@@ -108,11 +108,7 @@ const LoginPage = () => {
             Login
           </Button>
 
-          <div className="login-hint">
-            <p>Demo credentials:</p>
-            <p><strong>Username:</strong> admin, manager01, or staff01</p>
-            <p><strong>Password:</strong> password</p>
-          </div>
+       
         </form>
       </div>
     </div>

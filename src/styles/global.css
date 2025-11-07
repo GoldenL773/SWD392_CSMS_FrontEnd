@@ -97,6 +97,19 @@ textarea::placeholder {
   opacity: 0.6;
 }
 
+/* Fix dropdown option colors globally */
+select option {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: var(--spacing-sm);
+}
+
+select option:checked,
+select option:hover {
+  background-color: var(--color-primary);
+  color: white;
+}
+
 button {
   cursor: pointer;
   border: none;

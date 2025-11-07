@@ -102,10 +102,18 @@ class ApiClient {
   /**
    * POST request
    */
-  async post(endpoint, data) {
-    return this.request(endpoint, {
+  async post(endpoint, data, options = {}) {
+    // Handle query params if provided in options
+    let url = endpoint;
+    if (options.params) {
+      const queryString = new URLSearchParams(options.params).toString();
+      url = queryString ? `${endpoint}?${queryString}` : endpoint;
+    }
+    
+    return this.request(url, {
       method: 'POST',
-      body: JSON.stringify(data)
+      body: data ? JSON.stringify(data) : undefined,
+      ...options
     });
   }
 

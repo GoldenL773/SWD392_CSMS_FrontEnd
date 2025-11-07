@@ -60,12 +60,12 @@ const RevenueChart = ({ reports }) => {
 
 RevenueChart.propTypes = {
   reports: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.number.isRequired,
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
     reportDate: PropTypes.string.isRequired,
     totalOrders: PropTypes.number.isRequired,
     totalRevenue: PropTypes.number.isRequired,
-    totalIngredientCost: PropTypes.number.isRequired,
-    totalWorkingHours: PropTypes.number.isRequired
+    totalIngredientCost: PropTypes.number,
+    totalWorkingHours: PropTypes.number
   })).isRequired
 };
 

@@ -10,11 +10,7 @@ import './Sidebar.css';
  * Navigation sidebar for desktop
  */
 const Sidebar = ({ isOpen, onClose }) => {
-  const { hasAnyRole, user } = useAuth();
-
-  // Debug: Log user and roles
-  console.log('Sidebar - Current user:', user);
-  console.log('Sidebar - User roles:', user?.roles);
+  const { hasAnyRole, user, isAuthenticated } = useAuth();
 
   // Define all menu items with role requirements
   // Manager (MANAGER): All navigation links
@@ -34,12 +30,22 @@ const Sidebar = ({ isOpen, onClose }) => {
   ];
 
   // Filter items based on user roles - only show items user has access to
-  const navItems = user && user.roles && user.roles.length > 0
+  // Show items if user is authenticated and has matching roles; use hasAnyRole for checks
+  const navItems = isAuthenticated()
     ? allNavItems.filter(item => hasAnyRole(item.roles))
-    : []; // Show nothing if not logged in or no roles
+    : [];
 
-  const adminItems = user && hasAnyRole(['ADMIN']) ? [
-    { path: ROUTES.ADMIN, label: 'Admin', icon: '🔐' }
+  // Debug log if no items are shown for authenticated user
+  if (isAuthenticated() && navItems.length === 0 && user) {
+    console.warn('Sidebar: No menu items visible for user', { 
+      username: user.username, 
+      roles: user.roles,
+      roleNames: user.roleNames 
+    });
+  }
+
+  const adminItems = user && hasAnyRole(['ADMIN', 'MANAGER']) ? [
+    { path: ROUTES.ADMIN, label: 'Employee Mgmt', icon: '👥' }
   ] : [];
 
   return (

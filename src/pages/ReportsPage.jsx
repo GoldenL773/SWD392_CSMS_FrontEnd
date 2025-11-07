@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllOrders } from '../api/orderApi.jsx';
 import { getDailyReports, getIngredientTransactions } from '../api/reportApi.jsx';
-import { ORDER_STATUS } from '../utils/constants.jsx';
+import { ORDER_STATUS, API_BASE_URL } from '../utils/constants.jsx';
 import Card from '../components/common/Card/index.jsx';
 import RevenueChart from '../features/reports/RevenueChart.jsx';
 import TransactionTable from '../features/reports/TransactionTable.jsx';
@@ -14,7 +14,13 @@ import './ReportsPage.css';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('revenue');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // Default to yesterday to catch orders from previous day
+  const getDefaultReportDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1); // Yesterday
+    return date.toISOString().split('T')[0];
+  };
+  const [selectedDate, setSelectedDate] = useState(getDefaultReportDate());
   
   // Set default date range to last 30 days
   const getDefaultStartDate = () => {
@@ -27,7 +33,7 @@ const ReportsPage = () => {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   
   // Fetch all orders with large page size to get complete data
-  const { data: ordersData, loading: ordersLoading } = useApiQuery(
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useApiQuery(
     getAllOrders, 
     { size: 10000 }, 
     []
@@ -35,8 +41,61 @@ const ReportsPage = () => {
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
   const { data: transactions, loading: transactionsLoading } = useApiQuery(getIngredientTransactions, {}, []);
   
+  // Log API errors and authentication status
+  useEffect(() => {
+    const token = localStorage.getItem('csms_auth_token');
+    const user = localStorage.getItem('csms_user_data');
+    
+    console.log('🔐 Authentication Status:', {
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : null,
+      hasUserData: !!user,
+      userData: user ? JSON.parse(user) : null,
+      allLocalStorageKeys: Object.keys(localStorage)
+    });
+    
+    if (ordersError) {
+      console.error('❌ Orders API Error:', ordersError);
+    }
+    
+    // Test backend connectivity
+    console.log('🔍 Testing backend at:', API_BASE_URL);
+    fetch('http://localhost:8080/api/orders?size=5', {
+      headers: token ? {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      } : {}
+    })
+      .then(res => {
+        console.log('🌐 Backend Response Status:', res.status, res.statusText);
+        if (!res.ok) {
+          return res.text().then(text => {
+            console.error('Backend Error Response:', text);
+            throw new Error(`${res.status}: ${text}`);
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('📦 Backend Data Sample:', {
+          totalElements: data?.totalElements,
+          totalPages: data?.totalPages,
+          contentLength: data?.content?.length,
+          firstOrder: data?.content?.[0]
+        });
+      })
+      .catch(err => console.error('🔴 Backend Connection Error:', err.message));
+  }, [ordersError]);
+  
   // Extract orders from paginated response
   const allOrders = useMemo(() => {
+    console.log('Orders API Response:', {
+      ordersData,
+      isArray: Array.isArray(ordersData),
+      hasContent: ordersData?.content,
+      ordersDataType: typeof ordersData,
+      ordersDataKeys: ordersData ? Object.keys(ordersData) : null
+    });
     return ordersData?.content || ordersData || [];
   }, [ordersData]);
 
@@ -45,8 +104,11 @@ const ReportsPage = () => {
     if (!allOrders) return [];
     
     return allOrders.filter(order => {
-      // Only include completed orders
-      if (order.status !== ORDER_STATUS.COMPLETED) return false;
+      // Only include completed orders - handle any case variation
+      const orderStatus = (order.status || '').toString().toUpperCase();
+      const isCompleted = orderStatus === 'COMPLETED';
+      
+      if (!isCompleted) return false;
       
       const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
       
@@ -59,18 +121,26 @@ const ReportsPage = () => {
   
   // Group orders by date for chart
   const dailyRevenue = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) return [];
+    
     const revenueByDate = {};
     
+    // filteredOrders already has completed orders only
     filteredOrders.forEach(order => {
       const date = new Date(order.orderDate).toISOString().split('T')[0];
       if (!revenueByDate[date]) {
         revenueByDate[date] = {
+          id: date.replace(/-/g, ''), // Generate numeric-like id from date
           reportDate: date,
           totalRevenue: 0,
-          totalOrders: 0
+          totalOrders: 0,
+          totalIngredientCost: 0,
+          totalWorkingHours: 0
         };
       }
-      revenueByDate[date].totalRevenue += order.totalAmount || 0;
+      // Ensure totalAmount is a number (backend might return string or number)
+      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
+      revenueByDate[date].totalRevenue += amount || 0;
       revenueByDate[date].totalOrders += 1;
     });
     
@@ -100,7 +170,11 @@ const ReportsPage = () => {
       return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0 };
     }
 
-    const totalRevenue = filteredOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    // Ensure totalAmount is a number (backend might return string or number)
+    const totalRevenue = filteredOrders.reduce((sum, order) => {
+      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
+      return sum + (amount || 0);
+    }, 0);
     const totalOrders = filteredOrders.length;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
     
@@ -117,11 +191,75 @@ const ReportsPage = () => {
     };
   }, [filteredOrders, dailyRevenue]);
 
-  // Get selected report for export
+  // Get selected report for export - calculate from orders if not in backend
   const selectedReport = useMemo(() => {
-    if (!reports) return null;
-    return reports.find(r => r.reportDate === selectedDate);
-  }, [reports, selectedDate]);
+    // First try to get from backend reports
+    const backendReport = reports?.find(r => r.reportDate === selectedDate);
+    
+    // Otherwise, calculate from orders
+    // Use ALL orders, not filteredOrders (which is filtered by date range)
+    const ordersForDate = allOrders.filter(order => {
+      const orderStatus = (order.status || '').toString().toUpperCase();
+      const isCompleted = orderStatus === 'COMPLETED';
+      const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
+      const matchesDate = orderDate === selectedDate;
+      
+      return isCompleted && matchesDate;
+    });
+    
+    console.log('Daily Report Debug:', {
+      selectedDate,
+      allOrdersCount: allOrders.length,
+      filteredOrdersCount: filteredOrders.length,
+      ordersForDateCount: ordersForDate.length,
+      sampleOrder: ordersForDate[0],
+      ordersForDateDetailed: ordersForDate.map(o => ({
+        id: o.id,
+        status: o.status,
+        date: new Date(o.orderDate).toISOString().split('T')[0],
+        totalAmount: o.totalAmount,
+        rawOrder: o
+      })),
+      allOrdersSample: allOrders.slice(0, 5).map(o => ({
+        id: o.id,
+        status: o.status,
+        date: new Date(o.orderDate).toISOString().split('T')[0],
+        totalAmount: o.totalAmount
+      }))
+    });
+    
+    if (ordersForDate.length === 0 && !backendReport) {
+      return null;
+    }
+    
+    // Calculate revenue from completed orders
+    // Ensure totalAmount is a number (backend might return string or number)
+    const totalRevenue = ordersForDate.reduce((sum, order) => {
+      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
+      return sum + (amount || 0);
+    }, 0);
+    const totalOrders = ordersForDate.length;
+    
+    console.log('Daily Report calculation:', {
+      selectedDate,
+      totalOrders,
+      totalRevenue,
+      ordersForDate
+    });
+    
+    // Use backend values for cost/hours if available, otherwise 0
+    const totalIngredientCost = backendReport?.totalIngredientCost || 0;
+    const totalWorkingHours = backendReport?.totalWorkingHours || 0;
+    
+    return {
+      reportDate: selectedDate,
+      totalOrders,
+      totalRevenue,
+      totalIngredientCost,
+      totalWorkingHours,
+      notes: backendReport?.notes || ''
+    };
+  }, [reports, selectedDate, allOrders]);
   
   const handleClearFilters = () => {
     setStartDate(getDefaultStartDate());
@@ -134,6 +272,21 @@ const ReportsPage = () => {
         <h1>Reports & Analytics</h1>
         <p>View business performance and transaction history</p>
       </div>
+
+      {ordersError && (
+        <div style={{
+          backgroundColor: '#fee',
+          border: '1px solid #fcc',
+          padding: '16px',
+          marginBottom: '20px',
+          borderRadius: '8px',
+          color: '#c00'
+        }}>
+          <strong>⚠️ Error loading orders:</strong> {ordersError}
+          <br />
+          <small>Check console for details. Backend server may be offline.</small>
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card">
@@ -198,7 +351,7 @@ const ReportsPage = () => {
       </div>
 
       {activeTab === 'revenue' && (
-        <Card title="Daily Revenue" subtitle={`${dailyRevenue.length} days with completed orders`}>
+        <Card title="Daily Revenue" subtitle={`${dailyRevenue?.length || 0} days with completed orders`}>
           {ordersLoading ? (
             <div className="loading-container">
               <div className="loading"></div>

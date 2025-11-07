@@ -72,7 +72,7 @@ const AdminPage = () => {
   return (
     <div className="admin-page">
       <div className="page-header">
-        <h1>Admin Panel</h1>
+        <h1>Employee Management</h1>
         <p>Manage employees and system users</p>
       </div>
 

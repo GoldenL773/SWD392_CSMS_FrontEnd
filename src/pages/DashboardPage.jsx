@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
+import { getAllOrders } from '../api/orderApi.jsx';
 import { getDailyReports } from '../api/reportApi.jsx';
 import { formatCurrency, formatNumber } from '../utils/formatters.jsx';
 import './DashboardPage.css';
@@ -9,9 +10,39 @@ import './DashboardPage.css';
  * Main dashboard with business metrics and quick stats
  */
 const DashboardPage = () => {
-  const { data: reports, loading, error } = useApiQuery(getDailyReports, {}, []);
+  const { data: ordersData, loading: ordersLoading } = useApiQuery(getAllOrders, { size: 10000 }, []);
+  const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
 
-  const latestReport = reports && reports.length > 0 ? reports[0] : null;
+  const loading = ordersLoading || reportsLoading;
+  
+  // Calculate today's metrics from orders
+  const todayMetrics = useMemo(() => {
+    const orders = ordersData?.content || ordersData || [];
+    const today = new Date().toISOString().split('T')[0];
+    
+    const todayOrders = orders.filter(order => {
+      const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
+      const orderStatus = (order.status || '').toString().toUpperCase();
+      return orderDate === today && orderStatus === 'COMPLETED';
+    });
+    
+    const totalRevenue = todayOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalOrders = todayOrders.length;
+    
+    // Get ingredient cost and working hours from backend report if available
+    const todayReport = reports?.find(r => r.reportDate === today);
+    const totalIngredientCost = todayReport?.totalIngredientCost || 0;
+    const totalWorkingHours = todayReport?.totalWorkingHours || 0;
+    
+    return {
+      totalOrders,
+      totalRevenue,
+      totalIngredientCost,
+      totalWorkingHours
+    };
+  }, [ordersData, reports]);
+  
+  const latestReport = todayMetrics;
 
   return (
     <div className="dashboard-page">
@@ -27,13 +58,8 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {error && (
-        <div className="dashboard-error">
-          <p>Error loading dashboard: {error}</p>
-        </div>
-      )}
 
-      {latestReport && (
+      {!loading && (
         <>
           <div className="stats-grid">
             <div className="stat-card">

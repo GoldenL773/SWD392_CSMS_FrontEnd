@@ -14,7 +14,7 @@ export const ROUTES = {
   MENU: '/menu',
   REPORTS: '/reports',
   ATTENDANCE: '/attendance',
-  ADMIN: '/admin',
+  ADMIN: '/em-mgmt',
   FINANCE: '/finance',
   SETTINGS: '/settings',
   NOT_FOUND: '/404'
@@ -25,7 +25,8 @@ export const ROLES = {
   MANAGER: 'MANAGER',
   STAFF: 'STAFF',
   ADMIN: 'ADMIN',
-  FINANCE: 'FINANCE'
+  FINANCE: 'FINANCE',
+  BARISTA: 'BARISTA'
 };
 
 // Product Status
@@ -36,10 +37,10 @@ export const PRODUCT_STATUS = {
 
 // Order Status (matching backend exactly)
 export const ORDER_STATUS = {
-  PENDING: 'Pending',
-  PROCESSING: 'Processing',
-  COMPLETED: 'Completed',
-  CANCELLED: 'Cancelled'
+  PENDING: 'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
 };
 
 // Employee Status
@@ -94,7 +95,8 @@ export const EMPLOYEE_POSITIONS = [
   'Barista',
   'Cashier',
   'Kitchen Staff',
-  'Cleaner'
+  'Cleaner',
+  'Finance'
 ];
 
 // Pagination

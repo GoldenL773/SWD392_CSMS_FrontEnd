@@ -114,7 +114,10 @@ const OrdersPage = () => {
     
     // Filter by employee
     if (selectedEmployee !== 'ALL') {
-      filtered = filtered.filter((order) => order.employee?.id === parseInt(selectedEmployee));
+      filtered = filtered.filter((order) => 
+        order.employeeId === parseInt(selectedEmployee) || 
+        order.employee?.id === parseInt(selectedEmployee)
+      );
     }
     
     // Filter by date range

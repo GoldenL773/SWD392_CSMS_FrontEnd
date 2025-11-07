@@ -84,10 +84,10 @@ const TransactionTable = ({ transactions, loading }) => {
                     {transaction.type}
                   </span>
                 </td>
-                <td className="ingredient-name">{transaction.ingredient?.name || 'N/A'}</td>
-                <td>{transaction.employee?.fullName || 'N/A'}</td>
+                <td className="ingredient-name">{transaction.ingredientName || 'N/A'}</td>
+                <td>{transaction.employeeName || 'N/A'}</td>
                 <td className="quantity-cell">
-                  {formatNumber(transaction.quantity, 2)} {transaction.ingredient?.unit || ''}
+                  {formatNumber(transaction.quantity, 2)}
                 </td>
                 <td>{formatDateTime(transaction.transactionDate)}</td>
               </tr>
@@ -102,8 +102,10 @@ const TransactionTable = ({ transactions, loading }) => {
 TransactionTable.propTypes = {
   transactions: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number.isRequired,
-    ingredient: PropTypes.object,
-    employee: PropTypes.object,
+    ingredientId: PropTypes.number,
+    ingredientName: PropTypes.string,
+    employeeId: PropTypes.number,
+    employeeName: PropTypes.string,
     type: PropTypes.string.isRequired,
     quantity: PropTypes.number.isRequired,
     transactionDate: PropTypes.string.isRequired

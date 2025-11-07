@@ -66,8 +66,11 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     }
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Invalid phone number format';
+    } else {
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 9 || phoneDigits.length > 12) {
+        newErrors.phone = 'Phone number must be 9-12 digits';
+      }
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
@@ -92,10 +95,25 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     e.preventDefault();
     if (!validate()) return;
 
+    // Map position to role
+    const positionToRole = {
+      'Manager': 'MANAGER',
+      'Finance': 'FINANCE',
+      'Barista': 'BARISTA',
+      'Cashier': 'STAFF',
+      'Kitchen Staff': 'STAFF',
+      'Cleaner': 'STAFF'
+    };
+
+    const role = positionToRole[formData.position] || 'STAFF';
+
     const submitData = {
       ...formData,
-      salary: parseFloat(formData.salary)
+      salary: parseFloat(formData.salary),
+      roles: [role] // Assign role based on position
     };
+
+    console.log('Submitting employee data:', submitData);
 
     onSubmit(submitData);
   };
@@ -211,7 +229,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="salary">Monthly Salary (VND) *</label>
+            <label htmlFor="salary">Hourly Rate (VND/hour) *</label>
             <input
               type="number"
               id="salary"

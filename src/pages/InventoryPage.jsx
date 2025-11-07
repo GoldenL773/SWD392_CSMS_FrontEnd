@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
 import { useToast } from '../hooks/useToast.jsx';
 import { getAllProducts, createProduct, updateProduct, deleteProduct } from '../api/productApi.jsx';
-import { getAllIngredients, createIngredient, updateIngredient, deleteIngredient } from '../api/ingredientApi.jsx';
+import { getAllIngredients, createIngredient, updateIngredient, deleteIngredient, recordTransaction } from '../api/ingredientApi.jsx';
+import { PRODUCT_CATEGORIES } from '../utils/constants.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
@@ -28,6 +29,11 @@ const InventoryPage = () => {
   const [productPage, setProductPage] = useState(0);
   const [ingredientPage, setIngredientPage] = useState(0);
   const pageSize = 10;
+  
+  // Filter state
+  const [productSearch, setProductSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [ingredientSearch, setIngredientSearch] = useState('');
 
   // Fetch data with pagination
   const { data: productsData, loading: productsLoading, refetch: refetchProducts } = useApiQuery(
@@ -42,10 +48,22 @@ const InventoryPage = () => {
   );
   
   // Extract content from paginated response
-  const products = productsData?.content || productsData || [];
-  const ingredients = ingredientsData?.content || ingredientsData || [];
-  const totalProducts = productsData?.totalElements || products.length;
-  const totalIngredients = ingredientsData?.totalElements || ingredients.length;
+  const allProducts = productsData?.content || productsData || [];
+  const allIngredients = ingredientsData?.content || ingredientsData || [];
+  const totalProducts = productsData?.totalElements || allProducts.length;
+  const totalIngredients = ingredientsData?.totalElements || allIngredients.length;
+  
+  // Filter products
+  const products = allProducts.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(productSearch.toLowerCase());
+    const matchesCategory = categoryFilter === 'ALL' || product.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+  
+  // Filter ingredients
+  const ingredients = allIngredients.filter(ingredient =>
+    ingredient.name.toLowerCase().includes(ingredientSearch.toLowerCase())
+  );
 
   // Mutations
   const { mutate: createProductMutation, loading: creating } = useApiMutation(createProduct);
@@ -86,14 +104,40 @@ const InventoryPage = () => {
     }
   };
 
-  const handleTransactionSubmit = async (data) => {
+  const handleTransactionSubmit = async (transactions) => {
     try {
-      console.log('Recording transaction:', data);
-      // TODO: Call transaction API
-      toast.success('Transaction recorded successfully!');
-      setIsTransactionModalOpen(false);
+      console.log('Submitting transactions:', transactions);
+      
+      // Record transactions sequentially to better handle errors
+      let successCount = 0;
+      let errors = [];
+      
+      for (const transaction of transactions) {
+        try {
+          await recordTransaction(transaction);
+          successCount++;
+        } catch (err) {
+          console.error('Transaction error:', err);
+          errors.push(`${transaction.ingredientId}: ${err.message}`);
+        }
+      }
+      
+      if (successCount > 0) {
+        toast.success(`${successCount} transaction${successCount > 1 ? 's' : ''} recorded successfully!`);
+      }
+      
+      if (errors.length > 0) {
+        toast.error(`Failed to record ${errors.length} transaction(s)`);
+        console.error('Transaction errors:', errors);
+      }
+      
+      if (successCount > 0 || errors.length === 0) {
+        setIsTransactionModalOpen(false);
+      }
+      
       refetchIngredients();
     } catch (error) {
+      console.error('Transaction submit error:', error);
       toast.error('Error recording transaction: ' + error.message);
     }
   };
@@ -145,7 +189,7 @@ const InventoryPage = () => {
       {activeTab === 'products' && (
         <Card
           title="Products"
-          subtitle={`${totalProducts} products total`}
+          subtitle={`${products.length} of ${totalProducts} products`}
           actions={
             <Button onClick={() => {
               setSelectedProduct(null);
@@ -155,6 +199,43 @@ const InventoryPage = () => {
             </Button>
           }
         >
+          <div className="filters-section">
+            <div className="filter-row">
+              <div className="filter-group">
+                <input
+                  type="text"
+                  placeholder="🔍 Search products by name..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+              <div className="filter-group">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="ALL">All Categories</option>
+                  {PRODUCT_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+              {(productSearch || categoryFilter !== 'ALL') && (
+                <Button 
+                  variant="ghost" 
+                  size="small"
+                  onClick={() => {
+                    setProductSearch('');
+                    setCategoryFilter('ALL');
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
           <ProductsTable
             products={products || []}
             loading={productsLoading}
@@ -191,7 +272,7 @@ const InventoryPage = () => {
       {activeTab === 'ingredients' && (
         <Card
           title="Ingredients"
-          subtitle={`${totalIngredients} ingredients total`}
+          subtitle={`${ingredients.length} of ${totalIngredients} ingredients`}
           actions={
             <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
               <Button onClick={() => setIsTransactionModalOpen(true)} variant="secondary">
@@ -206,6 +287,28 @@ const InventoryPage = () => {
             </div>
           }
         >
+          <div className="filters-section">
+            <div className="filter-row">
+              <div className="filter-group">
+                <input
+                  type="text"
+                  placeholder="🔍 Search ingredients by name..."
+                  value={ingredientSearch}
+                  onChange={(e) => setIngredientSearch(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+              {ingredientSearch && (
+                <Button 
+                  variant="ghost" 
+                  size="small"
+                  onClick={() => setIngredientSearch('')}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
           <IngredientsTable
             ingredients={ingredients || []}
             loading={ingredientsLoading}

@@ -114,7 +114,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
                       className="status-btn cancel-btn"
                       onClick={(e) => handleStatusUpdate(e, order.id, ORDER_STATUS.CANCELLED)}
                     >
-                      Cancel
+                      CANCEL
                     </button>
                   )}
                 </td>

@@ -5,9 +5,13 @@ import apiClient from './apiClient.jsx';
  */
 
 // Calculate monthly salaries
-export const calculateMonthlySalaries = (month, year) => {
+export const calculateMonthlySalaries = ({ month, year }) => {
+  console.log('Calculating salaries with params:', { month, year });
   return apiClient.post('/salaries/calculate', null, {
-    params: { month, year }
+    params: { 
+      month: parseInt(month), 
+      year: parseInt(year) 
+    }
   });
 };
 

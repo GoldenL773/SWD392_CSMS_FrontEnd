@@ -26,6 +26,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
   });
   const [productIngredients, setProductIngredients] = useState([]);
   const [errors, setErrors] = useState({});
+  const [ingredientSearch, setIngredientSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
 
   useEffect(() => {
     if (product) {
@@ -57,6 +59,11 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
   };
+
+  // Filter ingredients based on search
+  const filteredIngredients = ingredients.filter(ing => 
+    ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
+  );
 
   const addIngredient = () => {
     setProductIngredients([...productIngredients, {
@@ -113,6 +120,22 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
       <form className="product-form" onSubmit={handleSubmit}>
         <div className="form-section">
           <h3>Product Information</h3>
+          <div className="filters-row">
+            <div className="form-group">
+              <label htmlFor="categoryFilter">Filter by Category</label>
+              <select
+                id="categoryFilter"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="ALL">All Categories</option>
+                {PRODUCT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="name">Product Name *</label>
@@ -196,6 +219,21 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
             </Button>
           </div>
 
+          <div className="ingredient-search">
+            <input
+              type="text"
+              placeholder="🔍 Search ingredients..."
+              value={ingredientSearch}
+              onChange={(e) => setIngredientSearch(e.target.value)}
+              className="search-input"
+            />
+            {ingredientSearch && (
+              <span className="search-results">
+                {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? 's' : ''} found
+              </span>
+            )}
+          </div>
+
           {productIngredients.length === 0 ? (
             <p className="empty-message">No ingredients added yet</p>
           ) : (
@@ -209,7 +247,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                     required
                   >
                     <option value="">-- Select Ingredient --</option>
-                    {ingredients?.map(ing => (
+                    {filteredIngredients?.map(ing => (
                       <option key={ing.id} value={ing.id}>
                         {ing.name} ({ing.unit})
                       </option>
