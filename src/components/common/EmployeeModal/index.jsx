@@ -72,8 +72,8 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
         newErrors.phone = 'Phone number must be 9-12 digits';
       }
     }
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Valid email is required';
     }
     if (!formData.salary || parseFloat(formData.salary) <= 0) {
       newErrors.salary = 'Valid salary is required';

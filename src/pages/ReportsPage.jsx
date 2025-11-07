@@ -119,11 +119,34 @@ const ReportsPage = () => {
     });
   }, [allOrders, startDate, endDate]);
   
+  // Filter reports by date range (for daily report export)
+  const filteredReports = useMemo(() => {
+    if (!reports) return [];
+    let filtered = [...reports];
+    
+    if (startDate) {
+      filtered = filtered.filter(r => r.reportDate >= startDate);
+    }
+    if (endDate) {
+      filtered = filtered.filter(r => r.reportDate <= endDate);
+    }
+    
+    return filtered;
+  }, [reports, startDate, endDate]);
+  
   // Group orders by date for chart
   const dailyRevenue = useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) return [];
     
     const revenueByDate = {};
+    
+    // Build cost map from backend daily reports (supports totalCost or totalIngredientCost)
+    const costMap = {};
+    (filteredReports || []).forEach(r => {
+      const key = r.reportDate;
+      const costVal = typeof r.totalIngredientCost !== 'undefined' ? r.totalIngredientCost : r.totalCost;
+      costMap[key] = typeof costVal === 'string' ? parseFloat(costVal) : costVal;
+    });
     
     // filteredOrders already has completed orders only
     filteredOrders.forEach(order => {
@@ -144,25 +167,18 @@ const ReportsPage = () => {
       revenueByDate[date].totalOrders += 1;
     });
     
+    // Merge cost data into the corresponding dates
+    Object.keys(revenueByDate).forEach(date => {
+      const cost = costMap[date];
+      if (typeof cost !== 'undefined' && cost !== null && !isNaN(cost)) {
+        revenueByDate[date].totalIngredientCost = cost;
+      }
+    });
+    
     return Object.values(revenueByDate).sort((a, b) => 
       new Date(a.reportDate) - new Date(b.reportDate)
     );
-  }, [filteredOrders]);
-  
-  // Filter reports by date range (for daily report export)
-  const filteredReports = useMemo(() => {
-    if (!reports) return [];
-    let filtered = [...reports];
-    
-    if (startDate) {
-      filtered = filtered.filter(r => r.reportDate >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter(r => r.reportDate <= endDate);
-    }
-    
-    return filtered;
-  }, [reports, startDate, endDate]);
+  }, [filteredOrders, filteredReports]);
 
   // Calculate summary stats from completed orders
   const stats = useMemo(() => {
@@ -248,7 +264,7 @@ const ReportsPage = () => {
     });
     
     // Use backend values for cost/hours if available, otherwise 0
-    const totalIngredientCost = backendReport?.totalIngredientCost || 0;
+    const totalIngredientCost = (backendReport?.totalIngredientCost ?? backendReport?.totalCost) || 0;
     const totalWorkingHours = backendReport?.totalWorkingHours || 0;
     
     return {
