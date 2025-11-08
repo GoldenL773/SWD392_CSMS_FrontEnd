@@ -9,7 +9,7 @@ import AppLayout from '../components/layout/AppLayout/index.jsx';
  * ProtectedRoute Component
  * Wraps routes that require authentication and optional role-based access
  */
-const ProtectedRoute = ({ requiredRoles = [] }) => {
+const ProtectedRoute = ({ requiredRoles = [], withLayout = true }) => {
   const { isAuthenticated, hasAnyRole, user, loading } = useAuth();
 
   // Show loading state while checking auth
@@ -33,7 +33,7 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
       return <Navigate to={ROUTES.ATTENDANCE} replace />;
     }
     if (hasAnyRole(['BARISTA'])) {
-      return <Navigate to={ROUTES.ORDERS} replace />;
+      return <Navigate to={ROUTES.ORDER_QUEUE} replace />;
     }
     if (hasAnyRole(['FINANCE'])) {
       return <Navigate to={ROUTES.FINANCE} replace />;
@@ -41,16 +41,20 @@ const ProtectedRoute = ({ requiredRoles = [] }) => {
     return <Navigate to={ROUTES.ATTENDANCE} replace />;
   }
 
-  // Render with AppLayout wrapper
-  return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  );
+  // Render with/without AppLayout wrapper
+  if (withLayout) {
+    return (
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    );
+  }
+  return <Outlet />;
 };
 
 ProtectedRoute.propTypes = {
-  requiredRoles: PropTypes.arrayOf(PropTypes.string)
+  requiredRoles: PropTypes.arrayOf(PropTypes.string),
+  withLayout: PropTypes.bool
 };
 
 export default ProtectedRoute;

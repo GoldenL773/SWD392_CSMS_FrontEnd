@@ -12,18 +12,19 @@ import './NewOrderModal.css';
  * Modal for creating new orders with product selection
  */
 const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
-  const { data: productsData, loading } = useApiQuery(getAllProducts, { size: 1000 }, []);
+  const { data: productsData, loading } = useApiQuery(getAllProducts, { page: 0, size: 10000 }, []);
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Extract products from paginated response
   const products = productsData?.content || productsData || [];
 
-  // Filter available products (status: Available or AVAILABLE)
+  // Filter available products (status: Available or AVAILABLE, and not out of stock)
   const availableProducts = useMemo(() => {
     if (!products) return [];
     return products.filter(p => 
-      p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available')
+      p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available') &&
+      p.isAvailable !== false // Exclude out-of-stock products
     );
   }, [products]);
 
@@ -130,15 +131,50 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                   {searchTerm ? 'No products found matching your search' : 'No available products'}
                 </div>
               ) : (
-                filteredProducts.map((product) => (
-                  <div key={product.id} className="product-card" onClick={() => addItem(product)}>
-                    <div className="product-info">
-                      <h4>{product.name}</h4>
-                      <span className="product-category">{product.category}</span>
+                filteredProducts.map((product) => {
+                  const isOutOfStock = product.availabilityStatus === 'OUT_OF_STOCK';
+                  const isLowStock = product.availabilityStatus === 'LOW_STOCK';
+                  
+                  return (
+                    <div 
+                      key={product.id} 
+                      className={`product-card ${isOutOfStock ? 'product-card--disabled' : ''}`}
+                      onClick={() => !isOutOfStock && addItem(product)}
+                      title={isOutOfStock ? 'This product is out of stock' : isLowStock ? 'Low stock available' : 'In stock'}
+                    >
+                      <div className="product-info">
+                        <h4>{product.name}</h4>
+                        <span className="product-category">{product.category}</span>
+                        
+                        {/* Ingredients List */}
+                        {(() => {
+                          const ingredientList = product.productIngredients || product.ingredients || [];
+                          if (!ingredientList || ingredientList.length === 0) return null;
+                          return (
+                            <div className="product-ingredients">
+                              <div className="ingredients-label">Ingredients:</div>
+                              {ingredientList.map((pi) => (
+                                <div key={pi.ingredientId || pi.id} className="ingredient-item">
+                                  <span className="ingredient-name">{pi.ingredientName || pi.name}</span>
+                                  <span className="ingredient-qty">
+                                    {(pi.requiredQuantity ?? pi.quantityRequired)} / {pi.currentQuantity} {pi.unit}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                        
+                        <div className="product-status-badge">
+                          {isOutOfStock && <span className="badge badge--out-of-stock">Out of Stock</span>}
+                          {isLowStock && !isOutOfStock && <span className="badge badge--low-stock">Low Stock</span>}
+                          {!isOutOfStock && !isLowStock && <span className="badge badge--in-stock">In Stock</span>}
+                        </div>
+                      </div>
+                      <div className="product-price">{formatCurrency(product.price)}</div>
                     </div>
-                    <div className="product-price">{formatCurrency(product.price)}</div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

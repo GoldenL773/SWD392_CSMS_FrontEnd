@@ -37,9 +37,40 @@ const OrdersPage = () => {
   // Fetch data
   const { data: ordersData, loading: ordersLoading, refetch: refetchOrders } = useApiQuery(
     getAllOrders, 
-    { page: currentPage, size: pageSize }, 
-    [currentPage]
+    { 
+      page: currentPage, 
+      size: pageSize,
+      status: activeStatus === 'ALL' ? undefined : activeStatus,
+      sortBy: (sortBy === 'amount-asc' || sortBy === 'amount-desc') ? 'totalAmount' : 'orderDate',
+      sortDir: (sortBy === 'amount-asc') ? 'ASC' : 'DESC'
+    }, 
+    [currentPage, pageSize, activeStatus, sortBy]
   );
+
+  // Lightweight meta queries for counts by status (size=1 to get totalElements)
+  const { data: pendingMeta } = useApiQuery(
+    getAllOrders,
+    { page: 0, size: 1, status: ORDER_STATUS.PENDING },
+    [],
+    { enabled: true }
+  );
+  const { data: completedMeta } = useApiQuery(
+    getAllOrders,
+    { page: 0, size: 1, status: ORDER_STATUS.COMPLETED },
+    [],
+    { enabled: true }
+  );
+  const { data: cancelledMeta } = useApiQuery(
+    getAllOrders,
+    { page: 0, size: 1, status: ORDER_STATUS.CANCELLED },
+    [],
+    { enabled: true }
+  );
+
+  // Reset pagination when filters/sort change
+  React.useEffect(() => {
+    setCurrentPage(0);
+  }, [activeStatus, sortBy]);
   
   // Handle new order notification
   const handleNewOrder = useCallback((order) => {
@@ -77,6 +108,13 @@ const OrdersPage = () => {
   const orders = ordersData?.content || ordersData || [];
   const totalOrders = ordersData?.totalElements || orders.length;
   const totalPages = ordersData?.totalPages || Math.ceil(totalOrders / pageSize);
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('OrdersPage - ordersData:', ordersData);
+    console.log('OrdersPage - orders array:', orders);
+    console.log('OrdersPage - totalOrders:', totalOrders);
+  }, [ordersData, orders, totalOrders]);
 
   // Only fetch employees if user has ADMIN or MANAGER role (STAFF users can't access this endpoint)
   const hasEmployeeAccess = user?.roles?.some(role =>
@@ -93,23 +131,22 @@ const OrdersPage = () => {
 
   // Calculate order counts by status
   const orderCounts = useMemo(() => {
-    if (!orders) return { ALL: 0 };
-    
-    const counts = {
-      ALL: orders.length,
+    const countsFromPage = {
       [ORDER_STATUS.PENDING]: 0,
       [ORDER_STATUS.COMPLETED]: 0,
       [ORDER_STATUS.CANCELLED]: 0
     };
-
-    orders.forEach((order) => {
-      if (counts[order.status] !== undefined) {
-        counts[order.status]++;
-      }
+    (orders || []).forEach((order) => {
+      if (countsFromPage[order.status] !== undefined) countsFromPage[order.status]++;
     });
 
-    return counts;
-  }, [orders]);
+    return {
+      ALL: totalOrders, // use server total across all pages
+      [ORDER_STATUS.PENDING]: pendingMeta?.totalElements ?? countsFromPage[ORDER_STATUS.PENDING] ?? 0,
+      [ORDER_STATUS.COMPLETED]: completedMeta?.totalElements ?? countsFromPage[ORDER_STATUS.COMPLETED] ?? 0,
+      [ORDER_STATUS.CANCELLED]: cancelledMeta?.totalElements ?? countsFromPage[ORDER_STATUS.CANCELLED] ?? 0
+    };
+  }, [orders, totalOrders, pendingMeta, completedMeta, cancelledMeta]);
 
   // Filter and sort orders
   const filteredOrders = useMemo(() => {

@@ -16,6 +16,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     position: EMPLOYEE_POSITIONS[0],
     phone: '',
     email: '',
+    dateOfBirth: '',
     hireDate: new Date().toISOString().split('T')[0],
     salary: '',
     status: EMPLOYEE_STATUS.ACTIVE,
@@ -31,6 +32,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
         position: employee.position || EMPLOYEE_POSITIONS[0],
         phone: employee.phone || '',
         email: employee.email || '',
+        dateOfBirth: employee.dateOfBirth?.split('T')[0] || '',
         hireDate: employee.hireDate?.split('T')[0] || new Date().toISOString().split('T')[0],
         salary: employee.salary?.toString() || '',
         status: employee.status || EMPLOYEE_STATUS.ACTIVE
@@ -41,6 +43,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
         position: EMPLOYEE_POSITIONS[0],
         phone: '',
         email: '',
+        dateOfBirth: '',
         hireDate: new Date().toISOString().split('T')[0],
         salary: '',
         status: EMPLOYEE_STATUS.ACTIVE,
@@ -181,6 +184,18 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
               placeholder="email@example.com"
             />
             {errors.email && <span className="error-message">{errors.email}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="dateOfBirth">Date of Birth</label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              max={new Date().toISOString().split('T')[0]}
+            />
           </div>
 
           {!employee && (

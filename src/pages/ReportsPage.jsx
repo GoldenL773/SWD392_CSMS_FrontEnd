@@ -41,61 +41,15 @@ const ReportsPage = () => {
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
   const { data: transactions, loading: transactionsLoading } = useApiQuery(getIngredientTransactions, {}, []);
   
-  // Log API errors and authentication status
+  // Log API errors only
   useEffect(() => {
-    const token = localStorage.getItem('csms_auth_token');
-    const user = localStorage.getItem('csms_user_data');
-    
-    console.log('🔐 Authentication Status:', {
-      hasToken: !!token,
-      tokenPreview: token ? token.substring(0, 20) + '...' : null,
-      hasUserData: !!user,
-      userData: user ? JSON.parse(user) : null,
-      allLocalStorageKeys: Object.keys(localStorage)
-    });
-    
     if (ordersError) {
-      console.error('❌ Orders API Error:', ordersError);
+      console.error('Orders API Error:', ordersError);
     }
-    
-    // Test backend connectivity
-    console.log('🔍 Testing backend at:', API_BASE_URL);
-    fetch('http://localhost:8080/api/orders?size=5', {
-      headers: token ? {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      } : {}
-    })
-      .then(res => {
-        console.log('🌐 Backend Response Status:', res.status, res.statusText);
-        if (!res.ok) {
-          return res.text().then(text => {
-            console.error('Backend Error Response:', text);
-            throw new Error(`${res.status}: ${text}`);
-          });
-        }
-        return res.json();
-      })
-      .then(data => {
-        console.log('📦 Backend Data Sample:', {
-          totalElements: data?.totalElements,
-          totalPages: data?.totalPages,
-          contentLength: data?.content?.length,
-          firstOrder: data?.content?.[0]
-        });
-      })
-      .catch(err => console.error('🔴 Backend Connection Error:', err.message));
   }, [ordersError]);
   
   // Extract orders from paginated response
   const allOrders = useMemo(() => {
-    console.log('Orders API Response:', {
-      ordersData,
-      isArray: Array.isArray(ordersData),
-      hasContent: ordersData?.content,
-      ordersDataType: typeof ordersData,
-      ordersDataKeys: ordersData ? Object.keys(ordersData) : null
-    });
     return ordersData?.content || ordersData || [];
   }, [ordersData]);
 
@@ -223,26 +177,6 @@ const ReportsPage = () => {
       return isCompleted && matchesDate;
     });
     
-    console.log('Daily Report Debug:', {
-      selectedDate,
-      allOrdersCount: allOrders.length,
-      filteredOrdersCount: filteredOrders.length,
-      ordersForDateCount: ordersForDate.length,
-      sampleOrder: ordersForDate[0],
-      ordersForDateDetailed: ordersForDate.map(o => ({
-        id: o.id,
-        status: o.status,
-        date: new Date(o.orderDate).toISOString().split('T')[0],
-        totalAmount: o.totalAmount,
-        rawOrder: o
-      })),
-      allOrdersSample: allOrders.slice(0, 5).map(o => ({
-        id: o.id,
-        status: o.status,
-        date: new Date(o.orderDate).toISOString().split('T')[0],
-        totalAmount: o.totalAmount
-      }))
-    });
     
     if (ordersForDate.length === 0 && !backendReport) {
       return null;
@@ -256,12 +190,6 @@ const ReportsPage = () => {
     }, 0);
     const totalOrders = ordersForDate.length;
     
-    console.log('Daily Report calculation:', {
-      selectedDate,
-      totalOrders,
-      totalRevenue,
-      ordersForDate
-    });
     
     // Use backend values for cost/hours if available, otherwise 0
     const totalIngredientCost = (backendReport?.totalIngredientCost ?? backendReport?.totalCost) || 0;

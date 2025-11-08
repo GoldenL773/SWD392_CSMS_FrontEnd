@@ -28,42 +28,65 @@ const InventoryPage = () => {
   // Pagination state
   const [productPage, setProductPage] = useState(0);
   const [ingredientPage, setIngredientPage] = useState(0);
-  const pageSize = 10;
+  const pageSize = 10; // Restore to 10 and use server-side filtering
   
   // Filter state
   const [productSearch, setProductSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [ingredientSearch, setIngredientSearch] = useState('');
 
-  // Fetch data with pagination
+  // Reset pages when filters change
+  React.useEffect(() => {
+    setProductPage(0);
+  }, [productSearch, categoryFilter]);
+  React.useEffect(() => {
+    setIngredientPage(0);
+  }, [ingredientSearch]);
+
+  // Fetch data with server-side pagination and filtering
   const { data: productsData, loading: productsLoading, refetch: refetchProducts } = useApiQuery(
-    getAllProducts, 
-    { page: productPage, size: pageSize }, 
-    [productPage]
+    getAllProducts,
+    {
+      page: productPage,
+      size: pageSize,
+      search: productSearch || undefined,
+      category: categoryFilter === 'ALL' ? undefined : categoryFilter
+    },
+    [productPage, pageSize, productSearch, categoryFilter]
   );
   const { data: ingredientsData, loading: ingredientsLoading, refetch: refetchIngredients } = useApiQuery(
-    getAllIngredients, 
-    { page: ingredientPage, size: pageSize }, 
-    [ingredientPage]
+    getAllIngredients,
+    {
+      page: ingredientPage,
+      size: pageSize,
+      search: ingredientSearch || undefined
+    },
+    [ingredientPage, pageSize, ingredientSearch]
   );
   
   // Extract content from paginated response
   const allProducts = productsData?.content || productsData || [];
   const allIngredients = ingredientsData?.content || ingredientsData || [];
-  const totalProducts = productsData?.totalElements || allProducts.length;
-  const totalIngredients = ingredientsData?.totalElements || allIngredients.length;
+  const totalProducts = productsData?.totalElements ?? allProducts.length;
+  const totalIngredients = ingredientsData?.totalElements ?? allIngredients.length;
+  const totalProductPages = productsData?.totalPages ?? Math.ceil(totalProducts / pageSize);
+  const totalIngredientPages = ingredientsData?.totalPages ?? Math.ceil(totalIngredients / pageSize);
   
-  // Filter products
-  const products = allProducts.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(productSearch.toLowerCase());
-    const matchesCategory = categoryFilter === 'ALL' || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  // Server provides filtered products
+  const products = allProducts;
   
-  // Filter ingredients
-  const ingredients = allIngredients.filter(ingredient =>
-    ingredient.name.toLowerCase().includes(ingredientSearch.toLowerCase())
-  );
+  // Server provides filtered ingredients
+  const ingredients = allIngredients;
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('InventoryPage - productsData:', productsData);
+    console.log('InventoryPage - products array:', products);
+    console.log('InventoryPage - totalProducts:', totalProducts);
+    console.log('InventoryPage - ingredientsData:', ingredientsData);
+    console.log('InventoryPage - ingredients array:', ingredients);
+    console.log('InventoryPage - totalIngredients:', totalIngredients);
+  }, [productsData, products, totalProducts, ingredientsData, ingredients, totalIngredients]);
 
   // Mutations
   const { mutate: createProductMutation, loading: creating } = useApiMutation(createProduct);
@@ -245,7 +268,7 @@ const InventoryPage = () => {
             }}
             onDelete={(id) => handleDeleteClick(id, 'product')}
           />
-          {totalProducts > pageSize && (
+          {totalProductPages > 1 && (
             <div className="pagination-controls">
               <Button 
                 variant="secondary" 
@@ -255,12 +278,12 @@ const InventoryPage = () => {
                 Previous
               </Button>
               <span className="page-info">
-                Page {productPage + 1} of {Math.ceil(totalProducts / pageSize)}
+                Page {productPage + 1} of {totalProductPages}
               </span>
               <Button 
                 variant="secondary" 
                 onClick={() => setProductPage(p => p + 1)}
-                disabled={(productPage + 1) * pageSize >= totalProducts}
+                disabled={productPage >= totalProductPages - 1}
               >
                 Next
               </Button>
@@ -318,7 +341,7 @@ const InventoryPage = () => {
             }}
             onDelete={(id) => handleDeleteClick(id, 'ingredient')}
           />
-          {totalIngredients > pageSize && (
+          {totalIngredientPages > 1 && (
             <div className="pagination-controls">
               <Button 
                 variant="secondary" 
@@ -328,12 +351,12 @@ const InventoryPage = () => {
                 Previous
               </Button>
               <span className="page-info">
-                Page {ingredientPage + 1} of {Math.ceil(totalIngredients / pageSize)}
+                Page {ingredientPage + 1} of {totalIngredientPages}
               </span>
               <Button 
                 variant="secondary" 
                 onClick={() => setIngredientPage(p => p + 1)}
-                disabled={(ingredientPage + 1) * pageSize >= totalIngredients}
+                disabled={ingredientPage >= totalIngredientPages - 1}
               >
                 Next
               </Button>

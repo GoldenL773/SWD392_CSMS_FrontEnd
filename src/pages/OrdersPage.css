@@ -8,13 +8,21 @@
 }
 
 .page-header {
-  margin-bottom: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-xl);
+}
+
+.page-header > div {
+  flex: 1;
 }
 
 .page-header h1 {
   font-size: var(--font-size-4xl);
   color: var(--color-text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin: 0 0 var(--spacing-sm) 0;
+  font-weight: var(--font-weight-bold);
 }
 
 .page-header p {

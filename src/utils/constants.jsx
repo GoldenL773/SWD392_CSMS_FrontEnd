@@ -11,6 +11,7 @@ export const ROUTES = {
   INVENTORY: '/inventory',
   EMPLOYEES: '/employees',
   ORDERS: '/orders',
+  ORDER_QUEUE: '/order-queue',
   MENU: '/menu',
   REPORTS: '/reports',
   ATTENDANCE: '/attendance',

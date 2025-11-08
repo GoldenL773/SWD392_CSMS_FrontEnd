@@ -26,19 +26,20 @@ const DashboardPage = () => {
       return orderDate === today && orderStatus === 'COMPLETED';
     });
     
-    const totalRevenue = todayOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    const totalRevenue = todayOrders.reduce((sum, order) => sum + (Number(order.totalAmount) || 0), 0);
     const totalOrders = todayOrders.length;
     
     // Get ingredient cost and working hours from backend report if available
     const todayReport = reports?.find(r => r.reportDate === today);
-    const totalIngredientCost = todayReport?.totalIngredientCost || 0;
-    const totalWorkingHours = todayReport?.totalWorkingHours || 0;
+    const totalIngredientCost = Number(todayReport?.totalIngredientCost) || 0;
+    const totalWorkingHours = Number(todayReport?.totalWorkingHours) || 0;
     
     return {
       totalOrders,
       totalRevenue,
       totalIngredientCost,
-      totalWorkingHours
+      totalWorkingHours,
+      hasData: totalOrders > 0 || totalRevenue > 0
     };
   }, [ordersData, reports]);
   
@@ -59,13 +60,21 @@ const DashboardPage = () => {
       )}
 
 
+      {!loading && !latestReport.hasData && (
+        <div className="dashboard-empty">
+          <div className="empty-icon">📊</div>
+          <h2>No data available for today</h2>
+          <p>Start by creating some orders to see statistics here.</p>
+        </div>
+      )}
+
       {!loading && (
         <>
           <div className="stats-grid">
             <div className="stat-card">
               <div className="stat-icon">📊</div>
               <div className="stat-content">
-                <h3 className="stat-label">Total Orders</h3>
+                <h3 className="stat-label">Completed Orders</h3>
                 <p className="stat-value">{formatNumber(latestReport.totalOrders)}</p>
                 <span className="stat-date">Today</span>
               </div>

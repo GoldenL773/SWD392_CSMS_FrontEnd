@@ -26,9 +26,9 @@ const RoleBasedRedirect = () => {
       return ROUTES.FINANCE;
     }
 
-    // Barista default: /orders
+    // Barista default: /order-queue (Kitchen Display System)
     if (hasAnyRole(['BARISTA'])) {
-      return ROUTES.ORDERS;
+      return ROUTES.ORDER_QUEUE;
     }
 
     // Manager/Admin default: /dashboard

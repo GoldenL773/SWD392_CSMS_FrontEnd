@@ -91,7 +91,11 @@ class ApiClient {
    * GET request
    */
   async get(endpoint, params = {}) {
-    const queryString = new URLSearchParams(params).toString();
+    // Remove undefined/null values to avoid sending "undefined" as string
+    const cleanedParams = Object.fromEntries(
+      Object.entries(params || {}).filter(([key, value]) => value !== undefined && value !== null)
+    );
+    const queryString = new URLSearchParams(cleanedParams).toString();
     const url = queryString ? `${endpoint}?${queryString}` : endpoint;
     
     return this.request(url, {
@@ -106,7 +110,10 @@ class ApiClient {
     // Handle query params if provided in options
     let url = endpoint;
     if (options.params) {
-      const queryString = new URLSearchParams(options.params).toString();
+      const cleanedParams = Object.fromEntries(
+        Object.entries(options.params || {}).filter(([key, value]) => value !== undefined && value !== null)
+      );
+      const queryString = new URLSearchParams(cleanedParams).toString();
       url = queryString ? `${endpoint}?${queryString}` : endpoint;
     }
     

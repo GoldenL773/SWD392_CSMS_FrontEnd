@@ -8,6 +8,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
 }
 
 .profile-info {

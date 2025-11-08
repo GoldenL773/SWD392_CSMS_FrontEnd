@@ -45,7 +45,7 @@ const LoginPage = () => {
       if (hasRole('STAFF')) {
         navigate(ROUTES.ATTENDANCE);
       } else if (hasRole('BARISTA')) {
-        navigate(ROUTES.ORDERS);
+        navigate(ROUTES.ORDER_QUEUE);
       } else if (hasRole('FINANCE')) {
         navigate(ROUTES.FINANCE);
       } else {

@@ -67,6 +67,3 @@ src/
 - **Typography**: Bold titles (32-56px), Body text (16-18px)
 - **Responsive**: Optimized for laptop (1024px+) with mobile fallback
 
-## Entity Mapping
-
-All forms and data structures strictly map to the backend entity definitions in `ENTITIES.md`.

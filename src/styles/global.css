@@ -185,9 +185,8 @@ tr:hover {
 /* Utility Classes */
 .container {
   width: 100%;
-  max-width: var(--max-content-width);
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
+  margin: 0;
+  padding: 0;
 }
 
 .text-center { text-align: center; }
@@ -203,6 +202,13 @@ tr:hover {
 .text-success { color: var(--color-success); }
 .text-warning { color: var(--color-warning); }
 .text-error { color: var(--color-error); }
+
+/* Responsive media */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
 .mt-xs { margin-top: var(--spacing-xs); }
 .mt-sm { margin-top: var(--spacing-sm); }

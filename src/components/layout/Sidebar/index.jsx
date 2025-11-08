@@ -20,6 +20,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const allNavItems = [
     { path: ROUTES.DASHBOARD, label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
     { path: ROUTES.ORDERS, label: 'Orders', icon: '🛒', roles: ['ADMIN', 'MANAGER', 'STAFF', 'BARISTA'] },
+    { path: ROUTES.ORDER_QUEUE, label: 'Order Queue', icon: '🔔', roles: ['ADMIN', 'MANAGER', 'BARISTA', 'STAFF'] },
     { path: ROUTES.MENU, label: 'Menu', icon: '☕', roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { path: ROUTES.INVENTORY, label: 'Inventory', icon: '📦', roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.EMPLOYEES, label: 'Employees', icon: '👥', roles: ['ADMIN', 'MANAGER'] },

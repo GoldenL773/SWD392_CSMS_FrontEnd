@@ -19,16 +19,13 @@ const AppLayout = ({ children }) => {
   return (
     <div className="app-layout">
       <Header onMenuClick={toggleSidebar} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
-      <div className="app-layout__container">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        
-        <main className="app-layout__main">
-          <div className="app-layout__content">
-            {children}
-          </div>
-        </main>
-      </div>
+      <main className="app-layout__main">
+        <div className="app-layout__content">
+          {children}
+        </div>
+      </main>
 
       <BottomNav />
     </div>

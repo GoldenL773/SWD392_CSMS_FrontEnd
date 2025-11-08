@@ -11,6 +11,7 @@ const DashboardPage = React.lazy(() => import('../pages/DashboardPage.jsx'));
 const InventoryPage = React.lazy(() => import('../pages/InventoryPage.jsx'));
 const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.jsx'));
 const OrdersPage = React.lazy(() => import('../pages/OrdersPage.jsx'));
+const OrderQueuePage = React.lazy(() => import('../pages/OrderQueuePage.jsx'));
 const MenuPage = React.lazy(() => import('../pages/MenuPage.jsx'));
 const ReportsPage = React.lazy(() => import('../pages/ReportsPage.jsx'));
 const AttendancePage = React.lazy(() => import('../pages/AttendancePage.jsx'));
@@ -34,19 +35,20 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         {/* Common routes - accessible by all authenticated users */}
         <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
+        <Route path={ROUTES.ORDER_QUEUE} element={<OrderQueuePage />} />
         <Route path={ROUTES.MENU} element={<MenuPage />} />
         <Route path={ROUTES.ATTENDANCE} element={<AttendancePage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         
         {/* Dashboard - Manager/Finance only */}
-        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'FINANCE']} />}>
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'FINANCE']} withLayout={false} />}>
           <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
           <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
           <Route path={ROUTES.FINANCE} element={<FinancePage />} />
         </Route>
         
         {/* Manager only routes */}
-        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} />}>
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} withLayout={false} />}>
           <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
           <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
           <Route path={ROUTES.ADMIN} element={<AdminPage />} />
