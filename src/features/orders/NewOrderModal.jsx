@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { useApiQuery } from '../../hooks/useApiQuery.jsx';
 import { getAllProducts } from '../../api/productApi.jsx';
+import { getAllIngredients } from '../../api/ingredientApi.jsx';
 import Modal from '../../components/common/Modal/index.jsx';
 import Button from '../../components/common/Button/index.jsx';
 import { formatCurrency } from '../../utils/formatters.jsx';
@@ -13,11 +14,47 @@ import './NewOrderModal.css';
  */
 const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
   const { data: productsData, loading } = useApiQuery(getAllProducts, { page: 0, size: 10000 }, []);
+  // Fetch all ingredients to build a fallback quantity/unit map
+  const { data: ingredientsData } = useApiQuery(getAllIngredients, { page: 0, size: 10000 }, []);
   const [selectedItems, setSelectedItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Extract products from paginated response
   const products = productsData?.content || productsData || [];
+
+  // Build ingredient lookup map: id -> { quantity, unit }
+  const ingredientLookup = useMemo(() => {
+    const list = ingredientsData?.content || ingredientsData || [];
+    const map = new Map();
+    list.forEach((ing) => {
+      map.set(ing.id, { quantity: Number(ing.quantity ?? 0), unit: ing.unit || '' });
+    });
+    return map;
+  }, [ingredientsData]);
+
+  // Build name-based lookup: lowercased name -> { quantity, unit }
+  const ingredientNameLookup = useMemo(() => {
+    const list = ingredientsData?.content || ingredientsData || [];
+    const map = new Map();
+    list.forEach((ing) => {
+      if (ing.name) {
+        map.set(ing.name.toLowerCase(), { quantity: Number(ing.quantity ?? 0), unit: ing.unit || '' });
+      }
+    });
+    return map;
+  }, [ingredientsData]);
+
+  // Debug: Log product data to check ingredient quantities
+  React.useEffect(() => {
+    if (products && products.length > 0) {
+      console.log('NewOrderModal - Products with ingredients:', products.map(p => ({
+        id: p.id,
+        name: p.name,
+        productIngredients: p.productIngredients,
+        ingredients: p.ingredients
+      })));
+    }
+  }, [products]);
 
   // Filter available products (status: Available or AVAILABLE, and not out of stock)
   const availableProducts = useMemo(() => {
@@ -153,14 +190,53 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                           return (
                             <div className="product-ingredients">
                               <div className="ingredients-label">Ingredients:</div>
-                              {ingredientList.map((pi) => (
-                                <div key={pi.ingredientId || pi.id} className="ingredient-item">
-                                  <span className="ingredient-name">{pi.ingredientName || pi.name}</span>
-                                  <span className="ingredient-qty">
-                                    {(pi.requiredQuantity ?? pi.quantityRequired)} / {pi.currentQuantity} {pi.unit}
-                                  </span>
-                                </div>
-                              ))}
+                              {ingredientList.map((pi) => {
+                                const required = Number(pi.requiredQuantity ?? pi.quantityRequired ?? pi.required ?? 0);
+                                const currentRaw = (pi.currentQuantity ?? pi.availableQuantity ?? pi.quantity ?? pi.stock ?? (pi.ingredient && pi.ingredient.quantity));
+                                let current = Number(currentRaw ?? 0);
+                                let unit = pi.unit || pi.ingredientUnit || '';
+
+                                // Fallback from global ingredients map if still missing/zero
+                                if ((!current || isNaN(current))) {
+                                  let fromMap = null;
+                                  if (pi.ingredientId || pi.id) {
+                                    fromMap = ingredientLookup.get(pi.ingredientId || pi.id) || null;
+                                  }
+                                  if (!fromMap) {
+                                    const keyName = (pi.ingredientName || pi.name || '').toLowerCase();
+                                    if (keyName) {
+                                      fromMap = ingredientNameLookup.get(keyName) || null;
+                                    }
+                                  }
+                                  if (fromMap) {
+                                    current = Number(fromMap.quantity ?? current);
+                                    unit = unit || fromMap.unit || '';
+                                  }
+                                }
+
+                                // Debug log for each ingredient row
+                                if (current === 0) {
+                                  console.log('Ingredient row debug:', {
+                                    name: pi.ingredientName || pi.name,
+                                    currentQuantity: pi.currentQuantity,
+                                    availableQuantity: pi.availableQuantity,
+                                    quantity: pi.quantity,
+                                    stock: pi.stock,
+                                    ingredientQty: pi.ingredient?.quantity,
+                                    mapQty: ingredientLookup.get(pi.ingredientId || pi.id)?.quantity ?? ingredientNameLookup.get((pi.ingredientName || pi.name || '').toLowerCase())?.quantity,
+                                    parsedCurrent: current
+                                  });
+                                }
+
+                                return (
+                                  <div key={pi.ingredientId || pi.id} className="ingredient-item">
+                                    <span className="ingredient-name">{pi.ingredientName || pi.name}</span>
+                                    <span className="ingredient-qty">
+                                      {required} / {current} {unit}
+                                    </span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           );
                         })()}

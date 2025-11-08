@@ -8,6 +8,50 @@
   border: 1px solid rgba(184, 134, 11, 0.1);
 }
 
+/* Recharts Container */
+.recharts-container {
+  width: 100%;
+  margin-top: var(--spacing-lg);
+}
+
+/* Recharts Tooltip */
+.recharts-tooltip {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(184, 134, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.recharts-tooltip p {
+  margin: var(--spacing-xs) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.tooltip-date {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-sm) !important;
+}
+
+.tooltip-revenue {
+  color: #b8860b;
+}
+
+.tooltip-orders {
+  color: #10b981;
+}
+
+.tooltip-cost {
+  color: #ef4444;
+}
+
+.tooltip-profit {
+  color: #10b981;
+  font-weight: var(--font-weight-semibold);
+}
+
 /* Chart Mode Toggle */
 .chart-mode-toggle {
   display: flex;
