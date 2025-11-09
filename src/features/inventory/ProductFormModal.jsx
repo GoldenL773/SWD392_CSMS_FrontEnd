@@ -120,22 +120,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
       <form className="product-form" onSubmit={handleSubmit}>
         <div className="form-section">
           <h3>Product Information</h3>
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="categoryFilter">Filter by Category</label>
-              <select
-                id="categoryFilter"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="ALL">All Categories</option>
-                {PRODUCT_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+          
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="name">Product Name *</label>
