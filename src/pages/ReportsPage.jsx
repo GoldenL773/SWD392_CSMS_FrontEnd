@@ -12,6 +12,8 @@ import Button from '../components/common/Button/index.jsx';
 import { formatCurrency, formatNumber, safeNumber } from '../utils/formatters.jsx';
 import './ReportsPage.css';
 import { AuthContext } from '../context/AuthProvider.jsx';
+import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, Tooltip, LabelList, CartesianGrid, Legend, Cell } from 'recharts';
+import { getPaidSalaries } from '../api/salaryApi.jsx';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('revenue');
@@ -41,6 +43,7 @@ const ReportsPage = () => {
   );
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
   const { data: transactions, loading: transactionsLoading } = useApiQuery(getIngredientTransactions, {}, []);
+  const { data: paidSalaries, loading: salariesLoading } = useApiQuery(getPaidSalaries, {}, []);
   
   // Log API errors only
   useEffect(() => {
@@ -132,10 +135,10 @@ const ReportsPage = () => {
     return Object.values(revenueByDate).sort((a, b) => new Date(a.reportDate) - new Date(b.reportDate));
   }, [filteredOrders, filteredReports]);
 
-  // Calculate summary stats from completed orders
+  // Calculate summary stats from completed orders (placed before breakdown to avoid TDZ)
   const stats = useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) {
-      return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0 };
+      return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0, avgRevenuePerDay: 0 };
     }
 
     const totalRevenue = filteredOrders.reduce((sum, order) => {
@@ -149,6 +152,106 @@ const ReportsPage = () => {
 
     return { totalRevenue, totalOrders, avgOrderValue, avgRevenuePerDay, daysInRange };
   }, [filteredOrders, dailyRevenue]);
+
+  // Sum ingredient cost across filtered reports (COGS)
+  const totalIngredientCost = useMemo(() => {
+    if (!filteredReports || filteredReports.length === 0) return 0;
+    return filteredReports.reduce((sum, r) => {
+      const raw = (typeof r.totalIngredientCost !== 'undefined' ? r.totalIngredientCost : r.totalCost) || 0;
+      return sum + (typeof raw === 'string' ? parseFloat(raw) : raw);
+    }, 0);
+  }, [filteredReports]);
+
+  // Sum salary cost from paid salaries within date range
+  const totalSalaryCost = useMemo(() => {
+    if (!paidSalaries || paidSalaries.length === 0) return 0;
+    return paidSalaries.reduce((sum, s) => {
+      if (!s.paymentDate) return sum;
+      const date = new Date(s.paymentDate).toISOString().split('T')[0];
+      if (startDate && date < startDate) return sum;
+      if (endDate && date > endDate) return sum;
+      return sum + safeNumber(s.totalSalary);
+    }, 0);
+  }, [paidSalaries, startDate, endDate]);
+
+  // Financial breakdown values
+  const breakdown = useMemo(() => {
+    const revenue = safeNumber(stats.totalRevenue);
+    const cogs = safeNumber(totalIngredientCost);
+    const labor = safeNumber(totalSalaryCost);
+    const net = revenue - cogs - labor;
+    return { revenue, cogs, labor, net };
+  }, [stats.totalRevenue, totalIngredientCost, totalSalaryCost]);
+
+  // Build data for Waterfall chart using stacked bars (base + delta)
+  const waterfallData = useMemo(() => {
+    const { revenue, cogs, labor, net } = breakdown;
+    // previous cumulative values to position the next bar
+    const afterRevenue = revenue;
+    const afterCogs = revenue + (-cogs);
+    // Labor cost is negative; cumulative after labor
+    const afterLabor = afterCogs + (-labor);
+
+    return [
+      { name: 'Total Revenue', base: 0, delta: revenue, color: '#10b981', isTotal: false },
+      { name: 'COGS', base: afterRevenue, delta: -cogs, color: '#ef4444', isTotal: false },
+      { name: 'Labor', base: afterCogs, delta: -labor, color: '#ef4444', isTotal: false },
+      { name: 'Net Profit', base: 0, delta: net, color: '#3b82f6', isTotal: true },
+    ];
+  }, [breakdown]);
+
+  // Employee performance (AOV per employee) data
+  const employeePerf = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) return [];
+    const map = new Map();
+    filteredOrders.forEach(order => {
+      const key = order.employeeId || order.employeeName || 'Unknown';
+      const name = order.employeeName || `Employee ${order.employeeId}`;
+      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount || 0;
+      if (!map.has(key)) map.set(key, { name, total: 0, count: 0 });
+      const obj = map.get(key);
+      obj.total += amount;
+      obj.count += 1;
+    });
+    const arr = Array.from(map.values()).map(o => ({
+      name: o.name,
+      avg: o.count > 0 ? o.total / o.count : 0,
+      count: o.count,
+      total: o.total,
+    }));
+    arr.sort((a, b) => b.avg - a.avg);
+    return arr;
+  }, [filteredOrders]);
+
+  // Custom label for currency on bars
+  const CurrencyLabel = (props) => {
+    const { x, y, width, value } = props;
+    if (value == null) return null;
+    const val = Number(value) || 0;
+    const posX = (x || 0) + (width || 0) + 6;
+    const posY = (y || 0) + 10;
+    return (
+      <text x={posX} y={posY} fill="#374151" fontSize={12}>{formatCurrency(val)}</text>
+    );
+  };
+
+  // Enhanced tooltip for employee performance
+  const EmployeeTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const d = payload[0].payload;
+      return (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 10, borderRadius: 6 }}>
+          <div><strong>Employee:</strong> {d.name}</div>
+          <div><strong>Avg. Order Value:</strong> {formatCurrency(d.avg)}</div>
+          <div><strong>Total Orders in Period:</strong> {d.count}</div>
+          <div><strong>Total Revenue in Period:</strong> {formatCurrency(d.total)}</div>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  
 
   // Get selected report for export - calculate from orders if not in backend
   const selectedReport = useMemo(() => {
@@ -284,20 +387,84 @@ const ReportsPage = () => {
       </div>
 
       {activeTab === 'revenue' && (
-        <Card title="Daily Revenue" subtitle={`${dailyRevenue?.length || 0} days with completed orders`}>
-          {ordersLoading ? (
-            <div className="loading-container">
-              <div className="loading"></div>
-              <p>Loading revenue data...</p>
-            </div>
-          ) : dailyRevenue.length === 0 ? (
-            <div className="empty-state">
-              <p>No completed orders found in the selected date range</p>
-            </div>
-          ) : (
-            <RevenueChart reports={dailyRevenue} />
-          )}
-        </Card>
+        <>
+          <Card title="Daily Revenue" subtitle={`${dailyRevenue?.length || 0} days with completed orders`}>
+            {ordersLoading ? (
+              <div className="loading-container">
+                <div className="loading"></div>
+                <p>Loading revenue data...</p>
+              </div>
+            ) : dailyRevenue.length === 0 ? (
+              <div className="empty-state">
+                <p>No completed orders found in the selected date range</p>
+              </div>
+            ) : (
+              <RevenueChart reports={dailyRevenue} />
+            )}
+          </Card>
+
+          <Card title="Financial Breakdown (Waterfall)" subtitle="Revenue vs. COGS and Labor to Net Profit">
+            {(ordersLoading || reportsLoading || salariesLoading) ? (
+              <div className="loading-container">
+                <div className="loading"></div>
+                <p>Loading financial breakdown...</p>
+              </div>
+            ) : (breakdown.revenue === 0 && breakdown.cogs === 0 && breakdown.labor === 0) ? (
+              <div className="empty-state">
+                <p>No data available for the selected period</p>
+              </div>
+            ) : (
+              <div style={{ width: '100%', height: 360 }}>
+                <ResponsiveContainer>
+                  <ComposedChart data={waterfallData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="category" dataKey="name" />
+                    <YAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
+                    <Tooltip formatter={(v) => formatCurrency(v)} />
+                    <Legend />
+                    {/* Base (invisible) to position deltas */}
+                    <Bar dataKey="base" stackId="a" fill="transparent" />
+                    {/* Delta bar, colored per bar using Cells */}
+                    <Bar dataKey="delta" stackId="a" name="Amount" isAnimationActive={false}>
+                      <LabelList dataKey="delta" content={<CurrencyLabel />} />
+                      {waterfallData.map((entry, idx) => (
+                        <Cell key={`wcell-${idx}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+
+          <Card title="Employee Performance (AOV)" subtitle="Average Order Value per Employee">
+            {ordersLoading ? (
+              <div className="loading-container">
+                <div className="loading"></div>
+                <p>Loading employee performance...</p>
+              </div>
+            ) : employeePerf.length === 0 ? (
+              <div className="empty-state">
+                <p>No data available for the selected period</p>
+              </div>
+            ) : (
+              <div style={{ width: '100%', height: 420 }}>
+                <ResponsiveContainer>
+                  <ComposedChart data={employeePerf} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
+                    <YAxis type="category" dataKey="name" width={140} />
+                    <Tooltip content={<EmployeeTooltip />} />
+                    <Legend />
+                    <Bar dataKey="avg" name="Average Order Value" fill="#82ca9d">
+                      <LabelList dataKey="avg" content={<CurrencyLabel />} />
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+        </>
       )}
 
       {activeTab === 'transactions' && (

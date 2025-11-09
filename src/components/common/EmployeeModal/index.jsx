@@ -244,7 +244,7 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="salary">Hourly Rate (VND/hour) *</label>
+            <label htmlFor="salary">Monthly Salary (VND) *</label>
             <input
               type="number"
               id="salary"

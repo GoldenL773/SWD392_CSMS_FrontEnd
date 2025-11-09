@@ -19,6 +19,8 @@ import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import { formatCurrency, formatDate, safeNumber, formatPercentage } from '../utils/formatters.jsx';
 import './FinancePage.css';
+import SalaryHistoryModal from '../components/salary/SalaryHistoryModal.jsx';
+import EmployeeDetailModal from '../components/finance/EmployeeDetailModal.jsx';
 import { AuthContext } from '../context/AuthProvider.jsx';
 
 const FinancePage = () => {
@@ -29,6 +31,23 @@ const FinancePage = () => {
   const [editFormData, setEditFormData] = useState({ bonus: 0, deductions: 0 });
   const [showPaidSalaries, setShowPaidSalaries] = useState(false);
   const [showCostBreakdown, setShowCostBreakdown] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historySalary, setHistorySalary] = useState(null);
+  const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
+  const [detailEmployee, setDetailEmployee] = useState(null);
+
+  // Sorting state
+  const [sortKey, setSortKey] = useState('employeeName');
+  const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
   
   // Date range for financial period
   const getDefaultStartDate = () => {
@@ -231,8 +250,29 @@ const FinancePage = () => {
   
   // Display salaries based on filter
   const displayedSalaries = useMemo(() => {
-    return showPaidSalaries ? (paidSalaries || []) : (pendingSalaries || []);
-  }, [showPaidSalaries, paidSalaries, pendingSalaries]);
+    const base = showPaidSalaries ? (paidSalaries || []) : (pendingSalaries || []);
+    const arr = Array.isArray(base) ? [...base] : [];
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const getVal = (row) => {
+      switch (sortKey) {
+        case 'employeeName': return (row.employeeName || '').toLowerCase();
+        case 'baseSalary': return Number(row.baseSalary) || 0;
+        case 'bonus': return Number(row.bonus) || 0;
+        case 'deductions': return Number(row.deductions) || 0;
+        case 'totalSalary': return Number(row.totalSalary) || 0;
+        case 'status': return (row.status || '').toLowerCase();
+        case 'paymentDate': return row.paymentDate || '';
+        default: return (row.employeeName || '').toLowerCase();
+      }
+    };
+    arr.sort((a, b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      return (va > vb ? 1 : va < vb ? -1 : 0) * dir;
+    });
+    return arr;
+  }, [showPaidSalaries, paidSalaries, pendingSalaries, sortKey, sortDir]);
 
   return (
     <div className="finance-page">
@@ -404,25 +444,28 @@ const FinancePage = () => {
                           />
                         </th>
                       )}
-                      <th>Employee</th>
+                      <th onClick={() => handleSort('employeeName')} style={{cursor:'pointer'}}>Employee {sortKey==='employeeName' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
                       <th>Period</th>
-                      <th>Base Salary</th>
-                      <th>Bonus</th>
-                      <th>Deductions</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      {showPaidSalaries && <th>Payment Date</th>}
-                      {!showPaidSalaries && <th>Actions</th>}
+                      <th onClick={() => handleSort('baseSalary')} style={{cursor:'pointer'}}>Base {sortKey==='baseSalary' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      <th onClick={() => handleSort('bonus')} style={{cursor:'pointer'}}>Bonus {sortKey==='bonus' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      <th onClick={() => handleSort('deductions')} style={{cursor:'pointer'}}>Deductions {sortKey==='deductions' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      <th onClick={() => handleSort('totalSalary')} style={{cursor:'pointer'}}>Total {sortKey==='totalSalary' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      <th onClick={() => handleSort('status')} style={{cursor:'pointer'}}>Status {sortKey==='status' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      {showPaidSalaries && (
+                        <th onClick={() => handleSort('paymentDate')} style={{cursor:'pointer'}}>Payment Date {sortKey==='paymentDate' ? (sortDir==='asc'?'▲':'▼') : ''}</th>
+                      )}
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayedSalaries.map((salary) => (
-                      <tr key={salary.id}>
+                      <tr key={salary.id} onClick={() => { setDetailEmployee({ employeeId: salary.employeeId, employeeName: salary.employeeName }); setShowEmployeeDetail(true); }} style={{ cursor: 'pointer' }}>
                         {!showPaidSalaries && (
                           <td>
                             <input 
                               type="checkbox" 
                               checked={selectedSalaries.includes(salary.id)}
+                              onClick={(e)=> e.stopPropagation()}
                               onChange={() => handleSelectSalary(salary.id)}
                             />
                           </td>
@@ -441,26 +484,35 @@ const FinancePage = () => {
                         {showPaidSalaries && (
                           <td>{salary.paymentDate ? formatDate(salary.paymentDate) : '-'}</td>
                         )}
-                        {!showPaidSalaries && (
-                          <td className="actions-cell">
-                            <Button 
-                              variant="ghost" 
-                              size="small"
-                              onClick={() => handleEditSalary(salary)}
-                              disabled={marking}
-                            >
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="small"
-                              onClick={() => handleMarkAsPaid(salary.id)}
-                              disabled={marking}
-                            >
-                              {marking ? 'Processing...' : 'Mark Paid'}
-                            </Button>
-                          </td>
-                        )}
+                        <td className="actions-cell">
+                          {!showPaidSalaries && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); handleEditSalary(salary); }}
+                                disabled={marking}
+                              >
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(salary.id); }}
+                                disabled={marking}
+                              >
+                                {marking ? 'Processing...' : 'Mark Paid'}
+                              </Button>
+                            </>
+                          )}
+                          <Button 
+                            variant="ghost" 
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); setHistorySalary(salary); setShowHistory(true); }}
+                          >
+                            History
+                          </Button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -468,6 +520,8 @@ const FinancePage = () => {
               </div>
             )}
           </Card>
+          <SalaryHistoryModal open={showHistory} onClose={() => { setShowHistory(false); setHistorySalary(null); }} salary={historySalary} />
+          <EmployeeDetailModal open={showEmployeeDetail} onClose={() => { setShowEmployeeDetail(false); setDetailEmployee(null); }} employee={detailEmployee} startDate={startDate} endDate={endDate} />
         </>
       )}
       
