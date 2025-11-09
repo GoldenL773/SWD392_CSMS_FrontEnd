@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useContext, useEffect } from 'react';
 import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
 import { useToast } from '../hooks/useToast.jsx';
 import { getAllEmployees } from '../api/employeeApi.jsx';
@@ -19,6 +19,7 @@ import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import { formatCurrency, formatDate, safeNumber, formatPercentage } from '../utils/formatters.jsx';
 import './FinancePage.css';
+import { AuthContext } from '../context/AuthProvider.jsx';
 
 const FinancePage = () => {
   const toast = useToast();
@@ -44,8 +45,21 @@ const FinancePage = () => {
   const [salaryMonth, setSalaryMonth] = useState(currentDate.getMonth() + 1);
   const [salaryYear, setSalaryYear] = useState(currentDate.getFullYear());
   
-  const { data: employees, loading: employeesLoading } = useApiQuery(getAllEmployees, { size: 1000 }, []);
-  const { data: ordersData, loading: ordersLoading } = useApiQuery(getAllOrders, { size: 10000 }, []);
+  const { hasAnyRole } = useContext(AuthContext);
+  const canViewEmployees = hasAnyRole(['ADMIN', 'MANAGER']);
+
+  const { data: employees, loading: employeesLoading } = useApiQuery(
+    getAllEmployees,
+    { size: 1000 },
+    [canViewEmployees],
+    { enabled: canViewEmployees }
+  );
+  // Fetch all orders (FINANCE can now access for finance reports)
+  const { data: ordersData, loading: ordersLoading } = useApiQuery(
+    getAllOrders,
+    { size: 10000 },
+    []
+  );
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
   const { data: pendingSalaries, loading: salariesLoading, refetch: refetchSalaries } = useApiQuery(getPendingSalaries, {}, []);
   const { data: paidSalaries, loading: paidSalariesLoading, refetch: refetchPaidSalaries } = useApiQuery(getPaidSalaries, {}, []);
@@ -62,43 +76,33 @@ const FinancePage = () => {
 
   // Calculate financial summary from completed orders in date range
   const financialSummary = useMemo(() => {
-    if (!allOrders || allOrders.length === 0) {
-      return { 
-        totalRevenue: 0, 
-        totalOrders: 0, 
-        completedOrders: 0, 
-        ingredientCost: 0,
-        salaryCost: 0,
-        totalCost: 0, 
-        profit: 0, 
-        profitMargin: 0 
-      };
+    let totalRevenue = 0;
+    let completedOrdersCount = 0;
+    let totalOrdersCount = 0;
+
+    if (allOrders && allOrders.length > 0) {
+      const completedOrders = allOrders.filter(order => {
+        if (order.status !== ORDER_STATUS.COMPLETED) return false;
+        const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
+        if (startDate && orderDate < startDate) return false;
+        if (endDate && orderDate > endDate) return false;
+        return true;
+      });
+      totalRevenue = completedOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      completedOrdersCount = completedOrders.length;
+      totalOrdersCount = allOrders.length;
     }
 
-    // Filter completed orders within date range
-    const completedOrders = allOrders.filter(order => {
-      if (order.status !== ORDER_STATUS.COMPLETED) return false;
-      
-      const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
-      if (startDate && orderDate < startDate) return false;
-      if (endDate && orderDate > endDate) return false;
-      
-      return true;
-    });
-
-    const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-    
-    // Calculate ingredient cost from reports in date range
-    const ingredientCost = reports?.reduce((sum, r) => {
+    // Ingredient cost from reports in date range
+    const ingredientCost = (reports?.reduce((sum, r) => {
       const reportDate = new Date(r.reportDate).toISOString().split('T')[0];
       if (startDate && reportDate < startDate) return sum;
       if (endDate && reportDate > endDate) return sum;
       return sum + safeNumber(r.totalCost);
-    }, 0) || 0;
-    
-    // Calculate salary cost from paid salaries in date range
-    const salaryCost = paidSalaries?.reduce((sum, s) => {
-      // Check if salary payment date is within range
+    }, 0)) || 0;
+
+    // Salary cost from paid salaries in date range
+    const salaryCost = (paidSalaries?.reduce((sum, s) => {
       if (s.paymentDate) {
         const paymentDate = new Date(s.paymentDate).toISOString().split('T')[0];
         if (startDate && paymentDate < startDate) return sum;
@@ -106,21 +110,21 @@ const FinancePage = () => {
         return sum + safeNumber(s.totalSalary);
       }
       return sum;
-    }, 0) || 0;
-    
+    }, 0)) || 0;
+
     const totalCost = ingredientCost + salaryCost;
     const profit = totalRevenue - totalCost;
     const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
 
-    return { 
-      totalRevenue, 
-      totalOrders: allOrders.length,
-      completedOrders: completedOrders.length,
+    return {
+      totalRevenue,
+      totalOrders: totalOrdersCount,
+      completedOrders: completedOrdersCount,
       ingredientCost,
       salaryCost,
-      totalCost, 
-      profit, 
-      profitMargin 
+      totalCost,
+      profit,
+      profitMargin
     };
   }, [allOrders, reports, paidSalaries, startDate, endDate]);
 

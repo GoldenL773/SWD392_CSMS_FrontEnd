@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useContext } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllOrders } from '../api/orderApi.jsx';
 import { getDailyReports, getIngredientTransactions } from '../api/reportApi.jsx';
@@ -11,6 +11,7 @@ import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import Button from '../components/common/Button/index.jsx';
 import { formatCurrency, formatNumber, safeNumber } from '../utils/formatters.jsx';
 import './ReportsPage.css';
+import { AuthContext } from '../context/AuthProvider.jsx';
 
 const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState('revenue');
@@ -32,10 +33,10 @@ const ReportsPage = () => {
   const [startDate, setStartDate] = useState(getDefaultStartDate());
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // Fetch all orders with large page size to get complete data
+  // Fetch all orders (FINANCE can now access for reports)
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useApiQuery(
-    getAllOrders, 
-    { size: 10000 }, 
+    getAllOrders,
+    { size: 10000 },
     []
   );
   const { data: reports, loading: reportsLoading } = useApiQuery(getDailyReports, {}, []);
@@ -93,7 +94,7 @@ const ReportsPage = () => {
     if (!filteredOrders || filteredOrders.length === 0) return [];
     
     const revenueByDate = {};
-    
+
     // Build cost map from backend daily reports (supports totalCost or totalIngredientCost)
     const costMap = {};
     (filteredReports || []).forEach(r => {
@@ -101,13 +102,13 @@ const ReportsPage = () => {
       const costVal = typeof r.totalIngredientCost !== 'undefined' ? r.totalIngredientCost : r.totalCost;
       costMap[key] = typeof costVal === 'string' ? parseFloat(costVal) : costVal;
     });
-    
+
     // filteredOrders already has completed orders only
     filteredOrders.forEach(order => {
       const date = new Date(order.orderDate).toISOString().split('T')[0];
       if (!revenueByDate[date]) {
         revenueByDate[date] = {
-          id: date.replace(/-/g, ''), // Generate numeric-like id from date
+          id: date.replace(/-/g, ''),
           reportDate: date,
           totalRevenue: 0,
           totalOrders: 0,
@@ -115,12 +116,11 @@ const ReportsPage = () => {
           totalWorkingHours: 0
         };
       }
-      // Ensure totalAmount is a number (backend might return string or number)
       const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
       revenueByDate[date].totalRevenue += amount || 0;
       revenueByDate[date].totalOrders += 1;
     });
-    
+
     // Merge cost data into the corresponding dates
     Object.keys(revenueByDate).forEach(date => {
       const cost = costMap[date];
@@ -128,10 +128,8 @@ const ReportsPage = () => {
         revenueByDate[date].totalIngredientCost = cost;
       }
     });
-    
-    return Object.values(revenueByDate).sort((a, b) => 
-      new Date(a.reportDate) - new Date(b.reportDate)
-    );
+
+    return Object.values(revenueByDate).sort((a, b) => new Date(a.reportDate) - new Date(b.reportDate));
   }, [filteredOrders, filteredReports]);
 
   // Calculate summary stats from completed orders
@@ -140,25 +138,16 @@ const ReportsPage = () => {
       return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0 };
     }
 
-    // Ensure totalAmount is a number (backend might return string or number)
     const totalRevenue = filteredOrders.reduce((sum, order) => {
       const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
       return sum + (amount || 0);
     }, 0);
     const totalOrders = filteredOrders.length;
     const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    
-    // Calculate days in range
     const daysInRange = dailyRevenue.length;
     const avgRevenuePerDay = daysInRange > 0 ? totalRevenue / daysInRange : 0;
 
-    return { 
-      totalRevenue, 
-      totalOrders, 
-      avgOrderValue, 
-      avgRevenuePerDay,
-      daysInRange 
-    };
+    return { totalRevenue, totalOrders, avgOrderValue, avgRevenuePerDay, daysInRange };
   }, [filteredOrders, dailyRevenue]);
 
   // Get selected report for export - calculate from orders if not in backend

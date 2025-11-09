@@ -39,18 +39,23 @@ const AttendancePage = () => {
     return () => clearInterval(timer);
   }, []);
   
+  // Use employeeId from user profile (not userId)
+  const employeeId = user?.employeeId;
+
   // Fetch today's attendance
   const { data: todayAttendance, loading: todayLoading, refetch: refetchToday } = useApiQuery(
     getTodayAttendance,
-    user?.id,
-    [user?.id]
+    employeeId,
+    [employeeId],
+    { enabled: !!employeeId }
   );
   
   // Fetch attendance history
   const { data: attendanceHistory, loading: historyLoading, refetch: refetchHistory } = useApiQuery(
-    () => getEmployeeAttendanceByDateRange(user?.id, startDate, endDate),
+    () => getEmployeeAttendanceByDateRange(employeeId, startDate, endDate),
     {},
-    [user?.id, startDate, endDate]
+    [employeeId, startDate, endDate],
+    { enabled: !!employeeId }
   );
   
   // Check-in mutation
@@ -61,27 +66,35 @@ const AttendancePage = () => {
   
   // Handle check-in
   const handleCheckIn = useCallback(async () => {
+    if (!employeeId) {
+      toast.error('Employee profile not found. Please log in again.');
+      return;
+    }
     try {
-      await performCheckIn(user?.id);
+      await performCheckIn(employeeId);
       toast.success('Checked in successfully!');
       refetchToday();
       refetchHistory();
     } catch (error) {
       toast.error(error.message || 'Failed to check in');
     }
-  }, [user?.id, performCheckIn, toast, refetchToday, refetchHistory]);
+  }, [employeeId, performCheckIn, toast, refetchToday, refetchHistory]);
   
   // Handle check-out
   const handleCheckOut = useCallback(async () => {
+    if (!employeeId) {
+      toast.error('Employee profile not found. Please log in again.');
+      return;
+    }
     try {
-      await performCheckOut(user?.id);
+      await performCheckOut(employeeId);
       toast.success('Checked out successfully!');
       refetchToday();
       refetchHistory();
     } catch (error) {
       toast.error(error.message || 'Failed to check out');
     }
-  }, [user?.id, performCheckOut, toast, refetchToday, refetchHistory]);
+  }, [employeeId, performCheckOut, toast, refetchToday, refetchHistory]);
   
   // Calculate attendance stats
   const stats = useMemo(() => {
