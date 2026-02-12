@@ -1,0 +1,6 @@
+/* SuppliersPage Styles */
+
+.suppliers-page {
+  min-height: 100vh;
+  background: var(--color-background, #FDFBF7);
+}

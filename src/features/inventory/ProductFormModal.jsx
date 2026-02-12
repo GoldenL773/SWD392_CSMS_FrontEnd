@@ -9,14 +9,16 @@ import './ProductFormModal.css';
 
 /**
  * ProductFormModal Component
- * Form for creating/editing products with ingredient mappings
+ * Form for creating/editing products with variants and ingredient mappings
  * Entity: Product (name, category, price, status)
+ * Entity: Variant (size, temperature, price, sku)
  * Entity: ProductIngredient (productId, ingredientId, quantityRequired)
  */
 const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
   const { data: ingredientsData } = useApiQuery(getAllIngredients, { size: 1000 }, []);
   // Extract ingredients array from paginated response
   const ingredients = ingredientsData?.content || ingredientsData || [];
+  
   const [formData, setFormData] = useState({
     name: '',
     category: PRODUCT_CATEGORIES[0],
@@ -24,6 +26,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     status: PRODUCT_STATUS.AVAILABLE,
     description: ''
   });
+  
+  const [variants, setVariants] = useState([]);
   const [productIngredients, setProductIngredients] = useState([]);
   const [errors, setErrors] = useState({});
   const [ingredientSearch, setIngredientSearch] = useState('');
@@ -39,6 +43,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
         description: product.description || ''
       });
       setProductIngredients(product.productIngredients || []);
+      setVariants(product.variants || []);
     } else {
       setFormData({
         name: '',
@@ -48,6 +53,10 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
         description: ''
       });
       setProductIngredients([]);
+      // Default variant if creating new
+      setVariants([
+        { id: Date.now(), size: 'Regular', temperature: 'None', price: '', sku: '' }
+      ]);
     }
     setErrors({});
   }, [product, isOpen]);
@@ -60,7 +69,30 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     }
   };
 
-  // Filter ingredients based on search
+  // Variant Management
+  const addVariant = () => {
+    setVariants([...variants, {
+      id: Date.now(),
+      size: '',
+      temperature: 'None',
+      price: '',
+      sku: ''
+    }]);
+  };
+
+  const updateVariant = (index, field, value) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariants(updated);
+  };
+
+  const removeVariant = (index) => {
+    if (variants.length > 1) {
+      setVariants(variants.filter((_, i) => i !== index));
+    }
+  };
+
+  // Ingredient Management
   const filteredIngredients = ingredients.filter(ing => 
     ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
   );
@@ -88,8 +120,19 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
       newErrors.name = 'Product name is required';
     }
     if (!formData.price || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required';
+      newErrors.price = 'Valid base price is required';
     }
+    
+    // Validate variants
+    if (variants.length === 0) {
+      newErrors.variants = 'At least one variant is required';
+    } else {
+      const invalidVariant = variants.some(v => !v.size || !v.price || parseFloat(v.price) <= 0);
+      if (invalidVariant) {
+        newErrors.variants = 'All variants must have a size and valid price';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -101,6 +144,12 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     const submitData = {
       ...formData,
       price: parseFloat(formData.price),
+      variants: variants.map(v => ({
+        ...v,
+        price: parseFloat(v.price),
+        // Remove temp ID if it's new (backend handles ID)
+        id: typeof v.id === 'string' ? v.id : undefined 
+      })),
       productIngredients: productIngredients.map(pi => ({
         ingredientId: parseInt(pi.ingredientId),
         quantityRequired: parseFloat(pi.quantityRequired)
@@ -118,24 +167,9 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
       size="large"
     >
       <form className="product-form" onSubmit={handleSubmit}>
+        {/* General Info */}
         <div className="form-section">
           <h3>Product Information</h3>
-          <div className="filters-row">
-            <div className="form-group">
-              <label htmlFor="categoryFilter">Filter by Category</label>
-              <select
-                id="categoryFilter"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="filter-select"
-              >
-                <option value="ALL">All Categories</option>
-                {PRODUCT_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-          </div>
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="name">Product Name *</label>
@@ -146,6 +180,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 value={formData.name}
                 onChange={handleChange}
                 className={errors.name ? 'error' : ''}
+                placeholder="e.g. Cappuccino"
               />
               {errors.name && <span className="error-message">{errors.name}</span>}
             </div>
@@ -165,7 +200,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="price">Price (VND) *</label>
+              <label htmlFor="price">Base Price (VND) *</label>
               <input
                 type="number"
                 id="price"
@@ -175,6 +210,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 min="0"
                 step="1000"
                 className={errors.price ? 'error' : ''}
+                placeholder="0"
               />
               {errors.price && <span className="error-message">{errors.price}</span>}
             </div>
@@ -199,13 +235,99 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows="3"
-                placeholder="Enter product description (optional)"
+                rows="2"
+                placeholder="Product description..."
               />
             </div>
           </div>
         </div>
 
+        {/* Variants Section */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>Product Variants</h3>
+            <Button
+              type="button"
+              variant="secondary"
+              size="small"
+              onClick={addVariant}
+            >
+              + Add Variant
+            </Button>
+          </div>
+          
+          {errors.variants && <div className="error-message">{errors.variants}</div>}
+          
+          <div className="variants-table-container">
+            <table className="variants-table">
+              <thead>
+                <tr>
+                  <th>Size *</th>
+                  <th>Temperature</th>
+                  <th>Price *</th>
+                  <th>SKU</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {variants.map((variant, index) => (
+                  <tr key={variant.id || index}>
+                    <td>
+                      <input
+                        type="text"
+                        value={variant.size}
+                        onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                        placeholder="e.g. Small"
+                        className="variant-input"
+                      />
+                    </td>
+                    <td>
+                      <select
+                        value={variant.temperature}
+                        onChange={(e) => updateVariant(index, 'temperature', e.target.value)}
+                        className="variant-input"
+                      >
+                        <option value="None">None</option>
+                        <option value="Hot">Hot</option>
+                        <option value="Cold">Cold</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        value={variant.price}
+                        onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                        placeholder="0"
+                        className="variant-input"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={variant.sku}
+                        onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                        placeholder="Optional"
+                        className="variant-input"
+                      />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="remove-btn"
+                        onClick={() => removeVariant(index)}
+                        disabled={variants.length <= 1}
+                      >
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Ingredients Section */}
         <div className="form-section">
           <div className="section-header">
             <h3>Ingredient Requirements</h3>
@@ -229,7 +351,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
             />
             {ingredientSearch && (
               <span className="search-results">
-                {filteredIngredients.length} ingredient{filteredIngredients.length !== 1 ? 's' : ''} found
+                {filteredIngredients.length} found
               </span>
             )}
           </div>

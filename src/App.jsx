@@ -3,7 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { ThemeProvider } from './context/ThemeProvider.jsx';
 import AppRoutes from './routes/AppRoutes.jsx';
-import './styles/global.css';
+import './styles/theme.css';
 
 /**
  * App Component

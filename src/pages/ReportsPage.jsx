@@ -1,31 +1,44 @@
-import React, { useState, useMemo, useEffect, useContext } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth.jsx';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
+import { useApiMutation } from '../hooks/useApiMutation.jsx';
 import { getAllOrders } from '../api/orderApi.jsx';
-import { getDailyReports, getIngredientTransactions } from '../api/reportApi.jsx';
-import { ORDER_STATUS, API_BASE_URL } from '../utils/constants.jsx';
+import { 
+  getDailyReports, 
+  getIngredientTransactions, 
+  uploadReportFile, 
+  getUploadedReports, 
+  downloadReportFile 
+} from '../api/reportApi.jsx';
+import { getPaidSalaries } from '../api/salaryApi.jsx';
 import Card from '../components/common/Card/index.jsx';
 import RevenueChart from '../features/reports/RevenueChart.jsx';
 import TransactionTable from '../features/reports/TransactionTable.jsx';
 import DailyReportExport from '../features/reports/DailyReportExport.jsx';
+import ReportUpload from '../features/reports/ReportUpload.jsx';
+import ReportViewer from '../features/reports/ReportViewer.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import Button from '../components/common/Button/index.jsx';
 import { formatCurrency, formatNumber, safeNumber } from '../utils/formatters.jsx';
 import './ReportsPage.css';
-import { AuthContext } from '../context/AuthProvider.jsx';
 import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, Tooltip, LabelList, CartesianGrid, Legend, Cell } from 'recharts';
-import { getPaidSalaries } from '../api/salaryApi.jsx';
 
 const ReportsPage = () => {
+  const { hasAnyRole } = useAuth();
+  const isFinance = hasAnyRole(['FINANCE', 'ADMIN']);
+  const isManager = hasAnyRole(['MANAGER', 'ADMIN', 'FINANCE']);
+
   const [activeTab, setActiveTab] = useState('revenue');
-  // Default to yesterday to catch orders from previous day
+  
+  // Default to yesterday
   const getDefaultReportDate = () => {
     const date = new Date();
-    date.setDate(date.getDate() - 1); // Yesterday
+    date.setDate(date.getDate() - 1);
     return date.toISOString().split('T')[0];
   };
   const [selectedDate, setSelectedDate] = useState(getDefaultReportDate());
   
-  // Set default date range to last 30 days
+  // Default range: last 30 days
   const getDefaultStartDate = () => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -35,7 +48,7 @@ const ReportsPage = () => {
   const [startDate, setStartDate] = useState(getDefaultStartDate());
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // Fetch all orders (FINANCE can now access for reports)
+  // Queries
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useApiQuery(
     getAllOrders,
     { size: 10000 },
@@ -45,68 +58,94 @@ const ReportsPage = () => {
   const { data: transactions, loading: transactionsLoading } = useApiQuery(getIngredientTransactions, {}, []);
   const { data: paidSalaries, loading: salariesLoading } = useApiQuery(getPaidSalaries, {}, []);
   
-  // Log API errors only
+  // Uploaded Reports Query
+  const { 
+    data: uploadedReports, 
+    loading: uploadedReportsLoading, 
+    refetch: refetchUploadedReports 
+  } = useApiQuery(getUploadedReports, {}, []);
+
+  // Upload Mutation
+  const { mutate: handleUploadReport } = useApiMutation(
+    ({ file, metadata }) => uploadReportFile(file, metadata),
+    {
+      successMessage: 'Report uploaded successfully',
+      onSuccess: () => refetchUploadedReports()
+    }
+  );
+
+  // Download Handler
+  const handleDownloadReport = async (reportId) => {
+    try {
+      await downloadReportFile(reportId);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // useApiMutation handles toast errors if we used it, but here just log or show toast
+    }
+  };
+
   useEffect(() => {
     if (ordersError) {
       console.error('Orders API Error:', ordersError);
     }
   }, [ordersError]);
   
-  // Extract orders from paginated response
-  const allOrders = useMemo(() => {
-    return ordersData?.content || ordersData || [];
-  }, [ordersData]);
+  // Memoized Data Processing
+  const allOrders = useMemo(() => ordersData?.content || ordersData || [], [ordersData]);
+  const allUploadedReports = useMemo(() => uploadedReports?.content || uploadedReports || [], [uploadedReports]);
 
-  // Filter orders by date range and status
+  // Filter orders
   const filteredOrders = useMemo(() => {
     if (!allOrders) return [];
-    
     return allOrders.filter(order => {
-      // Only include completed orders - handle any case variation
       const orderStatus = (order.status || '').toString().toUpperCase();
-      const isCompleted = orderStatus === 'COMPLETED';
-      
-      if (!isCompleted) return false;
-      
+      if (orderStatus !== 'COMPLETED') return false;
       const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
-      
       if (startDate && orderDate < startDate) return false;
       if (endDate && orderDate > endDate) return false;
-      
       return true;
     });
   }, [allOrders, startDate, endDate]);
   
-  // Filter reports by date range (for daily report export)
-  const filteredReports = useMemo(() => {
+  // Filter daily reports
+  const filteredDailyReports = useMemo(() => {
     if (!reports) return [];
     let filtered = [...reports];
-    
-    if (startDate) {
-      filtered = filtered.filter(r => r.reportDate >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter(r => r.reportDate <= endDate);
-    }
-    
+    if (startDate) filtered = filtered.filter(r => r.reportDate >= startDate);
+    if (endDate) filtered = filtered.filter(r => r.reportDate <= endDate);
     return filtered;
   }, [reports, startDate, endDate]);
   
-  // Group orders by date for chart
+  // Stats Calculation
+  const stats = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) {
+      return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0, avgRevenuePerDay: 0 };
+    }
+    const totalRevenue = filteredOrders.reduce((sum, order) => {
+      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
+      return sum + (amount || 0);
+    }, 0);
+    const totalOrders = filteredOrders.length;
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    
+    // Use filteredDailyReports length for daysInRange if available, else estimate
+    const daysInRange = filteredDailyReports.length || 1; 
+    const avgRevenuePerDay = daysInRange > 0 ? totalRevenue / daysInRange : 0;
+
+    return { totalRevenue, totalOrders, avgOrderValue, avgRevenuePerDay, daysInRange };
+  }, [filteredOrders, filteredDailyReports]);
+
+  // Data preparation for charts (same as before)
   const dailyRevenue = useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) return [];
-    
     const revenueByDate = {};
-
-    // Build cost map from backend daily reports (supports totalCost or totalIngredientCost)
     const costMap = {};
-    (filteredReports || []).forEach(r => {
+    (filteredDailyReports || []).forEach(r => {
       const key = r.reportDate;
       const costVal = typeof r.totalIngredientCost !== 'undefined' ? r.totalIngredientCost : r.totalCost;
       costMap[key] = typeof costVal === 'string' ? parseFloat(costVal) : costVal;
     });
 
-    // filteredOrders already has completed orders only
     filteredOrders.forEach(order => {
       const date = new Date(order.orderDate).toISOString().split('T')[0];
       if (!revenueByDate[date]) {
@@ -124,7 +163,6 @@ const ReportsPage = () => {
       revenueByDate[date].totalOrders += 1;
     });
 
-    // Merge cost data into the corresponding dates
     Object.keys(revenueByDate).forEach(date => {
       const cost = costMap[date];
       if (typeof cost !== 'undefined' && cost !== null && !isNaN(cost)) {
@@ -133,36 +171,16 @@ const ReportsPage = () => {
     });
 
     return Object.values(revenueByDate).sort((a, b) => new Date(a.reportDate) - new Date(b.reportDate));
-  }, [filteredOrders, filteredReports]);
+  }, [filteredOrders, filteredDailyReports]);
 
-  // Calculate summary stats from completed orders (placed before breakdown to avoid TDZ)
-  const stats = useMemo(() => {
-    if (!filteredOrders || filteredOrders.length === 0) {
-      return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, daysInRange: 0, avgRevenuePerDay: 0 };
-    }
-
-    const totalRevenue = filteredOrders.reduce((sum, order) => {
-      const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
-      return sum + (amount || 0);
-    }, 0);
-    const totalOrders = filteredOrders.length;
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-    const daysInRange = dailyRevenue.length;
-    const avgRevenuePerDay = daysInRange > 0 ? totalRevenue / daysInRange : 0;
-
-    return { totalRevenue, totalOrders, avgOrderValue, avgRevenuePerDay, daysInRange };
-  }, [filteredOrders, dailyRevenue]);
-
-  // Sum ingredient cost across filtered reports (COGS)
   const totalIngredientCost = useMemo(() => {
-    if (!filteredReports || filteredReports.length === 0) return 0;
-    return filteredReports.reduce((sum, r) => {
+    if (!filteredDailyReports || filteredDailyReports.length === 0) return 0;
+    return filteredDailyReports.reduce((sum, r) => {
       const raw = (typeof r.totalIngredientCost !== 'undefined' ? r.totalIngredientCost : r.totalCost) || 0;
       return sum + (typeof raw === 'string' ? parseFloat(raw) : raw);
     }, 0);
-  }, [filteredReports]);
+  }, [filteredDailyReports]);
 
-  // Sum salary cost from paid salaries within date range
   const totalSalaryCost = useMemo(() => {
     if (!paidSalaries || paidSalaries.length === 0) return 0;
     return paidSalaries.reduce((sum, s) => {
@@ -174,7 +192,6 @@ const ReportsPage = () => {
     }, 0);
   }, [paidSalaries, startDate, endDate]);
 
-  // Financial breakdown values
   const breakdown = useMemo(() => {
     const revenue = safeNumber(stats.totalRevenue);
     const cogs = safeNumber(totalIngredientCost);
@@ -183,13 +200,10 @@ const ReportsPage = () => {
     return { revenue, cogs, labor, net };
   }, [stats.totalRevenue, totalIngredientCost, totalSalaryCost]);
 
-  // Build data for Waterfall chart using stacked bars (base + delta)
   const waterfallData = useMemo(() => {
     const { revenue, cogs, labor, net } = breakdown;
-    // previous cumulative values to position the next bar
     const afterRevenue = revenue;
     const afterCogs = revenue + (-cogs);
-    // Labor cost is negative; cumulative after labor
     const afterLabor = afterCogs + (-labor);
 
     return [
@@ -200,7 +214,6 @@ const ReportsPage = () => {
     ];
   }, [breakdown]);
 
-  // Employee performance (AOV per employee) data
   const employeePerf = useMemo(() => {
     if (!filteredOrders || filteredOrders.length === 0) return [];
     const map = new Map();
@@ -223,83 +236,60 @@ const ReportsPage = () => {
     return arr;
   }, [filteredOrders]);
 
-  // Custom label for currency on bars
-  const CurrencyLabel = (props) => {
-    const { x, y, width, value } = props;
-    if (value == null) return null;
-    const val = Number(value) || 0;
-    const posX = (x || 0) + (width || 0) + 6;
-    const posY = (y || 0) + 10;
-    return (
-      <text x={posX} y={posY} fill="#374151" fontSize={12}>{formatCurrency(val)}</text>
-    );
-  };
-
-  // Enhanced tooltip for employee performance
-  const EmployeeTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const d = payload[0].payload;
-      return (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 10, borderRadius: 6 }}>
-          <div><strong>Employee:</strong> {d.name}</div>
-          <div><strong>Avg. Order Value:</strong> {formatCurrency(d.avg)}</div>
-          <div><strong>Total Orders in Period:</strong> {d.count}</div>
-          <div><strong>Total Revenue in Period:</strong> {formatCurrency(d.total)}</div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  
-
-  // Get selected report for export - calculate from orders if not in backend
   const selectedReport = useMemo(() => {
-    // First try to get from backend reports
     const backendReport = reports?.find(r => r.reportDate === selectedDate);
-    
-    // Otherwise, calculate from orders
-    // Use ALL orders, not filteredOrders (which is filtered by date range)
     const ordersForDate = allOrders.filter(order => {
       const orderStatus = (order.status || '').toString().toUpperCase();
       const isCompleted = orderStatus === 'COMPLETED';
       const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
-      const matchesDate = orderDate === selectedDate;
-      
-      return isCompleted && matchesDate;
+      return isCompleted && orderDate === selectedDate;
     });
     
+    if (ordersForDate.length === 0 && !backendReport) return null;
     
-    if (ordersForDate.length === 0 && !backendReport) {
-      return null;
-    }
-    
-    // Calculate revenue from completed orders
-    // Ensure totalAmount is a number (backend might return string or number)
     const totalRevenue = ordersForDate.reduce((sum, order) => {
       const amount = typeof order.totalAmount === 'string' ? parseFloat(order.totalAmount) : order.totalAmount;
       return sum + (amount || 0);
     }, 0);
-    const totalOrders = ordersForDate.length;
     
-    
-    // Use backend values for cost/hours if available, otherwise 0
     const totalIngredientCost = (backendReport?.totalIngredientCost ?? backendReport?.totalCost) || 0;
     const totalWorkingHours = backendReport?.totalWorkingHours || 0;
     
     return {
       reportDate: selectedDate,
-      totalOrders,
+      totalOrders: ordersForDate.length,
       totalRevenue,
       totalIngredientCost,
       totalWorkingHours,
       notes: backendReport?.notes || ''
     };
   }, [reports, selectedDate, allOrders]);
-  
+
   const handleClearFilters = () => {
     setStartDate(getDefaultStartDate());
     setEndDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const CurrencyLabel = (props) => {
+    const { x, y, width, value } = props;
+    if (value == null) return null;
+    const val = Number(value) || 0;
+    return <text x={x + width + 6} y={y + 10} fill="#374151" fontSize={12}>{formatCurrency(val)}</text>;
+  };
+
+  const EmployeeTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const d = payload[0].payload;
+      return (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: 10, borderRadius: 6 }}>
+          <div><strong>Employee:</strong> {d.name}</div>
+          <div><strong>Avg. Order Value:</strong> {formatCurrency(d.avg)}</div>
+          <div><strong>Total Orders:</strong> {d.count}</div>
+          <div><strong>Total Revenue:</strong> {formatCurrency(d.total)}</div>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -310,61 +300,58 @@ const ReportsPage = () => {
       </div>
 
       {ordersError && (
-        <div style={{
-          backgroundColor: '#fee',
-          border: '1px solid #fcc',
-          padding: '16px',
-          marginBottom: '20px',
-          borderRadius: '8px',
-          color: '#c00'
-        }}>
+        <div className="error-banner">
           <strong>⚠️ Error loading orders:</strong> {ordersError}
-          <br />
-          <small>Check console for details. Backend server may be offline.</small>
         </div>
       )}
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-label">Total Revenue</div>
-          <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
-          <div className="stat-note">From {stats.totalOrders} completed orders</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Completed Orders</div>
-          <div className="stat-value">{formatNumber(stats.totalOrders)}</div>
-          <div className="stat-note">In selected period</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg Order Value</div>
-          <div className="stat-value">{formatCurrency(stats.avgOrderValue)}</div>
-          <div className="stat-note">Per order</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Avg Revenue/Day</div>
-          <div className="stat-value">{formatCurrency(stats.avgRevenuePerDay)}</div>
-          <div className="stat-note">{stats.daysInRange} days</div>
-        </div>
-      </div>
-
-      {/* Date Range Filter */}
-      <Card>
-        <div className="filter-section">
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            label="Filter Reports by Date Range"
-          />
-          <div className="filter-actions">
-            <Button variant="secondary" onClick={handleClearFilters}>
-              Reset to Last 30 Days
-            </Button>
+      {/* Stats Cards */}
+      {activeTab === 'revenue' && (
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-label">Total Revenue</div>
+            <div className="stat-value">{formatCurrency(stats.totalRevenue)}</div>
+            <div className="stat-note">From {stats.totalOrders} completed orders</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Completed Orders</div>
+            <div className="stat-value">{formatNumber(stats.totalOrders)}</div>
+            <div className="stat-note">In selected period</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Avg Order Value</div>
+            <div className="stat-value">{formatCurrency(stats.avgOrderValue)}</div>
+            <div className="stat-note">Per order</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-label">Avg Revenue/Day</div>
+            <div className="stat-value">{formatCurrency(stats.avgRevenuePerDay)}</div>
+            <div className="stat-note">{stats.daysInRange} days</div>
           </div>
         </div>
-      </Card>
+      )}
 
+      {/* Date Filter */}
+      {activeTab !== 'files' && (
+        <Card>
+          <div className="filter-section">
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              label="Filter Reports by Date Range"
+            />
+            <div className="filter-actions">
+              <Button variant="secondary" onClick={handleClearFilters}>
+                Reset to Last 30 Days
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Tabs */}
       <div className="tabs">
         <button
           className={`tab ${activeTab === 'revenue' ? 'tab--active' : ''}`}
@@ -379,6 +366,12 @@ const ReportsPage = () => {
           Transactions
         </button>
         <button
+          className={`tab ${activeTab === 'files' ? 'tab--active' : ''}`}
+          onClick={() => setActiveTab('files')}
+        >
+          Files & Uploads
+        </button>
+        <button
           className={`tab ${activeTab === 'export' ? 'tab--active' : ''}`}
           onClick={() => setActiveTab('export')}
         >
@@ -386,18 +379,14 @@ const ReportsPage = () => {
         </button>
       </div>
 
+      {/* Tab Content */}
       {activeTab === 'revenue' && (
         <>
           <Card title="Daily Revenue" subtitle={`${dailyRevenue?.length || 0} days with completed orders`}>
             {ordersLoading ? (
-              <div className="loading-container">
-                <div className="loading"></div>
-                <p>Loading revenue data...</p>
-              </div>
+              <div className="loading-container"><div className="loading"></div></div>
             ) : dailyRevenue.length === 0 ? (
-              <div className="empty-state">
-                <p>No completed orders found in the selected date range</p>
-              </div>
+              <div className="empty-state"><p>No completed orders found in the selected date range</p></div>
             ) : (
               <RevenueChart reports={dailyRevenue} />
             )}
@@ -405,14 +394,9 @@ const ReportsPage = () => {
 
           <Card title="Financial Breakdown (Waterfall)" subtitle="Revenue vs. COGS and Labor to Net Profit">
             {(ordersLoading || reportsLoading || salariesLoading) ? (
-              <div className="loading-container">
-                <div className="loading"></div>
-                <p>Loading financial breakdown...</p>
-              </div>
+              <div className="loading-container"><div className="loading"></div></div>
             ) : (breakdown.revenue === 0 && breakdown.cogs === 0 && breakdown.labor === 0) ? (
-              <div className="empty-state">
-                <p>No data available for the selected period</p>
-              </div>
+              <div className="empty-state"><p>No data available</p></div>
             ) : (
               <div style={{ width: '100%', height: 360 }}>
                 <ResponsiveContainer>
@@ -422,14 +406,10 @@ const ReportsPage = () => {
                     <YAxis type="number" tickFormatter={(v) => formatCurrency(v)} />
                     <Tooltip formatter={(v) => formatCurrency(v)} />
                     <Legend />
-                    {/* Base (invisible) to position deltas */}
                     <Bar dataKey="base" stackId="a" fill="transparent" />
-                    {/* Delta bar, colored per bar using Cells */}
                     <Bar dataKey="delta" stackId="a" name="Amount" isAnimationActive={false}>
                       <LabelList dataKey="delta" content={<CurrencyLabel />} />
-                      {waterfallData.map((entry, idx) => (
-                        <Cell key={`wcell-${idx}`} fill={entry.color} />
-                      ))}
+                      {waterfallData.map((entry, idx) => <Cell key={`wcell-${idx}`} fill={entry.color} />)}
                     </Bar>
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -439,14 +419,9 @@ const ReportsPage = () => {
 
           <Card title="Employee Performance (AOV)" subtitle="Average Order Value per Employee">
             {ordersLoading ? (
-              <div className="loading-container">
-                <div className="loading"></div>
-                <p>Loading employee performance...</p>
-              </div>
+              <div className="loading-container"><div className="loading"></div></div>
             ) : employeePerf.length === 0 ? (
-              <div className="empty-state">
-                <p>No data available for the selected period</p>
-              </div>
+              <div className="empty-state"><p>No data available</p></div>
             ) : (
               <div style={{ width: '100%', height: 420 }}>
                 <ResponsiveContainer>
@@ -476,6 +451,32 @@ const ReportsPage = () => {
         </Card>
       )}
 
+      {activeTab === 'files' && (
+        <div className="files-section">
+          {/* Accountant/Finance/Admin can upload */}
+          {isFinance && (
+            <Card title="Upload Report">
+              <ReportUpload onUpload={(file, metadata) => handleUploadReport({ file, metadata })} />
+            </Card>
+          )}
+
+          {/* Manager/Finance/Admin can view/download */}
+          {isManager && (
+            <Card title="Uploaded Reports">
+              {uploadedReportsLoading ? (
+                <div className="loading-container"><div className="loading"></div></div>
+              ) : (
+                <ReportViewer 
+                  reports={allUploadedReports} 
+                  onDownload={handleDownloadReport}
+                  onPreview={(id) => console.log('Preview', id)} 
+                />
+              )}
+            </Card>
+          )}
+        </div>
+      )}
+
       {activeTab === 'export' && (
         <Card>
           <div className="export-date-selector">
@@ -489,10 +490,7 @@ const ReportsPage = () => {
             />
           </div>
           {reportsLoading ? (
-            <div className="loading-container">
-              <div className="loading"></div>
-              <p>Loading report...</p>
-            </div>
+            <div className="loading-container"><div className="loading"></div></div>
           ) : (
             <DailyReportExport report={selectedReport} />
           )}

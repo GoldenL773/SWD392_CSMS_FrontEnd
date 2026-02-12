@@ -1,0 +1,95 @@
+/* SupplierManagerExample Styles */
+
+.supplier-manager-example {
+  min-height: 100vh;
+  background: var(--color-background, #FDFBF7);
+}
+
+.example-header {
+  background: linear-gradient(135deg, var(--color-primary, #4B3621) 0%, #6d5033 100%);
+  color: white;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.example-header h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.example-header p {
+  font-family: 'Nunito', sans-serif;
+  font-size: 16px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.example-info {
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.example-info h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-primary, #4B3621);
+  margin: 2rem 0 1rem 0;
+}
+
+.example-info h3:first-child {
+  margin-top: 0;
+}
+
+.example-info ul {
+  font-family: 'Nunito', sans-serif;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text, #333);
+  padding-left: 1.5rem;
+}
+
+.example-info li {
+  margin-bottom: 0.5rem;
+}
+
+.example-info pre {
+  background: rgba(75, 54, 33, 0.05);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-primary, #4B3621);
+}
+
+.example-info strong {
+  color: var(--color-accent, #FF9F43);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .example-header {
+    padding: 2rem 1rem;
+  }
+
+  .example-header h1 {
+    font-size: 28px;
+  }
+
+  .example-info {
+    margin: 2rem 1rem;
+    padding: 1.5rem;
+  }
+
+  .example-info pre {
+    font-size: 12px;
+  }
+}

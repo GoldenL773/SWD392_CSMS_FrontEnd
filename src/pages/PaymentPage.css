@@ -1,0 +1,106 @@
+/* PaymentPage Styles - Visual Design System */
+
+.payment-page {
+  min-height: 100vh;
+  background: var(--color-creamy-white);
+}
+
+.payment-page-header {
+  margin-bottom: var(--spacing-3xl);
+  padding-bottom: var(--spacing-xl);
+  border-bottom: 2px solid rgba(242, 127, 13, 0.1);
+}
+
+.payment-page-header h1 {
+  font-size: var(--font-size-4xl);
+  font-family: var(--font-family-heading);
+  font-weight: 800;
+  color: var(--color-coffee-brown);
+  margin: 0 0 var(--spacing-sm) 0;
+  letter-spacing: -0.5px;
+}
+
+.payment-page-header p {
+  font-size: var(--font-size-lg);
+  font-family: var(--font-family-body);
+  color: var(--color-text-sub);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.payment-mode-selector {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-3xl);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 240, 224, 0.4));
+  padding: var(--spacing-md);
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(242, 127, 13, 0.15);
+  box-shadow: 0 4px 16px rgba(242, 127, 13, 0.08);
+}
+
+.mode-btn {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: white;
+  border: 2px solid rgba(242, 127, 13, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-coffee-brown);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.mode-btn:hover {
+  background: rgba(242, 127, 13, 0.05);
+  border-color: var(--color-vibrant-orange);
+  transform: translateY(-2px);
+}
+
+.mode-btn.active {
+  background: var(--color-vibrant-orange);
+  border-color: var(--color-vibrant-orange);
+  color: white;
+  box-shadow: 0 4px 12px rgba(242, 127, 13, 0.3);
+}
+
+.payment-display-container {
+  margin-bottom: var(--spacing-3xl);
+}
+
+.payment-reset {
+  text-align: center;
+  padding: var(--spacing-2xl);
+}
+
+.reset-btn {
+  padding: var(--spacing-md) var(--spacing-2xl);
+  background: white;
+  border: 2px solid rgba(242, 127, 13, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-coffee-brown);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.reset-btn:hover {
+  background: rgba(242, 127, 13, 0.05);
+  border-color: var(--color-vibrant-orange);
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .payment-page-header h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  .payment-mode-selector {
+    flex-direction: column;
+  }
+}

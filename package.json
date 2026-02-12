@@ -11,7 +11,11 @@
     "lint": "eslint src --ext .jsx,.js"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "phosphor-icons": "^1.4.2",
+    "phosphor-react": "^1.4.1",
     "prop-types": "^15.8.1",
+    "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.20.0",

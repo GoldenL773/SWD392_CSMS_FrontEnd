@@ -1,4 +1,18 @@
 import React from 'react';
+import { 
+  Coffee, 
+  Cake, 
+  Bread, 
+  Hamburger, 
+  Wine, 
+  ForkKnife,
+  MapPin,
+  Clock,
+  Phone,
+  FacebookLogo,
+  InstagramLogo,
+  TwitterLogo
+} from '@phosphor-icons/react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllProducts } from '../api/productApi.jsx';
 import { PRODUCT_CATEGORIES } from '../utils/constants.jsx';
@@ -27,16 +41,17 @@ const HomePage = () => {
   };
 
   const getCategoryIcon = (category) => {
+    const iconProps = { size: 32, weight: "thin" };
     const icons = {
-      'Coffee': '☕',
-      'Tea': '🍵',
-      'Cake': '🍰',
-      'Pastry': '🥐',
-      'Sandwich': '🥪',
-      'Beverage': '🥤',
-      'Other': '🍴'
+      'Coffee': <Coffee {...iconProps} />,
+      'Tea': <Wine {...iconProps} />,
+      'Cake': <Cake {...iconProps} />,
+      'Pastry': <Bread {...iconProps} />,
+      'Sandwich': <Hamburger {...iconProps} />,
+      'Beverage': <Wine {...iconProps} />,
+      'Other': <ForkKnife {...iconProps} />
     };
-    return icons[category] || '🍴';
+    return icons[category] || <ForkKnife {...iconProps} />;
   };
 
   return (
@@ -45,7 +60,7 @@ const HomePage = () => {
       <header className="homepage-header">
         <div className="header-content">
           <div className="logo">
-            <span className="logo-icon">☕</span>
+            <Coffee size={32} weight="thin" className="logo-icon" />
             <h1 className="logo-text">CSMS</h1>
           </div>
           <nav className="header-nav">
@@ -59,20 +74,53 @@ const HomePage = () => {
 
       {/* Hero Banner with Image */}
       <section className="hero-banner">
+        <div className="hero-decorative-blur hero-decorative-blur-1"></div>
+        <div className="hero-decorative-blur hero-decorative-blur-2"></div>
         <div className="hero-image-container">
           <img src={heroBanner} alt="CSMS Coffee" className="hero-image" />
           <div className="hero-overlay"></div>
         </div>
         <div className="hero-content">
-          <div className="hero-badge">Premium Coffee Experience</div>
-          <h2 className="hero-title">Welcome to CSMS Coffee</h2>
+          <div className="hero-badge">
+            <div className="hero-badge-stars">
+              <Coffee size={14} weight="fill" />
+              <Coffee size={14} weight="fill" />
+              <Coffee size={14} weight="fill" />
+              <Coffee size={14} weight="fill" />
+              <Coffee size={14} weight="fill" />
+            </div>
+            <span className="hero-badge-text">Premium Coffee Experience</span>
+          </div>
+          <h2 className="hero-title">
+            Welcome to <br />
+            <span className="hero-title-highlight">
+              CSMS Coffee
+              <svg className="hero-title-underline" preserveAspectRatio="none" viewBox="0 0 100 10">
+                <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" strokeWidth="8"></path>
+              </svg>
+            </span>
+          </h2>
           <p className="hero-subtitle">Experience the finest coffee in town</p>
           <p className="hero-description">
-            Handcrafted beverages, fresh pastries, and a cozy atmosphere
+            Handcrafted beverages, fresh pastries, and a cozy atmosphere. Join us for the perfect coffee experience.
           </p>
           <div className="hero-actions">
-            <a href="#menu" className="hero-cta primary">View Our Menu</a>
-            <a href="#about" className="hero-cta secondary">Learn More</a>
+            <a href="#menu" className="hero-cta primary">
+              View Our Menu
+            </a>
+            <a href="#about" className="hero-cta secondary">
+              Learn More
+            </a>
+          </div>
+          <div className="hero-features">
+            <span className="hero-feature-item">
+              <Coffee size={16} weight="fill" className="hero-feature-icon" />
+              30-Day Money Back Guarantee
+            </span>
+            <span className="hero-feature-item">
+              <Coffee size={16} weight="fill" className="hero-feature-icon" />
+              100% Organic Ingredients
+            </span>
           </div>
         </div>
       </section>
@@ -113,7 +161,7 @@ const HomePage = () => {
             <div className="about-features">
               <div className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <span className="feature-icon">☕</span>
+                  <Coffee size={40} weight="thin" className="feature-icon" />
                 </div>
                 <div className="feature-content">
                   <h4 className="feature-title">Premium Coffee</h4>
@@ -122,7 +170,7 @@ const HomePage = () => {
               </div>
               <div className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <span className="feature-icon">🥐</span>
+                  <Bread size={40} weight="thin" className="feature-icon" />
                 </div>
                 <div className="feature-content">
                   <h4 className="feature-title">Fresh Pastries</h4>
@@ -131,7 +179,7 @@ const HomePage = () => {
               </div>
               <div className="feature-card">
                 <div className="feature-icon-wrapper">
-                  <span className="feature-icon">🏠</span>
+                  <ForkKnife size={40} weight="thin" className="feature-icon" />
                 </div>
                 <div className="feature-content">
                   <h4 className="feature-title">Cozy Atmosphere</h4>
@@ -205,7 +253,7 @@ const HomePage = () => {
             <div className="contact-info">
               <div className="info-item">
                 <div className="info-icon-wrapper">
-                  <span className="info-icon">📍</span>
+                  <MapPin size={32} weight="thin" className="info-icon" />
                 </div>
                 <div className="info-details">
                   <h4 className="info-title">Location</h4>
@@ -215,7 +263,7 @@ const HomePage = () => {
               </div>
               <div className="info-item">
                 <div className="info-icon-wrapper">
-                  <span className="info-icon">⏰</span>
+                  <Clock size={32} weight="thin" className="info-icon" />
                 </div>
                 <div className="info-details">
                   <h4 className="info-title">Opening Hours</h4>
@@ -225,7 +273,7 @@ const HomePage = () => {
               </div>
               <div className="info-item">
                 <div className="info-icon-wrapper">
-                  <span className="info-icon">📞</span>
+                  <Phone size={32} weight="thin" className="info-icon" />
                 </div>
                 <div className="info-details">
                   <h4 className="info-title">Contact</h4>
@@ -236,7 +284,7 @@ const HomePage = () => {
             </div>
             <div className="contact-map">
               <div className="map-placeholder">
-                <span className="map-icon">🗺️</span>
+                <MapPin size={80} weight="thin" className="map-icon" />
                 <p className="map-text">Map Location</p>
               </div>
             </div>
@@ -267,9 +315,15 @@ const HomePage = () => {
             <div className="footer-section">
               <h4 className="footer-heading">Follow Us</h4>
               <div className="social-links">
-                <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer">📘</a>
-                <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer">📷</a>
-                <a href="https://twitter.com" aria-label="Twitter" target="_blank" rel="noopener noreferrer">🐦</a>
+                <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+                  <FacebookLogo size={24} weight="fill" />
+                </a>
+                <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+                  <InstagramLogo size={24} weight="fill" />
+                </a>
+                <a href="https://twitter.com" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
+                  <TwitterLogo size={24} weight="fill" />
+                </a>
               </div>
             </div>
           </div>

@@ -3,6 +3,16 @@ import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllOrders } from '../api/orderApi.jsx';
 import { getDailyReports } from '../api/reportApi.jsx';
 import { formatCurrency, formatNumber } from '../utils/formatters.jsx';
+import { 
+  ChartBar, 
+  CurrencyDollar, 
+  Package, 
+  Clock,
+  ShoppingCart,
+  Users,
+  ChartLine,
+  CheckCircle
+} from '@phosphor-icons/react';
 import './DashboardPage.css';
 
 /**
@@ -72,7 +82,9 @@ const DashboardPage = () => {
         <>
           <div className="stats-grid">
             <div className="stat-card">
-              <div className="stat-icon">📊</div>
+              <div className="stat-icon">
+                <ChartBar size={56} weight="duotone" color="#f27f0d" />
+              </div>
               <div className="stat-content">
                 <h3 className="stat-label">Completed Orders</h3>
                 <p className="stat-value">{formatNumber(latestReport.totalOrders)}</p>
@@ -81,7 +93,9 @@ const DashboardPage = () => {
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon">💰</div>
+              <div className="stat-icon">
+                <CurrencyDollar size={56} weight="duotone" color="#f27f0d" />
+              </div>
               <div className="stat-content">
                 <h3 className="stat-label">Total Revenue</h3>
                 <p className="stat-value text-success">{formatCurrency(latestReport.totalRevenue)}</p>
@@ -90,7 +104,9 @@ const DashboardPage = () => {
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon">📦</div>
+              <div className="stat-icon">
+                <Package size={56} weight="duotone" color="#f27f0d" />
+              </div>
               <div className="stat-content">
                 <h3 className="stat-label">Ingredient Cost</h3>
                 <p className="stat-value text-warning">{formatCurrency(latestReport.totalIngredientCost)}</p>
@@ -99,7 +115,9 @@ const DashboardPage = () => {
             </div>
 
             <div className="stat-card">
-              <div className="stat-icon">⏱️</div>
+              <div className="stat-icon">
+                <Clock size={56} weight="duotone" color="#f27f0d" />
+              </div>
               <div className="stat-content">
                 <h3 className="stat-label">Working Hours</h3>
                 <p className="stat-value">{formatNumber(latestReport.totalWorkingHours, 1)} hrs</p>
@@ -113,19 +131,27 @@ const DashboardPage = () => {
               <h2>Quick Actions</h2>
               <div className="quick-actions">
                 <a href="/orders" className="action-card">
-                  <span className="action-icon">🛒</span>
+                  <span className="action-icon">
+                    <ShoppingCart size={40} weight="duotone" color="#f27f0d" />
+                  </span>
                   <span className="action-label">New Order</span>
                 </a>
                 <a href="/inventory" className="action-card">
-                  <span className="action-icon">📦</span>
+                  <span className="action-icon">
+                    <Package size={40} weight="duotone" color="#f27f0d" />
+                  </span>
                   <span className="action-label">Manage Inventory</span>
                 </a>
                 <a href="/employees" className="action-card">
-                  <span className="action-icon">👥</span>
+                  <span className="action-icon">
+                    <Users size={40} weight="duotone" color="#f27f0d" />
+                  </span>
                   <span className="action-label">View Employees</span>
                 </a>
                 <a href="/reports" className="action-card">
-                  <span className="action-icon">📈</span>
+                  <span className="action-icon">
+                    <ChartLine size={40} weight="duotone" color="#f27f0d" />
+                  </span>
                   <span className="action-label">View Reports</span>
                 </a>
               </div>
@@ -135,21 +161,27 @@ const DashboardPage = () => {
               <h2>Recent Activity</h2>
               <div className="activity-list">
                 <div className="activity-item">
-                  <span className="activity-icon">✅</span>
+                  <span className="activity-icon">
+                    <CheckCircle size={28} weight="duotone" color="#10b981" />
+                  </span>
                   <div className="activity-content">
                     <p className="activity-title">Daily report generated</p>
                     <span className="activity-time">Just now</span>
                   </div>
                 </div>
                 <div className="activity-item">
-                  <span className="activity-icon">🛒</span>
+                  <span className="activity-icon">
+                    <ShoppingCart size={28} weight="duotone" color="#f27f0d" />
+                  </span>
                   <div className="activity-content">
                     <p className="activity-title">{latestReport.totalOrders} orders completed</p>
                     <span className="activity-time">Today</span>
                   </div>
                 </div>
                 <div className="activity-item">
-                  <span className="activity-icon">💰</span>
+                  <span className="activity-icon">
+                    <CurrencyDollar size={28} weight="duotone" color="#f27f0d" />
+                  </span>
                   <div className="activity-content">
                     <p className="activity-title">Revenue: {formatCurrency(latestReport.totalRevenue)}</p>
                     <span className="activity-time">Today</span>

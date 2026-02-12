@@ -4,6 +4,7 @@ import { useApiQuery } from '../../../hooks/useApiQuery.jsx';
 import { getProductById } from '../../../api/productApi.jsx';
 import Modal from '../Modal/index.jsx';
 import { formatCurrency } from '../../../utils/formatters.jsx';
+import RecipeViewer from '../../../features/menu/RecipeViewer.jsx';
 import './ProductDetailModal.css';
 
 /**
@@ -61,25 +62,24 @@ const ProductDetailModal = ({ isOpen, onClose, productId }) => {
             </div>
           )}
 
+          {/* Recipe Viewer - Shows ingredients and instructions */}
           {product.ingredients && product.ingredients.length > 0 && (
             <div className="product-detail-section">
-              <h3>Ingredient Requirements</h3>
-              <div className="ingredients-list">
-                {product.ingredients.map((ingredient, index) => (
-                  <div key={index} className="ingredient-item">
-                    <span className="ingredient-name">{ingredient.ingredientName || ingredient.name}</span>
-                    <span className="ingredient-quantity">
-                      {ingredient.quantityRequired || ingredient.quantity} {ingredient.unit}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <RecipeViewer
+                recipe={{
+                  productName: product.name,
+                  ingredients: product.ingredients,
+                  instructions: product.instructions || product.preparationInstructions,
+                  prepTime: product.prepTime || product.preparationTime
+                }}
+                mode="view"
+              />
             </div>
           )}
 
           {(!product.ingredients || product.ingredients.length === 0) && (
             <div className="product-detail-section">
-              <p className="no-ingredients">No ingredient information available</p>
+              <p className="no-ingredients">No recipe information available</p>
             </div>
           )}
         </div>

@@ -13,9 +13,11 @@ export const ROUTES = {
   ORDERS: '/orders',
   ORDER_QUEUE: '/order-queue',
   MENU: '/menu',
+  RECIPES: '/recipes',
+  SUPPLIERS: '/suppliers',
+  PAYMENT: '/payment',
   REPORTS: '/reports',
   ATTENDANCE: '/attendance',
-  ADMIN: '/em-mgmt',
   FINANCE: '/finance',
   SETTINGS: '/settings',
   NOT_FOUND: '/404'

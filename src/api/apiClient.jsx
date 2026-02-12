@@ -61,6 +61,17 @@ class ApiClient {
       credentials: 'include' // Enable sending cookies and credentials
     };
 
+    // If sending FormData, let the browser set the Content-Type header (multipart/form-data) with boundary
+    // And do not JSON.stringify the body
+    const isFormData = options.body instanceof FormData || (options.body && options.body.constructor && options.body.constructor.name === 'FormData');
+    
+    if (isFormData) {
+      delete config.headers['Content-Type']; // Let browser set it
+    } else if (config.method !== 'GET' && config.method !== 'HEAD' && !config.headers['Content-Type']) {
+      // Default to JSON if not set and not FormData
+      config.headers['Content-Type'] = 'application/json';
+    }
+
     try {
       const response = await fetch(url, config);
       
@@ -130,9 +141,11 @@ class ApiClient {
       url = queryString ? `${endpoint}?${queryString}` : endpoint;
     }
     
+    const isFormData = data instanceof FormData;
+
     return this.request(url, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : (data ? JSON.stringify(data) : undefined),
       ...options
     });
   }
@@ -141,9 +154,10 @@ class ApiClient {
    * PUT request
    */
   async put(endpoint, data) {
+    const isFormData = data instanceof FormData;
     return this.request(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data)
+      body: isFormData ? data : JSON.stringify(data)
     });
   }
 
@@ -160,9 +174,10 @@ class ApiClient {
    * PATCH request
    */
   async patch(endpoint, data) {
+    const isFormData = data instanceof FormData;
     return this.request(endpoint, {
       method: 'PATCH',
-      body: JSON.stringify(data)
+      body: isFormData ? data : JSON.stringify(data)
     });
   }
 }

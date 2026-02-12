@@ -5,6 +5,7 @@ import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useApiQuery } from '../../../hooks/useApiQuery.jsx';
 import { getAllOrders } from '../../../api/orderApi.jsx';
 import { ORDER_STATUS, ROUTES } from '../../../utils/constants.jsx';
+import { Bell } from '@phosphor-icons/react';
 import ConfirmationModal from '../../common/ConfirmationModal/index.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
 import './Header.css';
@@ -104,7 +105,7 @@ const Header = ({ onMenuClick }) => {
                 onClick={handleNotificationClick}
                 title={`${pendingOrdersCount} pending order${pendingOrdersCount !== 1 ? 's' : ''}`}
               >
-                🔔
+                <Bell size={24} weight={pendingOrdersCount > 0 ? "fill" : "regular"} />
                 {pendingOrdersCount > 0 && (
                   <span className="header__notification-badge">
                     {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}

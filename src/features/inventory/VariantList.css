@@ -1,0 +1,159 @@
+/* VariantList Component Styles */
+
+.variant-list {
+  background-color: rgba(255, 159, 67, 0.03);
+  border-top: 2px solid var(--color-border);
+  padding: var(--spacing-lg);
+}
+
+.variant-list-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.variant-header-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-coffee-brown);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.variant-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.variant-item {
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.variant-item:hover {
+  border-color: var(--color-vibrant-orange);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(4px);
+}
+
+.variant-item:focus {
+  outline: 2px solid var(--color-vibrant-orange);
+  outline-offset: 2px;
+}
+
+.variant-item.unavailable {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: rgba(107, 114, 128, 0.05);
+}
+
+.variant-item.unavailable:hover {
+  border-color: var(--color-border);
+  transform: none;
+}
+
+.variant-attributes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex: 1;
+}
+
+.variant-attribute {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.variant-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.variant-value {
+  font-size: var(--font-size-base);
+  color: var(--color-coffee-brown);
+  font-weight: var(--font-weight-semibold);
+}
+
+.variant-price .price-value {
+  color: var(--color-vibrant-orange);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-lg);
+}
+
+.variant-sku {
+  font-family: monospace;
+}
+
+.variant-sku .variant-value {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.variant-status {
+  flex-shrink: 0;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.unavailable {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: var(--color-text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 767px) {
+  .variant-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .variant-attributes {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+  }
+
+  .variant-attribute {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .variant-status {
+    width: 100%;
+  }
+
+  .status-badge {
+    display: block;
+    text-align: center;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .variant-attributes {
+    gap: var(--spacing-sm);
+  }
+
+  .variant-attribute {
+    min-width: 120px;
+  }
+}
