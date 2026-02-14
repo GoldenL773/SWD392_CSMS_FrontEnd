@@ -69,8 +69,13 @@ export const uploadReportFile = async (file, metadata) => {
  * Get uploaded report files
  */
 export const getUploadedReports = async (params = {}) => {
-  const response = await apiClient.get('/reports/files', { params });
-  return response.data?.content || response.data || response;
+  try {
+    const response = await apiClient.get('/reports/files', { params });
+    return response.data?.content || response.data || response;
+  } catch (error) {
+    console.warn('Failed to fetch uploaded reports (API might not be available):', error);
+    return [];
+  }
 };
 
 /**

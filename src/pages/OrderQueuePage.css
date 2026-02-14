@@ -1,18 +1,6 @@
 /* OrderQueuePage Styles */
 
-.order-queue-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xl);
-  animation: fadeIn var(--transition-base);
-  padding: 0;
-}
-
-.page-subtitle {
-  margin: var(--spacing-xs) 0 0 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
+/* Page Header styles moved to theme.css */
 
 .header-actions {
   display: flex;

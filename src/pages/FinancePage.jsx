@@ -22,6 +22,7 @@ import './FinancePage.css';
 import SalaryHistoryModal from '../components/salary/SalaryHistoryModal.jsx';
 import EmployeeDetailModal from '../components/finance/EmployeeDetailModal.jsx';
 import { AuthContext } from '../context/AuthProvider.jsx';
+import { Bank } from '@phosphor-icons/react';
 
 const FinancePage = () => {
   const toast = useToast();
@@ -277,8 +278,13 @@ const FinancePage = () => {
   return (
     <div className="finance-page">
       <div className="page-header">
-        <h1>Finance Management</h1>
-        <p>Financial overview and salary management</p>
+        <div className="page-header-content">
+          <Bank size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Finance Management</h1>
+            <p className="page-subtitle">Financial overview and salary management</p>
+          </div>
+        </div>
       </div>
       
       {/* Tabs */}

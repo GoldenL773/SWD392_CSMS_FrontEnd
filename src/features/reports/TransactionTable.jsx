@@ -9,12 +9,14 @@ import './TransactionTable.css';
  * Displays ingredient transactions
  * Entity: IngredientTransaction (id, ingredient, employee, type, quantity, transactionDate)
  */
-const TransactionTable = ({ transactions, loading }) => {
+const TransactionTable = ({ transactions = [], loading }) => {
   const [filterType, setFilterType] = useState('ALL');
 
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+
   const filteredTransactions = filterType === 'ALL' 
-    ? transactions 
-    : transactions.filter(t => t.type === filterType);
+    ? safeTransactions 
+    : safeTransactions.filter(t => t.type === filterType);
 
   const getTypeClass = (type) => {
     return type === TRANSACTION_TYPE.IMPORT ? 'type-import' : 'type-export';
@@ -33,7 +35,7 @@ const TransactionTable = ({ transactions, loading }) => {
     );
   }
 
-  if (transactions.length === 0) {
+  if (safeTransactions.length === 0) {
     return (
       <div className="table-empty">
         <p>No transactions found</p>
@@ -48,19 +50,19 @@ const TransactionTable = ({ transactions, loading }) => {
           className={`filter-chip ${filterType === 'ALL' ? 'active' : ''}`}
           onClick={() => setFilterType('ALL')}
         >
-          All ({transactions.length})
+          All ({safeTransactions.length})
         </button>
         <button
           className={`filter-chip ${filterType === TRANSACTION_TYPE.IMPORT ? 'active' : ''}`}
           onClick={() => setFilterType(TRANSACTION_TYPE.IMPORT)}
         >
-          Import ({transactions.filter(t => t.type === TRANSACTION_TYPE.IMPORT).length})
+          Import ({safeTransactions.filter(t => t.type === TRANSACTION_TYPE.IMPORT).length})
         </button>
         <button
           className={`filter-chip ${filterType === TRANSACTION_TYPE.EXPORT ? 'active' : ''}`}
           onClick={() => setFilterType(TRANSACTION_TYPE.EXPORT)}
         >
-          Export ({transactions.filter(t => t.type === TRANSACTION_TYPE.EXPORT).length})
+          Export ({safeTransactions.filter(t => t.type === TRANSACTION_TYPE.EXPORT).length})
         </button>
       </div>
 

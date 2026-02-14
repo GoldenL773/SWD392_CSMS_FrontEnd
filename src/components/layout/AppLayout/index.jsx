@@ -10,7 +10,13 @@ import './AppLayout.css';
  * Main application layout with header, sidebar, and bottom navigation
  */
 const AppLayout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Default to closed on mobile, open on desktop
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

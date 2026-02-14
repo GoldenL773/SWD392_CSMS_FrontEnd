@@ -15,6 +15,7 @@ import OrdersTable from '../features/orders/OrdersTable.jsx';
 import NewOrderModal from '../features/orders/NewOrderModal.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import { formatCurrency } from '../utils/formatters.jsx';
+import { ShoppingCart } from '@phosphor-icons/react';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
@@ -255,13 +256,18 @@ const OrdersPage = () => {
   return (
     <div className="orders-page">
       <div className="page-header">
-        <div>
-          <h1>Orders Management</h1>
-          <p>View and manage customer orders</p>
+        <div className="page-header-content">
+          <ShoppingCart size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Orders Management</h1>
+            <p className="page-subtitle">View and manage customer orders</p>
+          </div>
         </div>
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-          + Create Order
-        </Button>
+        <div className="page-header-actions">
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            + Create Order
+          </Button>
+        </div>
       </div>
 
       <StatusFilter

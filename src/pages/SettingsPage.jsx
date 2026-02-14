@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
 import { formatDate } from '../utils/formatters.jsx';
+import { Gear } from '@phosphor-icons/react';
 import './SettingsPage.css';
 
 const SettingsPage = () => {
@@ -49,8 +50,13 @@ const SettingsPage = () => {
   return (
     <div className="settings-page">
       <div className="page-header">
-        <h1>Settings</h1>
-        <p>Manage your account and preferences</p>
+        <div className="page-header-content">
+          <Gear size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Settings</h1>
+            <p className="page-subtitle">Manage your account and preferences</p>
+          </div>
+        </div>
       </div>
 
       <div className="settings-grid">

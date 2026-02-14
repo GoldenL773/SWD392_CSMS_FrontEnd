@@ -5,28 +5,7 @@
   background: var(--color-creamy-white);
 }
 
-.payment-page-header {
-  margin-bottom: var(--spacing-3xl);
-  padding-bottom: var(--spacing-xl);
-  border-bottom: 2px solid rgba(242, 127, 13, 0.1);
-}
-
-.payment-page-header h1 {
-  font-size: var(--font-size-4xl);
-  font-family: var(--font-family-heading);
-  font-weight: 800;
-  color: var(--color-coffee-brown);
-  margin: 0 0 var(--spacing-sm) 0;
-  letter-spacing: -0.5px;
-}
-
-.payment-page-header p {
-  font-size: var(--font-size-lg);
-  font-family: var(--font-family-body);
-  color: var(--color-text-sub);
-  margin: 0;
-  font-weight: var(--font-weight-medium);
-}
+/* Header styles moved to theme.css */
 
 .payment-mode-selector {
   display: flex;
@@ -96,10 +75,6 @@
 
 /* Responsive */
 @media (max-width: 767px) {
-  .payment-page-header h1 {
-    font-size: var(--font-size-3xl);
-  }
-
   .payment-mode-selector {
     flex-direction: column;
   }

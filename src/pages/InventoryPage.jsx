@@ -13,6 +13,7 @@ import ProductFormModal from '../features/inventory/ProductFormModal.jsx';
 import IngredientModal from '../components/common/IngredientModal/index.jsx';
 import TransactionModal from '../components/common/TransactionModal/index.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog/index.jsx';
+import { Package } from '@phosphor-icons/react';
 import './InventoryPage.css';
 
 const InventoryPage = () => {
@@ -190,8 +191,13 @@ const InventoryPage = () => {
   return (
     <div className="inventory-page">
       <div className="page-header">
-        <h1>Inventory Management</h1>
-        <p>Manage products and ingredients</p>
+        <div className="page-header-content">
+          <Package size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Inventory Management</h1>
+            <p className="page-subtitle">Manage products and ingredients</p>
+          </div>
+        </div>
       </div>
 
       <div className="tabs">

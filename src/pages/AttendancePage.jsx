@@ -13,6 +13,7 @@ import Button from '../components/common/Button/index.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import { formatDate, formatTime } from '../utils/formatters.jsx';
+import { CalendarCheck } from '@phosphor-icons/react';
 import './AttendancePage.css';
 
 const AttendancePage = () => {
@@ -116,8 +117,13 @@ const AttendancePage = () => {
   return (
     <div className="attendance-page">
       <div className="page-header">
-        <h1>Attendance</h1>
-        <p>Track your work hours and attendance</p>
+        <div className="page-header-content">
+          <CalendarCheck size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Attendance</h1>
+            <p className="page-subtitle">Track your work hours and attendance</p>
+          </div>
+        </div>
       </div>
       
       {/* Current Time & Status */}

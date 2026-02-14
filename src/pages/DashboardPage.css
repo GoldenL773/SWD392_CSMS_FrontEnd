@@ -6,28 +6,7 @@
   background: var(--color-creamy-white);
 }
 
-.dashboard-header {
-  margin-bottom: var(--spacing-3xl);
-  padding-bottom: var(--spacing-xl);
-  border-bottom: 2px solid rgba(242, 127, 13, 0.1);
-}
-
-.dashboard-header h1 {
-  font-size: var(--font-size-4xl);
-  font-family: var(--font-family-heading);
-  font-weight: 800;
-  color: var(--color-coffee-brown);
-  margin-bottom: var(--spacing-sm);
-  letter-spacing: -0.5px;
-}
-
-.dashboard-subtitle {
-  font-size: var(--font-size-lg);
-  font-family: var(--font-family-body);
-  color: var(--color-text-sub);
-  margin: 0;
-  font-weight: var(--font-weight-medium);
-}
+/* Header styles moved to theme.css */
 
 .dashboard-loading,
 .dashboard-error,

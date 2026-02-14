@@ -3,6 +3,7 @@ import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllEmployees } from '../api/employeeApi.jsx';
 import EmployeeCard from '../features/employees/EmployeeCard.jsx';
 import EmployeeDetailView from '../features/employees/EmployeeDetailView.jsx';
+import { Users } from '@phosphor-icons/react';
 import './EmployeesPage.css';
 
 const EmployeesPage = () => {
@@ -27,8 +28,13 @@ const EmployeesPage = () => {
   return (
     <div className="employees-page">
       <div className="page-header">
-        <h1>Employee Management</h1>
-        <p>Manage employee profiles, attendance, and salary</p>
+        <div className="page-header-content">
+          <Users size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Employee Management</h1>
+            <p className="page-subtitle">Manage employee profiles, attendance, and salary</p>
+          </div>
+        </div>
       </div>
 
       <div className="employees-layout">

@@ -11,7 +11,8 @@ import {
   ShoppingCart,
   Users,
   ChartLine,
-  CheckCircle
+  CheckCircle,
+  House
 } from '@phosphor-icons/react';
 import './DashboardPage.css';
 
@@ -57,9 +58,14 @@ const DashboardPage = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p className="dashboard-subtitle">Welcome to Coffee Shop Management System</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <House size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Dashboard</h1>
+            <p className="page-subtitle">Welcome to Coffee Shop Management System</p>
+          </div>
+        </div>
       </div>
 
       {loading && (

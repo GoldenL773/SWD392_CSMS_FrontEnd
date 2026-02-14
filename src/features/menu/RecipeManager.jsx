@@ -7,7 +7,8 @@ import {
   MagnifyingGlass, 
   PencilSimple, 
   Trash,
-  Clock
+  Clock,
+  CookingPot
 } from '@phosphor-icons/react';
 import { generateId } from '../../utils/formatters.jsx';
 import './RecipeManager.css';
@@ -94,19 +95,24 @@ const RecipeManager = ({
   return (
     <div className="recipe-manager">
       {/* Header Section */}
-      <div className="recipe-manager-header">
-        <div className="header-left">
-          <h2 className="page-title">Recipe Management</h2>
-          <p className="page-subtitle">Manage recipes for all products</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <CookingPot size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h2 className="page-title">Recipe Management</h2>
+            <p className="page-subtitle">Manage recipes for all products</p>
+          </div>
         </div>
-        <Button 
-          variant="primary" 
-          onClick={handleCreateClick}
-          disabled={loading}
-        >
-          <Plus size={20} weight="regular" />
-          Create Recipe
-        </Button>
+        <div className="page-header-actions">
+          <Button 
+            variant="primary" 
+            onClick={handleCreateClick}
+            disabled={loading}
+          >
+            <Plus size={20} weight="regular" />
+            Create Recipe
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filter Section */}

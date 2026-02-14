@@ -6,6 +6,7 @@ import Button from '../components/common/Button/index.jsx';
 import EmployeeModal from '../components/common/EmployeeModal/index.jsx';
 import ConfirmDialog from '../components/common/ConfirmDialog/index.jsx';
 import { formatDate, formatPhone } from '../utils/formatters.jsx';
+import { ShieldCheck } from '@phosphor-icons/react';
 import './AdminPage.css';
 
 const AdminPage = () => {
@@ -72,8 +73,13 @@ const AdminPage = () => {
   return (
     <div className="admin-page">
       <div className="page-header">
-        <h1>Employee Management</h1>
-        <p>Manage employees and system users</p>
+        <div className="page-header-content">
+          <ShieldCheck size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Employee Management</h1>
+            <p className="page-subtitle">Manage employees and system users</p>
+          </div>
+        </div>
       </div>
 
       <Card

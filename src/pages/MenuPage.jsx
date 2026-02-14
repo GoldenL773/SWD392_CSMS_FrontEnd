@@ -101,10 +101,13 @@ const MenuPage = () => {
 
   return (
     <div className="menu-page">
-      <div className="menu-header">
-        <div>
-          <h1>☕ Menu</h1>
-          <p>Browse our delicious offerings</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <BookOpen size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Menu Management</h1>
+            <p className="page-subtitle">Browse our delicious offerings</p>
+          </div>
         </div>
       </div>
 

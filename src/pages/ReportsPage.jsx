@@ -22,6 +22,7 @@ import Button from '../components/common/Button/index.jsx';
 import { formatCurrency, formatNumber, safeNumber } from '../utils/formatters.jsx';
 import './ReportsPage.css';
 import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, Tooltip, LabelList, CartesianGrid, Legend, Cell } from 'recharts';
+import { ChartLineUp } from '@phosphor-icons/react';
 
 const ReportsPage = () => {
   const { hasAnyRole } = useAuth();
@@ -295,8 +296,13 @@ const ReportsPage = () => {
   return (
     <div className="reports-page">
       <div className="page-header">
-        <h1>Reports & Analytics</h1>
-        <p>View business performance and transaction history</p>
+        <div className="page-header-content">
+          <ChartLineUp size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Reports & Analytics</h1>
+            <p className="page-subtitle">View business performance and transaction history</p>
+          </div>
+        </div>
       </div>
 
       {ordersError && (

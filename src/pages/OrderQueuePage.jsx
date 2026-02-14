@@ -9,6 +9,7 @@ import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import { formatDate, formatTime } from '../utils/formatters.jsx';
+import { ListNumbers } from '@phosphor-icons/react';
 import './OrderQueuePage.css';
 
 /**
@@ -181,12 +182,15 @@ const OrderQueuePage = () => {
     <div className="order-queue-page">
       {/* Header */}
       <div className="page-header">
-        <div>
-          <h1>Order Queue</h1>
-          <p className="page-subtitle">Kitchen Display System - Real-time order management</p>
+        <div className="page-header-content">
+          <ListNumbers size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Order Queue</h1>
+            <p className="page-subtitle">Kitchen Display System - Real-time order management</p>
+          </div>
         </div>
         
-        <div className="header-actions">
+        <div className="page-header-actions">
           <Button
             variant={autoRefresh ? 'primary' : 'secondary'}
             onClick={() => setAutoRefresh(!autoRefresh)}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PaymentDisplay } from '../features/payment/index.js';
+import { CreditCard } from '@phosphor-icons/react';
 import './PaymentPage.css';
 
 /**
@@ -46,9 +47,14 @@ const PaymentPage = () => {
 
   return (
     <div className="payment-page">
-      <div className="payment-page-header">
-        <h1>Payment Management</h1>
-        <p>Manage payment QR codes and banking information</p>
+      <div className="page-header">
+        <div className="page-header-content">
+          <CreditCard size={32} weight="thin" className="page-header-icon" />
+          <div>
+            <h1 className="page-title">Payment Management</h1>
+            <p className="page-subtitle">Manage payment QR codes and banking information</p>
+          </div>
+        </div>
       </div>
 
       <div className="payment-mode-selector">
