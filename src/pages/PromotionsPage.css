@@ -1,0 +1,246 @@
+/* PromotionsPage Styles - Visual Design System */
+
+.promotions-page {
+  animation: fadeIn var(--transition-base);
+}
+
+.promo-filters {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.promo-filter-btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-fast);
+}
+
+.promo-filter-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-surface-hover);
+}
+
+.promo-filter-btn--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+  box-shadow: var(--shadow-orange);
+}
+
+.promo-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.promo-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.promo-table th {
+  text-align: left;
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  border-bottom: 2px solid var(--color-border);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+}
+
+.promo-table td {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.promo-table tr:last-child td {
+  border-bottom: none;
+}
+
+.promo-table tr:hover td {
+  background-color: var(--color-surface-hover);
+}
+
+.promo-row--expired td {
+  opacity: 0.6;
+}
+
+.promo-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-coffee-brown);
+}
+
+.promo-expired-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--color-error);
+  background: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-top: 4px;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+}
+
+.promo-type-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  background: rgba(75, 54, 33, 0.1);
+  color: var(--color-coffee-brown);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-left: var(--spacing-sm);
+  text-transform: uppercase;
+}
+
+.promo-apply-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  background: var(--color-background);
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.promo-target-name {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.promo-period div {
+  font-size: var(--font-size-sm);
+}
+
+.period-to {
+  color: var(--color-text-secondary);
+}
+
+.promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-full);
+  padding: 4px 12px;
+  text-transform: uppercase;
+}
+
+.promo-badge--active {
+  background: rgba(46, 204, 113, 0.1);
+  color: var(--color-success);
+}
+
+.promo-badge--inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--color-text-secondary);
+}
+
+.promo-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.btn-icon--danger:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--color-error);
+  border-color: rgba(231, 76, 60, 0.2);
+}
+
+.promo-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.promo-form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.promo-form-group input,
+.promo-form-group select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-base);
+  transition: all var(--transition-fast);
+}
+
+.promo-form-group input:focus,
+.promo-form-group select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(242, 127, 13, 0.1);
+}
+
+.input-error {
+  border-color: var(--color-error) !important;
+}
+
+.err {
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  font-weight: var(--font-weight-medium);
+}
+
+.loading-container,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}

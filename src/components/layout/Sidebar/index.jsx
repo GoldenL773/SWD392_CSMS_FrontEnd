@@ -15,7 +15,8 @@ import {
   ReportIcon,
   FinanceIcon,
   AttendanceIcon,
-  SettingsIcon
+  SettingsIcon,
+  TagIcon
 } from '../../../utils/icons.js';
 import './Sidebar.css';
 
@@ -40,6 +41,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: ROUTES.INVENTORY, label: 'Inventory', Icon: ProductIcon, roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.SUPPLIERS, label: 'Suppliers', Icon: SupplierIcon, roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.EMPLOYEES, label: 'Employees', Icon: EmployeeIcon, roles: ['ADMIN', 'MANAGER'] },
+    { path: ROUTES.PROMOTIONS, label: 'Promotions', Icon: TagIcon, roles: ['ADMIN', 'MANAGER'] },
     { path: ROUTES.PAYMENT, label: 'Payment', Icon: PaymentIcon, roles: ['ADMIN', 'MANAGER', 'STAFF'] },
     { path: ROUTES.REPORTS, label: 'Reports', Icon: ReportIcon, roles: ['ADMIN', 'MANAGER', 'FINANCE'] },
     { path: ROUTES.FINANCE, label: 'Finance', Icon: FinanceIcon, roles: ['ADMIN', 'MANAGER', 'FINANCE'] },

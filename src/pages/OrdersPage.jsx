@@ -7,6 +7,7 @@ import { getAllOrders, createOrder, updateOrderStatus } from '../api/orderApi.js
 import { getAllEmployees, getEmployeeForUser } from '../api/employeeApi.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import OrderNotificationToast from '../components/common/OrderNotificationToast/index.jsx';
+import OrderReceiptModal from '../features/orders/OrderReceiptModal.jsx';
 import { ORDER_STATUS } from '../utils/constants.jsx';
 import Card from '../components/common/Card/index.jsx';
 import Button from '../components/common/Button/index.jsx';
@@ -30,6 +31,10 @@ const OrdersPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const pageSize = 10;
+  
+  // Receipt modal state
+  const [receiptOrder, setReceiptOrder] = useState(null);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   
   // Real-time order notification state
   const [newOrderNotification, setNewOrderNotification] = useState(null);
@@ -224,18 +229,21 @@ const OrdersPage = () => {
       }
 
       const requestData = {
-        employeeId: currentEmployee.id,
+        userId: user?.id, // Backend expects userId from Auth
         items: orderData.orderItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity
         })),
-        notes: orderData.notes || ''
+        note: orderData.notes || ''
       };
 
-      await createOrderMutation(requestData);
+      const createdOrder = await createOrderMutation(requestData);
       toast.success('Order created successfully!');
       setIsModalOpen(false);
       refetchOrders();
+      // Show receipt modal
+      setReceiptOrder(createdOrder || requestData);
+      setIsReceiptOpen(true);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(`Failed to create order: ${error.message || 'Unknown error'}`);
@@ -381,6 +389,13 @@ const OrdersPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateOrder}
+      />
+      
+      <OrderReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => { setIsReceiptOpen(false); setReceiptOrder(null); }}
+        order={receiptOrder}
+        cashierName={user?.fullName || user?.username}
       />
       
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />

@@ -54,10 +54,11 @@
   --color-bg-input: #f8f7f5;
   
   /* Text Colors */
-  --color-text-main: #1c140d;
-  --color-text-sub: #9c7349;
+  --color-text-main: var(--color-coffee-brown);
+  --color-text-sub: #6B5D52;
   --color-text-light: #ffffff;
-  --color-text-muted: #6b7280;
+  --color-text-muted: #9c7349;
+  --color-text-inverse: #ffffff;
   
   /* Border Colors */
   --color-border: #f4ede7;
@@ -385,26 +386,38 @@
 }
 
 .btn-primary {
-  background-color: var(--color-primary);
-  color: var(--color-text-light);
+  background-color: var(--color-vibrant-orange);
+  color: #ffffff;
   box-shadow: var(--shadow-primary);
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-hover);
-  transform: scale(1.05);
+  background-color: var(--color-accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(242, 127, 13, 0.4);
 }
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--color-text-main);
-  border: 2px solid var(--color-border);
+  color: var(--color-coffee-brown);
+  border: 2px solid var(--color-coffee-brown);
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-bg-light);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  background-color: var(--color-coffee-brown);
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text-sub);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-main);
+  border-color: var(--color-border);
 }
 
 .btn-outline {

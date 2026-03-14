@@ -45,10 +45,10 @@ const EmployeeDetailView = ({ employee }) => {
       <Card>
         <div className="employee-detail__header">
           <div className="employee-detail__avatar">
-            {employee.fullName.charAt(0).toUpperCase()}
+            {employee.firstName ? employee.firstName.charAt(0).toUpperCase() : '?'}
           </div>
           <div className="employee-detail__header-info">
-            <h2>{employee.fullName}</h2>
+            <h2>{`${employee.firstName || ''} ${employee.lastName || ''}`.trim()}</h2>
             <p className="position">{employee.position}</p>
           </div>
         </div>
@@ -79,7 +79,7 @@ const EmployeeDetailView = ({ employee }) => {
             <div className="info-grid">
               <div className="info-item">
                 <label>Full Name</label>
-                <span>{employee.fullName}</span>
+                <span>{`${employee.firstName || ''} ${employee.lastName || ''}`.trim()}</span>
               </div>
               <div className="info-item">
                 <label>Date of Birth</label>
@@ -132,13 +132,14 @@ const EmployeeDetailView = ({ employee }) => {
 EmployeeDetailView.propTypes = {
   employee: PropTypes.shape({
     id: PropTypes.number.isRequired,
-    fullName: PropTypes.string.isRequired,
-    dob: PropTypes.string.isRequired,
-    gender: PropTypes.string.isRequired,
-    phone: PropTypes.string.isRequired,
-    position: PropTypes.string.isRequired,
-    hireDate: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired
+    firstName: PropTypes.string.isRequired,
+    lastName: PropTypes.string.isRequired,
+    dob: PropTypes.string,
+    gender: PropTypes.string,
+    phone: PropTypes.string,
+    position: PropTypes.string,
+    hireDate: PropTypes.string,
+    status: PropTypes.string
   }).isRequired
 };
 

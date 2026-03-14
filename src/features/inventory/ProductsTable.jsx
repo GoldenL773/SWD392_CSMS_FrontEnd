@@ -55,8 +55,19 @@ const ProductsTable = ({
       : bValue - aValue;
   });
 
-  const getStatusClass = (status) => {
-    return status === PRODUCT_STATUS.AVAILABLE ? 'status-available' : 'status-unavailable';
+  const getStatusClass = (product) => {
+    // Support both available (boolean) and status (string) field from backend
+    const isAvailable = product.available !== undefined ? product.available : product.status === PRODUCT_STATUS.AVAILABLE;
+    return isAvailable ? 'status-available' : 'status-unavailable';
+  };
+
+  const getStatusLabel = (product) => {
+    if (product.status) return product.status;
+    return product.available ? 'Available' : 'Unavailable';
+  };
+
+  const getCategory = (product) => {
+    return product.categoryName || product.category || '—';
   };
 
   if (loading) {
@@ -128,11 +139,11 @@ const ProductsTable = ({
                     )}
                   </div>
                 </td>
-                <td>{product.category}</td>
+                <td>{getCategory(product)}</td>
                 <td className="product-price">{formatCurrency(product.price)}</td>
                 <td>
-                  <span className={`status-badge ${getStatusClass(product.status)}`}>
-                    {product.status}
+                  <span className={`status-badge ${getStatusClass(product)}`}>
+                    {getStatusLabel(product)}
                   </span>
                 </td>
                 <td className="actions-cell">
@@ -217,9 +228,11 @@ ProductsTable.propTypes = {
   products: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    category: PropTypes.string.isRequired,
+    categoryName: PropTypes.string,
+    category: PropTypes.string,
     price: PropTypes.number.isRequired,
-    status: PropTypes.string.isRequired,
+    status: PropTypes.string,
+    available: PropTypes.bool,
     variants: PropTypes.array
   })).isRequired,
   onEdit: PropTypes.func.isRequired,

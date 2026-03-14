@@ -1,24 +1,24 @@
 import apiClient from './apiClient.jsx';
 
-const BASE_URL = '/combos';
+const BASE_URL = '/promotions';
 
-export const getAllCombos = async (params = {}) => {
+export const getAllPromotions = async (params = {}) => {
   const response = await apiClient.get(BASE_URL, params);
   return response?.content || response || [];
 };
 
-export const getComboById = async (id) => {
+export const getPromotionById = async (id) => {
   return apiClient.get(`${BASE_URL}/${id}`);
 };
 
-export const createCombo = async (data) => {
+export const createPromotion = async (data) => {
   return apiClient.post(BASE_URL, data);
 };
 
-export const updateCombo = async (id, data) => {
+export const updatePromotion = async (id, data) => {
   return apiClient.put(`${BASE_URL}/${id}`, data);
 };
 
-export const deleteCombo = async (id) => {
+export const deletePromotion = async (id) => {
   return apiClient.delete(`${BASE_URL}/${id}`);
 };

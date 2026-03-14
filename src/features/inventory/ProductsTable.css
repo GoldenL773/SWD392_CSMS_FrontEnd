@@ -21,8 +21,11 @@
   text-align: left;
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   border-bottom: 2px solid var(--color-border);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
 }
 
 .products-table th.sortable {
@@ -36,8 +39,9 @@
 
 .products-table td {
   padding: var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border-light);
   vertical-align: middle;
+  color: var(--color-text-primary);
 }
 
 .products-table tr:last-child td {
@@ -45,8 +49,8 @@
 }
 
 .product-name {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-coffee-brown);
 }
 
 .name-wrapper {
@@ -56,31 +60,35 @@
 }
 
 .variant-count-badge {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-normal);
+  font-size: 10px;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
   background-color: var(--color-background);
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
   width: fit-content;
   border: 1px solid var(--color-border);
+  text-transform: uppercase;
 }
 
 .product-price {
-  font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-coffee-brown);
+  font-family: var(--font-family-mono);
 }
 
 .status-badge {
   display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: 4px 12px;
   border-radius: var(--radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .status-available {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: rgba(46, 204, 113, 0.1);
   color: var(--color-success);
 }
 
@@ -91,11 +99,15 @@
 
 .actions-cell {
   white-space: nowrap;
+  width: 140px;
+  min-width: 140px;
+  text-align: center;
 }
 
 .action-buttons {
   display: flex;
-  gap: var(--spacing-xs);
+  justify-content: center;
+  gap: var(--spacing-sm);
 }
 
 .btn-icon {
@@ -119,9 +131,9 @@
 }
 
 .btn-icon.btn-danger:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(231, 76, 60, 0.1);
   color: var(--color-error);
-  border-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(231, 76, 60, 0.2);
 }
 
 .table-loading,
@@ -137,19 +149,20 @@
 
 /* Expansion Styles */
 .expand-col {
-  width: 40px;
+  width: 44px;
+  min-width: 44px;
   text-align: center;
   padding-right: 0 !important;
 }
 
 .expand-btn {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
   color: var(--color-text-secondary);
   border-radius: 50%;
@@ -159,21 +172,22 @@
 .expand-btn:hover {
   background-color: var(--color-background);
   color: var(--color-primary);
+  border-color: var(--color-border);
 }
 
 .row-expanded td {
-  background-color: var(--color-bg-light);
+  background-color: var(--color-surface-hover);
   border-bottom: none;
 }
 
 .variants-row td {
-  padding: 0 0 var(--spacing-md) 0;
-  background-color: var(--color-bg-light);
+  padding: 0 0 var(--spacing-lg) 0;
+  background-color: var(--color-surface-hover);
   border-bottom: 1px solid var(--color-border);
 }
 
 .variants-container {
-  margin: 0 var(--spacing-md) var(--spacing-md) 56px; /* Indent to align with name */
+  margin: 0 var(--spacing-lg) var(--spacing-md) 64px; /* Indent to align with name */
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -192,8 +206,10 @@
 
 .variants-header h4 {
   margin: 0;
-  font-size: var(--font-size-base);
-  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  color: var(--color-coffee-brown);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .variants-list-table {
@@ -204,7 +220,7 @@
 .variants-list-table th {
   padding: var(--spacing-xs) var(--spacing-sm);
   color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
   background-color: var(--color-background);
   border-bottom: 1px solid var(--color-border);
 }

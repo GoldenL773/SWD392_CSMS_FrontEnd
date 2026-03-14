@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useApiQuery } from '../../../hooks/useApiQuery.jsx';
+import { getAllSuppliers } from '../../../api/supplierApi.jsx';
 import Modal from '../Modal/index.jsx';
 import Button from '../Button/index.jsx';
 import { INGREDIENT_UNITS } from '../../../utils/constants.jsx';
@@ -8,16 +10,19 @@ import './IngredientModal.css';
 /**
  * IngredientModal Component
  * Modal for creating/editing ingredients
- * Entity: Ingredient (name, unit, quantity, reorderLevel, supplier)
+ * Backend DTO: { name, unit, currentStock, minStock, unitCost, supplierId }
  */
 const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
+  const { data: suppliersData } = useApiQuery(getAllSuppliers, {}, []);
+  const suppliers = Array.isArray(suppliersData) ? suppliersData : suppliersData?.content || [];
+
   const [formData, setFormData] = useState({
     name: '',
     unit: INGREDIENT_UNITS[0],
-    quantity: '',
-    pricePerUnit: '',
-    reorderLevel: '',
-    supplier: ''
+    currentStock: '',
+    unitCost: '',
+    minStock: '',
+    supplierId: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -26,19 +31,19 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
       setFormData({
         name: ingredient.name || '',
         unit: ingredient.unit || INGREDIENT_UNITS[0],
-        quantity: ingredient.quantity?.toString() || '',
-        pricePerUnit: ingredient.pricePerUnit?.toString() || '',
-        reorderLevel: ingredient.minimumStock?.toString() || '',
-        supplier: ingredient.supplier || ''
+        currentStock: ingredient.currentStock?.toString() || ingredient.quantity?.toString() || '',
+        unitCost: ingredient.unitCost?.toString() || ingredient.pricePerUnit?.toString() || '',
+        minStock: ingredient.minStock?.toString() || ingredient.minimumStock?.toString() || '',
+        supplierId: (ingredient.supplierId || ingredient.supplier?.id)?.toString() || ''
       });
     } else {
       setFormData({
         name: '',
         unit: INGREDIENT_UNITS[0],
-        quantity: '',
-        pricePerUnit: '',
-        reorderLevel: '',
-        supplier: ''
+        currentStock: '',
+        unitCost: '',
+        minStock: '',
+        supplierId: ''
       });
     }
     setErrors({});
@@ -57,14 +62,14 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
     if (!formData.name.trim()) {
       newErrors.name = 'Ingredient name is required';
     }
-    if (!formData.quantity || parseFloat(formData.quantity) < 0) {
-      newErrors.quantity = 'Valid quantity is required';
+    if (!formData.currentStock || parseFloat(formData.currentStock) < 0) {
+      newErrors.currentStock = 'Valid current stock is required (≥ 0)';
     }
-    if (!formData.pricePerUnit || parseFloat(formData.pricePerUnit) <= 0) {
-      newErrors.pricePerUnit = 'Valid price per unit is required';
+    if (!formData.unitCost || parseFloat(formData.unitCost) <= 0) {
+      newErrors.unitCost = 'Valid unit cost is required';
     }
-    if (!formData.reorderLevel || parseFloat(formData.reorderLevel) < 0) {
-      newErrors.reorderLevel = 'Valid reorder level is required';
+    if (!formData.minStock || parseFloat(formData.minStock) < 0) {
+      newErrors.minStock = 'Valid min stock is required (≥ 0)';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -74,14 +79,13 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // Backend expects 'minimumStock' instead of 'reorderLevel'
     const submitData = {
       name: formData.name,
       unit: formData.unit,
-      quantity: parseFloat(formData.quantity),
-      pricePerUnit: parseFloat(formData.pricePerUnit),
-      minimumStock: parseFloat(formData.reorderLevel),
-      supplier: formData.supplier
+      currentStock: parseFloat(formData.currentStock),
+      unitCost: parseFloat(formData.unitCost),
+      minStock: parseFloat(formData.minStock),
+      ...(formData.supplierId ? { supplierId: parseInt(formData.supplierId) } : {})
     };
 
     onSubmit(submitData);
@@ -124,64 +128,69 @@ const IngredientModal = ({ isOpen, onClose, onSubmit, ingredient }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="quantity">Current Quantity *</label>
+            <label htmlFor="currentStock">Current Stock *</label>
             <input
               type="number"
-              id="quantity"
-              name="quantity"
-              value={formData.quantity}
+              id="currentStock"
+              name="currentStock"
+              value={formData.currentStock}
               onChange={handleChange}
               min="0"
               step="0.01"
-              className={errors.quantity ? 'error' : ''}
+              className={errors.currentStock ? 'error' : ''}
               placeholder="0.00"
             />
-            {errors.quantity && <span className="error-message">{errors.quantity}</span>}
+            {errors.currentStock && <span className="error-message">{errors.currentStock}</span>}
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="unitCost">Unit Cost (VND) *</label>
+            <input
+              type="number"
+              id="unitCost"
+              name="unitCost"
+              value={formData.unitCost}
+              onChange={handleChange}
+              min="0"
+              step="1000"
+              className={errors.unitCost ? 'error' : ''}
+              placeholder="Cost per unit"
+            />
+            {errors.unitCost && <span className="error-message">{errors.unitCost}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="minStock">Min Stock (Reorder Level) *</label>
+            <input
+              type="number"
+              id="minStock"
+              name="minStock"
+              value={formData.minStock}
+              onChange={handleChange}
+              min="0"
+              step="0.01"
+              className={errors.minStock ? 'error' : ''}
+              placeholder="Minimum before reorder"
+            />
+            {errors.minStock && <span className="error-message">{errors.minStock}</span>}
           </div>
         </div>
 
         <div className="form-group">
-          <label htmlFor="pricePerUnit">Price Per Unit (VND) *</label>
-          <input
-            type="number"
-            id="pricePerUnit"
-            name="pricePerUnit"
-            value={formData.pricePerUnit}
+          <label htmlFor="supplierId">Supplier</label>
+          <select
+            id="supplierId"
+            name="supplierId"
+            value={formData.supplierId}
             onChange={handleChange}
-            min="0"
-            step="1000"
-            className={errors.pricePerUnit ? 'error' : ''}
-            placeholder="Price per unit"
-          />
-          {errors.pricePerUnit && <span className="error-message">{errors.pricePerUnit}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="reorderLevel">Reorder Level *</label>
-          <input
-            type="number"
-            id="reorderLevel"
-            name="reorderLevel"
-            value={formData.reorderLevel}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            className={errors.reorderLevel ? 'error' : ''}
-            placeholder="Minimum quantity before reorder"
-          />
-          {errors.reorderLevel && <span className="error-message">{errors.reorderLevel}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="supplier">Supplier</label>
-          <input
-            type="text"
-            id="supplier"
-            name="supplier"
-            value={formData.supplier}
-            onChange={handleChange}
-            placeholder="Supplier name (optional)"
-          />
+          >
+            <option value="">-- Select Supplier (optional) --</option>
+            {suppliers.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
         </div>
 
         <div className="form-actions">

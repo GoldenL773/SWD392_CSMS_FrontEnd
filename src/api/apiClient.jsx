@@ -1,6 +1,6 @@
 // CSMS API Client - Base HTTP client for API communication
 
-import { API_BASE_URL, STORAGE_KEYS } from '../utils/constants.jsx';
+import { API_BASE_URL, STORAGE_KEYS, ROUTES } from '../utils/constants.jsx';
 
 /**
  * Base API client with authentication support
@@ -77,9 +77,16 @@ class ApiClient {
       
       // Handle 401 Unauthorized
       if (response.status === 401) {
-        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-        localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-        window.location.href = '/login';
+        // Only clear session and redirect if:
+        // 1. We're NOT on the login page OR ignoreUnauthorized is not set
+        // 2. ignoreUnauthorized is false or missing (default behavior)
+        if (!options.ignoreUnauthorized) {
+          if (window.location.pathname !== '/login' && window.location.pathname !== (ROUTES.LOGIN || '/login')) {
+            localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.USER_DATA);
+            window.location.href = '/login';
+          }
+        }
         throw new Error('Unauthorized');
       }
 
@@ -105,6 +112,11 @@ class ApiClient {
 
       return data;
     } catch (error) {
+      // Suppress logging Unauthorized error if ignoreUnauthorized is set
+      if (options.ignoreUnauthorized && error.message === 'Unauthorized') {
+        throw error;
+      }
+      
       // Log the final URL to help debug duplicate-prefix issues
       console.error('API Request Error:', error, 'Request URL:', url);
       throw error;
@@ -114,7 +126,7 @@ class ApiClient {
   /**
    * GET request
    */
-  async get(endpoint, params = {}) {
+  async get(endpoint, params = {}, options = {}) {
     // Remove undefined/null values to avoid sending "undefined" as string
     const cleanedParams = Object.fromEntries(
       Object.entries(params || {}).filter(([key, value]) => value !== undefined && value !== null)
@@ -123,7 +135,8 @@ class ApiClient {
     const url = queryString ? `${endpoint}?${queryString}` : endpoint;
     
     return this.request(url, {
-      method: 'GET'
+      method: 'GET',
+      ...options
     });
   }
 
@@ -153,31 +166,34 @@ class ApiClient {
   /**
    * PUT request
    */
-  async put(endpoint, data) {
+  async put(endpoint, data, options = {}) {
     const isFormData = data instanceof FormData;
     return this.request(endpoint, {
       method: 'PUT',
-      body: isFormData ? data : JSON.stringify(data)
+      body: isFormData ? data : JSON.stringify(data),
+      ...options
     });
   }
 
   /**
    * DELETE request
    */
-  async delete(endpoint) {
+  async delete(endpoint, options = {}) {
     return this.request(endpoint, {
-      method: 'DELETE'
+      method: 'DELETE',
+      ...options
     });
   }
 
   /**
    * PATCH request
    */
-  async patch(endpoint, data) {
+  async patch(endpoint, data, options = {}) {
     const isFormData = data instanceof FormData;
     return this.request(endpoint, {
       method: 'PATCH',
-      body: isFormData ? data : JSON.stringify(data)
+      body: isFormData ? data : JSON.stringify(data),
+      ...options
     });
   }
 }

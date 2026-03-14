@@ -22,6 +22,7 @@ const AdminPage = React.lazy(() => import('../pages/AdminPage.jsx'));
 const FinancePage = React.lazy(() => import('../pages/FinancePage.jsx'));
 const SettingsPage = React.lazy(() => import('../pages/SettingsPage.jsx'));
 const NotFoundPage = React.lazy(() => import('../pages/NotFoundPage.jsx'));
+const PromotionsPage = React.lazy(() => import('../pages/PromotionsPage.jsx'));
 
 /**
  * AppRoutes Component
@@ -31,7 +32,11 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path={ROUTES.HOME} element={<HomePage />} />
+      <Route path={ROUTES.HOME} element={
+        <React.Suspense fallback={<div className="loading" />}>
+          <RoleBasedRedirect defaultElement={<HomePage />} />
+        </React.Suspense>
+      } />
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
 
       {/* Protected Routes */}
@@ -57,6 +62,7 @@ const AppRoutes = () => {
           <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
           <Route path={ROUTES.RECIPES} element={<RecipesPage />} />
           <Route path={ROUTES.SUPPLIERS} element={<SuppliersPage />} />
+          <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
         </Route>
       </Route>
 

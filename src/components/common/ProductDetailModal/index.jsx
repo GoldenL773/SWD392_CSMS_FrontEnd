@@ -49,8 +49,8 @@ const ProductDetailModal = ({ isOpen, onClose, productId }) => {
             </div>
             <div className="detail-row">
               <span className="detail-label">Status:</span>
-              <span className={`detail-value status ${product.status?.toLowerCase()}`}>
-                {product.status}
+              <span className={`detail-value status ${(product.status || (product.available ? 'Available' : 'Unavailable')).toLowerCase()}`}>
+                {product.status || (product.available ? 'Available' : 'Unavailable')}
               </span>
             </div>
           </div>

@@ -20,6 +20,7 @@ export const ROUTES = {
   ATTENDANCE: '/attendance',
   FINANCE: '/finance',
   SETTINGS: '/settings',
+  PROMOTIONS: '/promotions',
   NOT_FOUND: '/404'
 };
 

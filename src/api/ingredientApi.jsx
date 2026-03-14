@@ -60,3 +60,10 @@ export const getTransactions = async (params = {}) => {
 export const getLowStockIngredients = async () => {
   return apiClient.get('/ingredients/low-stock');
 };
+
+/**
+ * Get ingredients for a specific product
+ */
+export const getProductIngredients = async (productId) => {
+  return apiClient.get(`/product-ingredients/product/${productId}`);
+};

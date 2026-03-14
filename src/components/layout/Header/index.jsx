@@ -5,7 +5,7 @@ import { useAuth } from '../../../hooks/useAuth.jsx';
 import { useApiQuery } from '../../../hooks/useApiQuery.jsx';
 import { getAllOrders } from '../../../api/orderApi.jsx';
 import { ORDER_STATUS, ROUTES } from '../../../utils/constants.jsx';
-import { Bell } from '@phosphor-icons/react';
+import { Bell, Atom } from '@phosphor-icons/react';
 import ConfirmationModal from '../../common/ConfirmationModal/index.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
 import './Header.css';
@@ -88,7 +88,7 @@ const Header = ({ onMenuClick }) => {
             onClick={onMenuClick}
             aria-label="Toggle menu"
           >
-            <span className="header__menu-icon"></span>
+            <Atom size={24} weight="fill" />
           </button>
           
           <div className="header__logo">
@@ -123,6 +123,7 @@ const Header = ({ onMenuClick }) => {
           
           {user && (
             <div className="header__user">
+
               <div className="header__user-info">
                 <span className="header__user-name">{user.username}</span>
                 {user.employee && (

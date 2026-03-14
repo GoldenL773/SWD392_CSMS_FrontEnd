@@ -192,7 +192,7 @@ const InventoryPage = () => {
     <div className="inventory-page">
       <div className="page-header">
         <div className="page-header-content">
-          <Package size={32} weight="thin" className="page-header-icon" />
+          <Package size={32} weight="regular" className="page-header-icon" />
           <div>
             <h1 className="page-title">Inventory Management</h1>
             <p className="page-subtitle">Manage products and ingredients</p>
@@ -303,7 +303,7 @@ const InventoryPage = () => {
           title="Ingredients"
           subtitle={`${ingredients.length} of ${totalIngredients} ingredients`}
           actions={
-            <div style={{ display: 'flex', gap: 'var(--spacing-md)' }}>
+            <div className="card-actions-group">
               <Button onClick={() => setIsTransactionModalOpen(true)} variant="secondary">
                 Record Transaction
               </Button>

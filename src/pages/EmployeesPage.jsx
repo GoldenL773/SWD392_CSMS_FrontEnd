@@ -1,16 +1,106 @@
 import React, { useState, useMemo } from 'react';
-import { useApiQuery } from '../hooks/useApiQuery.jsx';
-import { getAllEmployees } from '../api/employeeApi.jsx';
+import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
+import { useToast } from '../hooks/useToast.jsx';
+import { getAllEmployees, createEmployee, updateEmployee, deleteEmployee } from '../api/employeeApi.jsx';
+import { register } from '../api/authApi.jsx';
 import EmployeeCard from '../features/employees/EmployeeCard.jsx';
 import EmployeeDetailView from '../features/employees/EmployeeDetailView.jsx';
-import { Users } from '@phosphor-icons/react';
+import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
+import Button from '../components/common/Button/index.jsx';
+import Modal from '../components/common/Modal/index.jsx';
+import { Users, Plus, PencilSimple, Trash, Eye, EyeSlash } from '@phosphor-icons/react';
+import { EMPLOYEE_POSITIONS } from '../utils/constants.jsx';
 import './EmployeesPage.css';
 
 const EmployeesPage = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: employeesData, loading } = useApiQuery(getAllEmployees, { size: 1000 }, []);
+  const [activeTab, setActiveTab] = useState('list');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const toast = useToast();
+
+  const { data: employeesData, loading, refetch: refetchEmployees } = useApiQuery(getAllEmployees, { size: 1000 }, []);
   const employees = employeesData?.content || employeesData || [];
+
+  const [formData, setFormData] = useState({
+    firstName: '', lastName: '', position: '', phone: '', address: '', userId: '', hireDate: '',
+    username: '', password: '', email: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const openCreate = () => { 
+    setEditingEmployee(null); 
+    setFormData({ 
+      firstName: '', lastName: '', position: '', phone: '', address: '', userId: '', hireDate: '',
+      username: '', password: '', email: ''
+    }); 
+    setIsModalOpen(true); 
+  };
+  
+  const openEdit = (emp) => { 
+    setEditingEmployee(emp); 
+    setFormData({ 
+      firstName: emp.firstName || '', lastName: emp.lastName || '', position: emp.position || '', 
+      phone: emp.phone || '', address: emp.address || '', userId: emp.userId || '', 
+      hireDate: emp.hireDate || '', username: '', password: '', email: '' 
+    }); 
+    setIsModalOpen(true); 
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingEmployee) {
+        await updateEmployee(editingEmployee.id, { ...formData, userId: formData.userId ? parseInt(formData.userId) : null });
+        toast.success('Employee updated successfully');
+      } else {
+        // 1. Register account first
+        let finalUserId = formData.userId ? parseInt(formData.userId) : null;
+        
+        if (!finalUserId && formData.username && formData.password) {
+          const roleMap = {
+            'Manager': 'MANAGER',
+            'Barista': 'BARISTA',
+            'Cashier': 'STAFF',
+            'Kitchen Staff': 'STAFF',
+            'Cleaner': 'STAFF',
+            'Finance': 'FINANCE'
+          };
+          
+          const regResponse = await register({
+            username: formData.username,
+            password: formData.password,
+            email: formData.email,
+            roles: [roleMap[formData.position] || 'STAFF']
+          });
+          finalUserId = regResponse.userId || regResponse.id;
+          toast.success('Account created successfully');
+        }
+
+        // 2. Create employee profile
+        await createEmployee({ ...formData, userId: finalUserId });
+        toast.success('Employee profile created successfully');
+      }
+      setIsModalOpen(false);
+      refetchEmployees();
+    } catch (err) {
+      toast.error(err.message || 'Operation failed');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteEmployee(id);
+      toast.success('Employee deleted');
+      setDeleteConfirmId(null);
+      if (selectedEmployee?.id === id) setSelectedEmployee(null);
+      refetchEmployees();
+    } catch (err) {
+      toast.error(err.message || 'Delete failed');
+    }
+  };
 
   // Filter employees based on search term
   const filteredEmployees = useMemo(() => {
@@ -18,7 +108,8 @@ const EmployeesPage = () => {
     
     const search = searchTerm.toLowerCase().trim();
     return employees.filter(emp =>
-      emp.fullName?.toLowerCase().includes(search) ||
+      emp.firstName?.toLowerCase().includes(search) ||
+      emp.lastName?.toLowerCase().includes(search) ||
       emp.position?.toLowerCase().includes(search) ||
       emp.email?.toLowerCase().includes(search) ||
       emp.phone?.includes(search)
@@ -26,7 +117,7 @@ const EmployeesPage = () => {
   }, [employees, searchTerm]);
 
   return (
-    <div className="employees-page">
+    <div className="employees-page page-container">
       <div className="page-header">
         <div className="page-header-content">
           <Users size={32} weight="thin" className="page-header-icon" />
@@ -35,66 +126,250 @@ const EmployeesPage = () => {
             <p className="page-subtitle">Manage employee profiles, attendance, and salary</p>
           </div>
         </div>
+        <Button variant="primary" onClick={openCreate} className="btn-add">
+          <Plus size={20} weight="bold" /> Add Employee
+        </Button>
       </div>
 
-      <div className="employees-layout">
-        <div className="employees-list">
-          <div className="employees-list-header">
-            <h2>Employees ({filteredEmployees?.length || 0})</h2>
-            <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search by name, position, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
+      {/* Tabs */}
+      <div className="tabs">
+        <button className={`tab ${activeTab === 'list' ? 'tab--active' : ''}`} onClick={() => setActiveTab('list')}>Employee List</button>
+        <button className={`tab ${activeTab === 'manage' ? 'tab--active' : ''}`} onClick={() => setActiveTab('manage')}>Manage</button>
+      </div>
+
+      {activeTab === 'list' && (
+        <div className="employees-layout">
+          <div className="employees-list">
+            <div className="employees-list-header">
+              <h2>Employees ({filteredEmployees?.length || 0})</h2>
+              <div className="search-box">
+                <input
+                  type="text"
+                  placeholder="Search by name, position..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                {searchTerm && (
+                  <button className="clear-search" onClick={() => setSearchTerm('')} aria-label="Clear search">✕</button>
+                )}
+              </div>
+            </div>
+            {loading && (<div className="loading-container"><div className="loading"></div><p>Loading employees...</p></div>)}
+            {!loading && filteredEmployees && filteredEmployees.length > 0 && (
+              <div className="employees-grid">
+                {filteredEmployees.map((employee) => (
+                  <EmployeeCard key={employee.id} employee={employee} onSelect={setSelectedEmployee} isSelected={selectedEmployee?.id === employee.id} />
+                ))}
+              </div>
+            )}
+            {!loading && (!filteredEmployees || filteredEmployees.length === 0) && (
+              <div className="empty-state">
+                <p>{searchTerm ? 'No employees match your search' : 'No employees found'}</p>
+              </div>
+            )}
+          </div>
+          <div className="employee-detail-panel">
+            {selectedEmployee ? (
+              <EmployeeDetailView employee={selectedEmployee} />
+            ) : (
+              <div className="no-selection card"><p>Select an employee to view details</p></div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'manage' && (
+        <div className="employees-manage-table table-container">
+          {loading && (<div className="loading-container"><div className="loading"></div><p>Loading...</p></div>)}
+          {!loading && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Position</th>
+                  <th>Phone</th>
+                  <th>Hire Date</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map(emp => (
+                  <tr key={emp.id}>
+                    <td>{emp.firstName} {emp.lastName}</td>
+                    <td>{emp.position}</td>
+                    <td>{emp.phone}</td>
+                    <td>{emp.hireDate}</td>
+                    <td className="actions-cell text-center">
+                      <button className="btn-icon" onClick={() => openEdit(emp)} title="Edit">
+                        <PencilSimple size={20}/>
+                      </button>
+                      <button className="btn-icon btn-danger" onClick={() => setDeleteConfirmId(emp.id)} title="Delete">
+                        <Trash size={20}/>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingEmployee ? 'Edit Employee' : 'Add New Employee'}
+        size="medium"
+        footer={
+          <div className="modal-actions">
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={handleSubmit}>{editingEmployee ? 'Update' : 'Create'}</Button>
+          </div>
+        }
+      >
+        <form className="employee-form" onSubmit={handleSubmit}>
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">First Name *</label>
+              <input 
+                required 
+                className="form-input"
+                value={formData.firstName} 
+                onChange={e => setFormData({...formData, firstName: e.target.value})} 
               />
-              {searchTerm && (
-                <button 
-                  className="clear-search"
-                  onClick={() => setSearchTerm('')}
-                  aria-label="Clear search"
-                >
-                  ✕
-                </button>
-              )}
+            </div>
+            <div className="form-group">
+              <label className="form-label">Last Name *</label>
+              <input 
+                required 
+                className="form-input"
+                value={formData.lastName} 
+                onChange={e => setFormData({...formData, lastName: e.target.value})} 
+              />
             </div>
           </div>
-          {loading && (
-            <div className="loading-container">
-              <div className="loading"></div>
-              <p>Loading employees...</p>
+          
+          <div className="form-group">
+            <label className="form-label">Position *</label>
+            <select 
+              required 
+              className="form-select"
+              value={formData.position} 
+              onChange={e => setFormData({...formData, position: e.target.value})}
+            >
+              <option value="">-- Select Position --</option>
+              {EMPLOYEE_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          
+          <div className="form-grid">
+            <div className="form-group">
+              <label className="form-label">Phone</label>
+              <input 
+                className="form-input"
+                value={formData.phone} 
+                onChange={e => setFormData({...formData, phone: e.target.value})} 
+              />
             </div>
-          )}
-          {!loading && filteredEmployees && filteredEmployees.length > 0 && (
-            <div className="employees-grid">
-              {filteredEmployees.map((employee) => (
-                <EmployeeCard
-                  key={employee.id}
-                  employee={employee}
-                  onSelect={setSelectedEmployee}
-                  isSelected={selectedEmployee?.id === employee.id}
+            <div className="form-group">
+              <label className="form-label">Hire Date</label>
+              <input 
+                type="date" 
+                className="form-input"
+                value={formData.hireDate} 
+                onChange={e => setFormData({...formData, hireDate: e.target.value})} 
+              />
+            </div>
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.address} 
+              onChange={e => setFormData({...formData, address: e.target.value})} 
+              rows={2} 
+            />
+          </div>
+          
+          {!editingEmployee && (
+            <div className="account-section">
+              <h4 className="section-title">Account Settings</h4>
+              <div className="form-group">
+                <label className="form-label">Username *</label>
+                <input 
+                  required
+                  className="form-input"
+                  value={formData.username} 
+                  onChange={e => setFormData({...formData, username: e.target.value})} 
+                  placeholder="System login username" 
                 />
-              ))}
+              </div>
+              <div className="form-group password-group">
+                <label className="form-label">Password *</label>
+                <div className="password-input-wrapper">
+                  <input 
+                    required
+                    type={showPassword ? 'text' : 'password'} 
+                    className="form-input"
+                    value={formData.password} 
+                    onChange={e => setFormData({...formData, password: e.target.value})} 
+                    placeholder="Secure password" 
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeSlash size={18}/> : <Eye size={18}/>}
+                  </button>
+                </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input 
+                  type="email" 
+                  className="form-input"
+                  value={formData.email} 
+                  onChange={e => setFormData({...formData, email: e.target.value})} 
+                  placeholder="employee@example.com" 
+                />
+              </div>
+              <div className="divider"><span>OR</span></div>
+              <div className="form-group">
+                <label className="form-label">Link existing User ID</label>
+                <input 
+                  type="number" 
+                  className="form-input"
+                  value={formData.userId} 
+                  onChange={e => setFormData({...formData, userId: e.target.value})} 
+                  placeholder="User ID" 
+                />
+              </div>
             </div>
           )}
-          {!loading && (!filteredEmployees || filteredEmployees.length === 0) && (
-            <div className="empty-state">
-              <p>{searchTerm ? 'No employees match your search' : 'No employees found'}</p>
-            </div>
-          )}
-        </div>
+        </form>
+      </Modal>
 
-        <div className="employee-detail-panel">
-          {selectedEmployee ? (
-            <EmployeeDetailView employee={selectedEmployee} />
-          ) : (
-            <div className="no-selection">
-              <p>Select an employee to view details</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        title="Confirm Delete"
+        size="small"
+        footer={
+          <div className="modal-actions">
+            <Button variant="secondary" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+            <Button variant="danger" onClick={() => handleDelete(deleteConfirmId)}>Delete</Button>
+          </div>
+        }
+      >
+        <p>Are you sure you want to delete this employee? This action cannot be undone.</p>
+      </Modal>
+
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

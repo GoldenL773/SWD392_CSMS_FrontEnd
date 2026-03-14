@@ -118,29 +118,33 @@ export const AuthProvider = ({ children }) => {
       console.log('User roles:', userData.roles);
       console.log('User roleNames:', userData.roleNames);
 
-      // Fetch employee profile to get employeeId
-      try {
-        const employeeProfile = await getEmployeeForUser();
-        if (employeeProfile && employeeProfile.id) {
-          userData.employeeId = employeeProfile.id;
-          console.log('Employee profile fetched - employeeId:', userData.employeeId);
-        }
-      } catch (err) {
-        console.warn('Failed to fetch employee profile:', err.message);
-        // Continue without employeeId - some roles may not have an employee profile
-      }
-
-      // Store token and user data
+      // Store token and user data immediately so navigation works
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
-
+      
+      // Set user and clear error/loading immediately to allow UI to proceed
       setUser(userData);
+      setError(null);
+      setLoading(false);
+
+      // Fetch employee profile to get employeeId (truly non-blocking)
+      // We don't await this because we want the Login page to be able to navigate immediately
+      getEmployeeForUser(userData).then(employeeProfile => {
+        if (employeeProfile && employeeProfile.id) {
+          console.log('Employee profile fetched asynchronously - employeeId:', employeeProfile.id);
+          const updatedUser = { ...userData, employeeId: employeeProfile.id };
+          localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        }
+      }).catch(err => {
+        console.warn('Optional employee profile fetch failed or not found:', err.message);
+      });
+
       return userData;
     } catch (err) {
       setError(err.message || 'Login failed');
-      throw err;
-    } finally {
       setLoading(false);
+      throw err;
     }
   };
 

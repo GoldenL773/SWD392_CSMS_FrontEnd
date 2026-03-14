@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { formatCurrency, formatNumber } from '../../utils/formatters.jsx';
+import { PencilSimple, Trash } from '@phosphor-icons/react';
 import Button from '../../components/common/Button/index.jsx';
 import './IngredientsTable.css';
 
@@ -38,8 +39,8 @@ const IngredientsTable = ({
     }
     
     return sortDirection === 'asc' 
-      ? aValue - bValue
-      : bValue - aValue;
+      ? (Number(aValue) || 0) - (Number(bValue) || 0)
+      : (Number(bValue) || 0) - (Number(aValue) || 0);
   });
 
   const getStockStatus = (quantity) => {
@@ -70,55 +71,59 @@ const IngredientsTable = ({
       <table className="ingredients-table">
         <thead>
           <tr>
-            <th onClick={() => handleSort('id')} className="sortable">
+            <th onClick={() => handleSort('id')} className="sortable center-col">
               ID {sortField === 'id' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
             <th onClick={() => handleSort('name')} className="sortable">
               Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
-            <th onClick={() => handleSort('unit')} className="sortable">
+            <th onClick={() => handleSort('unit')} className="sortable center-col">
               Unit {sortField === 'unit' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
-            <th onClick={() => handleSort('quantity')} className="sortable">
-              Quantity {sortField === 'quantity' && (sortDirection === 'asc' ? '↑' : '↓')}
+            <th onClick={() => handleSort('currentStock')} className="sortable right-col">
+              Quantity {sortField === 'currentStock' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
-            <th onClick={() => handleSort('pricePerUnit')} className="sortable">
-              Price/Unit {sortField === 'pricePerUnit' && (sortDirection === 'asc' ? '↑' : '↓')}
+            <th onClick={() => handleSort('unitCost')} className="sortable right-col">
+              Price/Unit {sortField === 'unitCost' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
-            <th>Total Value</th>
-            <th>Actions</th>
+            <th className="right-col">Total Value</th>
+            <th className="center-col">Actions</th>
           </tr>
         </thead>
         <tbody>
           {sortedIngredients.map((ingredient) => (
             <tr key={ingredient.id}>
-              <td>{ingredient.id}</td>
+              <td className="center-col">{ingredient.id}</td>
               <td className="ingredient-name">{ingredient.name}</td>
-              <td>{ingredient.unit}</td>
-              <td>
-                <span className={`quantity ${getStockStatus(ingredient.quantity)}`}>
-                  {formatNumber(ingredient.quantity, 2)}
+              <td className="center-col">{ingredient.unit}</td>
+              <td className="right-col">
+                <span className={`quantity ${getStockStatus(ingredient.currentStock)}`}>
+                  {formatNumber(ingredient.currentStock || 0, 2)}
                 </span>
               </td>
-              <td className="price-cell">{formatCurrency(ingredient.pricePerUnit || 0)}</td>
-              <td className="total-value">
-                {formatCurrency((ingredient.quantity || 0) * (ingredient.pricePerUnit || 0))}
+              <td className="right-col price-cell">
+                {formatCurrency(ingredient.unitCost || 0)}
+              </td>
+              <td className="right-col total-value">
+                {formatCurrency((ingredient.currentStock || 0) * (ingredient.unitCost || 0))}
               </td>
               <td className="actions-cell">
-                <Button 
-                  variant="ghost" 
-                  size="small"
-                  onClick={() => onEdit(ingredient)}
-                >
-                  Edit
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="small"
-                  onClick={() => onDelete(ingredient.id)}
-                >
-                  Delete
-                </Button>
+                <div className="action-buttons">
+                  <button 
+                    className="btn-icon" 
+                    onClick={() => onEdit(ingredient)}
+                    title="Edit"
+                  >
+                    <PencilSimple size={18} />
+                  </button>
+                  <button 
+                    className="btn-icon btn-danger" 
+                    onClick={() => onDelete(ingredient.id)}
+                    title="Delete"
+                  >
+                    <Trash size={18} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -133,8 +138,8 @@ IngredientsTable.propTypes = {
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
     unit: PropTypes.string.isRequired,
-    quantity: PropTypes.number.isRequired,
-    pricePerUnit: PropTypes.number.isRequired
+    currentStock: PropTypes.number,
+    unitCost: PropTypes.number
   })).isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,

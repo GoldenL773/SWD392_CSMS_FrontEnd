@@ -1,5 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SupplierManager } from '../features/suppliers/index.js';
+import { useApiQuery } from '../hooks/useApiQuery.jsx';
+import { getAllSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../api/supplierApi.jsx';
+import { getAllIngredients } from '../api/ingredientApi.jsx';
+import { useToast } from '../hooks/useToast.jsx';
+import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
 import './SuppliersPage.css';
 
 /**
@@ -7,24 +12,47 @@ import './SuppliersPage.css';
  * Page for managing suppliers (Manager only)
  */
 const SuppliersPage = () => {
-  // Mock data - replace with actual API calls
-  const suppliers = [];
-  const ingredients = [];
+  const toast = useToast();
+  // Fetch suppliers and ingredients
+  const { data: suppliersData, loading: loadingSuppliers, refetch: refetchSuppliers } = useApiQuery(getAllSuppliers, {}, []);
+  const { data: ingredientsData, loading: loadingIngredients } = useApiQuery(getAllIngredients, { size: 1000 }, []);
+  
+  const suppliers = suppliersData || [];
+  const ingredients = ingredientsData?.content || ingredientsData || [];
 
-  const handleCreateSupplier = (supplierData) => {
-    console.log('Create supplier:', supplierData);
-    // TODO: Implement API call
+  const handleCreateSupplier = async (supplierData) => {
+    try {
+      await createSupplier(supplierData);
+      toast.success('Supplier created successfully');
+      refetchSuppliers();
+    } catch (error) {
+      toast.error(error.message || 'Failed to create supplier');
+    }
   };
 
-  const handleUpdateSupplier = (supplierId, supplierData) => {
-    console.log('Update supplier:', supplierId, supplierData);
-    // TODO: Implement API call
+  const handleUpdateSupplier = async (supplierId, supplierData) => {
+    try {
+      await updateSupplier(supplierId, supplierData);
+      toast.success('Supplier updated successfully');
+      refetchSuppliers();
+    } catch (error) {
+      toast.error(error.message || 'Failed to update supplier');
+    }
   };
 
-  const handleDeleteSupplier = (supplierId) => {
-    console.log('Delete supplier:', supplierId);
-    // TODO: Implement API call
+  const handleDeleteSupplier = async (supplierId) => {
+    try {
+      await deleteSupplier(supplierId);
+      toast.success('Supplier deleted successfully');
+      refetchSuppliers();
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete supplier');
+    }
   };
+
+  if (loadingSuppliers || loadingIngredients) {
+    return <div className="loading-container"><div className="loading"></div><p>Loading suppliers...</p></div>;
+  }
 
   return (
     <div className="suppliers-page">
@@ -35,6 +63,7 @@ const SuppliersPage = () => {
         onUpdateSupplier={handleUpdateSupplier}
         onDeleteSupplier={handleDeleteSupplier}
       />
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

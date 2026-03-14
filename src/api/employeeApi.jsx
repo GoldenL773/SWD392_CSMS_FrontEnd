@@ -30,7 +30,7 @@ export const getEmployeeById = async (id) => {
 export const getEmployeeForUser = async (user) => {
   // 1) Try "me" endpoint first (works without user parameter)
   try {
-    const me = await apiClient.get('/employees/me');
+    const me = await apiClient.get('/employees/me', {}, { ignoreUnauthorized: true });
     if (me) return me;
   } catch (err) {
     // ignore and try next
@@ -70,8 +70,8 @@ export const getEmployeeForUser = async (user) => {
  * Get employee attendance records
  */
 export const getEmployeeAttendance = async (employeeId, params = {}) => {
-  const response = await apiClient.get(`/employees/${employeeId}/attendance`, params);
-  return response.content || response;
+  const response = await apiClient.get(`/attendance/employee/${employeeId}`, params);
+  return response?.content || response || [];
 };
 
 /**
@@ -107,7 +107,7 @@ export const deleteEmployee = async (id) => {
  * Add attendance record
  */
 export const addAttendance = async (attendanceData) => {
-  return apiClient.post('/employees/attendance', attendanceData);
+  return apiClient.post('/attendance', attendanceData);
 };
 
 /**

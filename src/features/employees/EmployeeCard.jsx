@@ -6,7 +6,7 @@ import './EmployeeCard.css';
 /**
  * EmployeeCard Component
  * Grid card for employee display
- * Entity: Employee (id, fullName, dob, gender, phone, position, hireDate, status)
+ * Entity: Employee (id, firstName, lastName, phone, position, hireDate)
  */
 const EmployeeCard = ({ employee, onSelect, isSelected }) => {
   const getStatusClass = (status) => {
@@ -19,11 +19,11 @@ const EmployeeCard = ({ employee, onSelect, isSelected }) => {
       onClick={() => onSelect(employee)}
     >
       <div className="employee-card__avatar">
-        {employee.fullName.charAt(0).toUpperCase()}
+        {employee.firstName ? employee.firstName.charAt(0).toUpperCase() : '?'}
       </div>
       
       <div className="employee-card__info">
-        <h3 className="employee-card__name">{employee.fullName}</h3>
+        <h3 className="employee-card__name">{`${employee.firstName || ''} ${employee.lastName || ''}`.trim()}</h3>
         <p className="employee-card__position">{employee.position}</p>
         
         <div className="employee-card__details">
@@ -46,13 +46,12 @@ const EmployeeCard = ({ employee, onSelect, isSelected }) => {
 EmployeeCard.propTypes = {
   employee: PropTypes.shape({
     id: PropTypes.number.isRequired,
-    fullName: PropTypes.string.isRequired,
-    dob: PropTypes.string.isRequired,
-    gender: PropTypes.string.isRequired,
-    phone: PropTypes.string.isRequired,
-    position: PropTypes.string.isRequired,
-    hireDate: PropTypes.string.isRequired,
-    status: PropTypes.string.isRequired
+    firstName: PropTypes.string.isRequired,
+    lastName: PropTypes.string.isRequired,
+    phone: PropTypes.string,
+    position: PropTypes.string,
+    hireDate: PropTypes.string,
+    status: PropTypes.string
   }).isRequired,
   onSelect: PropTypes.func.isRequired,
   isSelected: PropTypes.bool

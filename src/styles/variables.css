@@ -19,18 +19,20 @@
   --color-indigo: #2F4F4F;
   --color-white: #FFFFFF;
   
-  /* Semantic Colors - Updated to use Visual Design System */
+  /* Semantic Colors - Standardized for high contrast */
   --color-background: var(--color-creamy-white);
   --color-surface: #FFFFFF;
-  --color-surface-hover: #F5F5F5;
+  --color-surface-hover: #F8F5F2;
   --color-primary: var(--color-coffee-brown);
-  --color-primary-hover: #5d4429;
+  --color-primary-hover: #362617;
   --color-accent: var(--color-vibrant-orange);
   --color-accent-hover: #d96e00;
   --color-text-primary: var(--color-coffee-brown);
   --color-text-secondary: #6B5D52;
-  --color-border: #f4ede7;
-  --color-border-light: #F0F0F0;
+  --color-text-on-accent: #FFFFFF;
+  --color-text-on-primary: #FFFFFF;
+  --color-border: #E8DFD5;
+  --color-border-light: #F4EDE7;
   
   /* Status Colors - Updated to use Visual Design System */
   --color-success: var(--color-natural-green);

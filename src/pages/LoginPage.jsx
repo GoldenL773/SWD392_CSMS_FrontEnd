@@ -11,7 +11,29 @@ import './LoginPage.css';
  */
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, loading, error } = useAuth();
+  const { login, loading, error, user, isAuthenticated } = useAuth();
+  
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated() && user) {
+      const hasRole = (r) => {
+        const normalize = (x) => (x || '').toString().toUpperCase().replace(/^ROLE_/, '');
+        const target = normalize(r);
+        return user.roleNames ? user.roleNames.includes(target) : 
+               user.roles?.some(role => normalize(typeof role === 'string' ? role : role.name) === target);
+      };
+
+      if (hasRole('STAFF')) {
+        navigate(ROUTES.ATTENDANCE);
+      } else if (hasRole('BARISTA')) {
+        navigate(ROUTES.ORDER_QUEUE);
+      } else if (hasRole('FINANCE')) {
+        navigate(ROUTES.FINANCE);
+      } else {
+        navigate(ROUTES.DASHBOARD);
+      }
+    }
+  }, [user, isAuthenticated, navigate]);
   
   const [formData, setFormData] = useState({
     username: '',

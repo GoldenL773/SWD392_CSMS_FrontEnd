@@ -1,5 +1,11 @@
 import React from 'react';
+import { useApiQuery, useApiMutation } from '../hooks/useApiQuery.jsx';
+import { useToast } from '../hooks/useToast.jsx';
 import { RecipeManager } from '../features/menu/index.js';
+import ToastContainer from '../components/common/Toast/ToastContainer.jsx';
+import { getAllIngredients } from '../api/ingredientApi.jsx';
+import { getAllProducts } from '../api/productApi.jsx';
+import { getAllRecipes, createRecipe, updateRecipe, deleteRecipe } from '../api/recipeApi.jsx';
 import './RecipesPage.css';
 
 /**
@@ -7,24 +13,44 @@ import './RecipesPage.css';
  * Page for managing recipes (Manager only)
  */
 const RecipesPage = () => {
-  // Mock data - replace with actual API calls
-  const recipes = [];
-  const ingredients = [];
-  const products = [];
+  const toast = useToast();
 
-  const handleCreateRecipe = (recipeData) => {
-    console.log('Create recipe:', recipeData);
-    // TODO: Implement API call
+  const { data: recipesData, loading: recipesLoading, refetch: refetchRecipes } = useApiQuery(getAllRecipes, {}, []);
+  const { data: ingredientsData } = useApiQuery(getAllIngredients, { size: 1000 }, []);
+  const { data: productsData } = useApiQuery(getAllProducts, { size: 1000 }, []);
+
+  const recipes = recipesData?.content || recipesData || [];
+  const ingredients = ingredientsData?.content || ingredientsData || [];
+  const products = productsData?.content || productsData || [];
+
+  const handleCreateRecipe = async (recipeData) => {
+    try {
+      await createRecipe(recipeData);
+      toast.success('Recipe created successfully!');
+      refetchRecipes();
+    } catch (err) {
+      toast.error('Failed to create recipe: ' + (err.message || 'Unknown error'));
+    }
   };
 
-  const handleUpdateRecipe = (recipeId, recipeData) => {
-    console.log('Update recipe:', recipeId, recipeData);
-    // TODO: Implement API call
+  const handleUpdateRecipe = async (recipeId, recipeData) => {
+    try {
+      await updateRecipe(recipeId, recipeData);
+      toast.success('Recipe updated successfully!');
+      refetchRecipes();
+    } catch (err) {
+      toast.error('Failed to update recipe: ' + (err.message || 'Unknown error'));
+    }
   };
 
-  const handleDeleteRecipe = (recipeId) => {
-    console.log('Delete recipe:', recipeId);
-    // TODO: Implement API call
+  const handleDeleteRecipe = async (recipeId) => {
+    try {
+      await deleteRecipe(recipeId);
+      toast.success('Recipe deleted successfully!');
+      refetchRecipes();
+    } catch (err) {
+      toast.error('Failed to delete recipe: ' + (err.message || 'Unknown error'));
+    }
   };
 
   return (
@@ -36,7 +62,9 @@ const RecipesPage = () => {
         onCreateRecipe={handleCreateRecipe}
         onUpdateRecipe={handleUpdateRecipe}
         onDeleteRecipe={handleDeleteRecipe}
+        loading={recipesLoading}
       />
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 };

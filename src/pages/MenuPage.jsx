@@ -86,10 +86,10 @@ const MenuPage = () => {
 
   const filteredProducts = selectedCategory === 'All'
     ? products || []
-    : (products || []).filter(p => p.category === selectedCategory);
+    : (products || []).filter(p => (p.categoryName || p.category) === selectedCategory);
 
   const getProductsByCategory = (category) => {
-    return (products || []).filter(p => p.category === category);
+    return (products || []).filter(p => (p.categoryName || p.category) === category);
   };
 
   const formatPrice = (price) => {
@@ -176,15 +176,15 @@ const MenuPage = () => {
                             >
                               <div className="product-image">
                                 <div className="image-placeholder">
-                                  {product.category === 'Coffee' && '☕'}
-                                  {product.category === 'Tea' && '🍵'}
-                                  {product.category === 'Cake' && '🍰'}
-                                  {product.category === 'Pastry' && '🥐'}
-                                  {product.category === 'Sandwich' && '🥪'}
-                                  {product.category === 'Beverage' && '🥤'}
-                                  {product.category === 'Other' && '🍴'}
+                                  {(product.categoryName || product.category) === 'Coffee' && '☕'}
+                                  {(product.categoryName || product.category) === 'Tea' && '🍵'}
+                                  {(product.categoryName || product.category) === 'Cake' && '🍰'}
+                                  {(product.categoryName || product.category) === 'Pastry' && '🥐'}
+                                  {(product.categoryName || product.category) === 'Sandwich' && '🥪'}
+                                  {(product.categoryName || product.category) === 'Beverage' && '🥤'}
+                                  {(product.categoryName || product.category) === 'Other' && '🍴'}
                                 </div>
-                                {product.status === 'Unavailable' && (
+                                {(!product.available && product.status !== 'Available') && (
                                   <div className="unavailable-badge">Out of Stock</div>
                                 )}
                                 
@@ -201,7 +201,7 @@ const MenuPage = () => {
                               <div className="product-info">
                                 <h3 className="product-name">{product.name}</h3>
                                 <p className="product-price">{formatPrice(product.price)}</p>
-                                <span className={`status-badge ${product.status === 'Available' ? 'available' : 'unavailable'}`}>
+                                <span className={`status-badge ${product.available !== false && product.status !== 'Unavailable' ? 'available' : 'unavailable'}`}>
                                   {product.status}
                                 </span>
                               </div>

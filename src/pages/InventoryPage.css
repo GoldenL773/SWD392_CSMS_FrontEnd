@@ -144,3 +144,8 @@
 .inventory-page .card {
   width: 100%;
 }
+
+.card-actions-group {
+  display: flex;
+  gap: var(--spacing-md);
+}

@@ -13,7 +13,7 @@ const RoleBasedRedirect = () => {
   // Determine default route based on role
   const getDefaultRoute = () => {
     if (!user || !user.roles || user.roles.length === 0) {
-      return ROUTES.DASHBOARD;
+      return null; // Don't redirect if not logged in
     }
 
     // Staff default: /attendance
@@ -40,7 +40,10 @@ const RoleBasedRedirect = () => {
     return ROUTES.DASHBOARD;
   };
 
-  return <Navigate to={getDefaultRoute()} replace />;
+  const route = getDefaultRoute();
+  if (!route) return null;
+
+  return <Navigate to={route} replace />;
 };
 
 export default RoleBasedRedirect;

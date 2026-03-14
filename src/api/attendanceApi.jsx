@@ -16,7 +16,7 @@ export const checkOut = (employeeId) => {
 
 // Get today's attendance
 export const getTodayAttendance = (employeeId) => {
-  return apiClient.get(`/attendance/today/${employeeId}`);
+  return apiClient.get(`/attendance/date/${new Date().toISOString().split('T')[0]}`, { employeeId }, { ignoreUnauthorized: true });
 };
 
 // Get attendance by ID

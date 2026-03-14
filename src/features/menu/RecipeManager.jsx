@@ -11,6 +11,7 @@ import {
   CookingPot
 } from '@phosphor-icons/react';
 import { generateId } from '../../utils/formatters.jsx';
+import { getProductIngredients } from '../../api/ingredientApi.jsx';
 import './RecipeManager.css';
 
 /**
@@ -339,6 +340,35 @@ const RecipeFormModal = ({
     }
     setErrors({});
   }, [recipe, isOpen]);
+
+  // Fetch product ingredients when a new product is selected
+  React.useEffect(() => {
+    const fetchProductIngredients = async () => {
+      if (formData.productId && !recipe) { // Only auto-populate for new recipes
+        try {
+          const productIngredients = await getProductIngredients(formData.productId);
+          if (productIngredients && productIngredients.length > 0) {
+            setRecipeIngredients(productIngredients.map(ing => ({
+              id: generateId(),
+              ingredientId: ing.ingredientId,
+              quantity: ing.quantity || ing.quantityRequired || '',
+              unit: ing.unit || ''
+            })));
+          } else {
+            // Default to one empty row if no ingredients found
+            setRecipeIngredients([
+              { id: generateId(), ingredientId: '', quantity: '', unit: '' }
+            ]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch product ingredients:", error);
+          // Don't clear existing if it fails, or maybe show an error
+        }
+      }
+    };
+
+    fetchProductIngredients();
+  }, [formData.productId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

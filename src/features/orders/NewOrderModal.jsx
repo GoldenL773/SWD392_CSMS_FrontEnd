@@ -56,13 +56,17 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     }
   }, [products]);
 
-  // Filter available products (status: Available or AVAILABLE, and not out of stock)
+  // Filter available products (support both status string and available boolean)
   const availableProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter(p => 
-      p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available') &&
-      p.isAvailable !== false // Exclude out-of-stock products
-    );
+    return products.filter(p => {
+      // Check for available boolean (preferred from backend) or status string
+      const isAvailable = p.available !== false && p.isAvailable !== false;
+      const statusCheck = !p.status || 
+                          ['AVAILABLE', 'IN_STOCK', 'ACTIVE'].includes(p.status.toUpperCase());
+      
+      return isAvailable && statusCheck;
+    });
   }, [products]);
 
   // Filter products by search term

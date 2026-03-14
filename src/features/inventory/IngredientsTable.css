@@ -5,22 +5,34 @@
   min-width: 700px;
 }
 
+.ingredients-table th {
+  padding: var(--spacing-md);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  border-bottom: 2px solid var(--color-border);
+  text-transform: uppercase;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.5px;
+}
+
 .ingredients-table th.sortable {
   cursor: pointer;
   transition: background-color var(--transition-fast);
 }
 
 .ingredients-table th.sortable:hover {
-  background-color: rgba(184, 134, 11, 0.1);
+  background-color: var(--color-surface-hover);
 }
 
 .ingredient-name {
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-coffee-brown);
 }
 
 .quantity {
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-family-mono);
 }
 
 .quantity.in-stock {
@@ -35,13 +47,57 @@
   color: var(--color-error);
 }
 
-.price-cell {
-  color: var(--color-text-secondary);
+.center-col {
+  text-align: center;
 }
 
-.total-value {
-  font-weight: var(--font-weight-semibold);
+.right-col {
+  text-align: right;
+}
+
+.price-cell, .total-value {
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-coffee-brown);
+}
+
+.actions-cell, th.center-col:last-child {
+  width: 120px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background-color: var(--color-background);
   color: var(--color-primary);
+  border-color: var(--color-border);
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-error);
+  border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Mobile */
