@@ -100,8 +100,8 @@ const PromotionsPage = () => {
         ? { productId: parseInt(formData.targetId) }
         : { comboId: parseInt(formData.targetId) }),
       targetId: parseInt(formData.targetId),
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      startDate: formData.startDate ? formData.startDate + 'T00:00:00' : null,
+      endDate: formData.endDate ? formData.endDate + 'T23:59:59' : null,
       status: formData.status,
     };
 

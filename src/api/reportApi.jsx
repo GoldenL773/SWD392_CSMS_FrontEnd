@@ -6,40 +6,37 @@ import apiClient from './apiClient.jsx';
  * Get daily reports with optional date range filter
  */
 export const getDailyReports = async (params = {}) => {
-  const response = await apiClient.get('/reports/daily', { params });
-  return response.data?.content || response.data || response;
+  const response = await apiClient.get('/reports/daily', params);
+  return response?.content || response || [];
 };
 
 /**
  * Get daily report by specific date
  */
 export const getDailyReportByDate = async (date) => {
-  const response = await apiClient.get(`/reports/daily/${date}`);
-  return response.data;
+  return await apiClient.get(`/reports/daily/${date}`);
 };
 
 /**
  * Create daily report
  */
 export const createDailyReport = async (reportData) => {
-  const response = await apiClient.post('/reports/daily', reportData);
-  return response.data;
+  return await apiClient.post('/reports/daily', reportData);
 };
 
 /**
  * Get ingredient transactions (using ingredient API)
  */
 export const getIngredientTransactions = async (params = {}) => {
-  const response = await apiClient.get('/reports/transactions', { params });
-  return response.data?.content || response.data || response;
+  const response = await apiClient.get('/transactions', params);
+  return response?.content || response || [];
 };
 
 /**
  * Get dashboard statistics
  */
 export const getDashboardStats = async () => {
-  const response = await apiClient.get('/dashboard/stats');
-  return response.data;
+  return await apiClient.get('/dashboard/stats');
 };
 
 // --- File Management APIs ---
@@ -57,12 +54,11 @@ export const uploadReportFile = async (file, metadata) => {
   formData.append('reportType', metadata.reportType);
   formData.append('reportPeriod', metadata.reportPeriod);
 
-  const response = await apiClient.post('/reports/upload', formData, {
+  return await apiClient.post('/reports/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
   });
-  return response.data;
 };
 
 /**
@@ -70,8 +66,8 @@ export const uploadReportFile = async (file, metadata) => {
  */
 export const getUploadedReports = async (params = {}) => {
   try {
-    const response = await apiClient.get('/reports/files', { params });
-    return response.data?.content || response.data || response;
+    const response = await apiClient.get('/reports/files', params);
+    return response?.content || response || [];
   } catch (error) {
     console.warn('Failed to fetch uploaded reports (API might not be available):', error);
     return [];
