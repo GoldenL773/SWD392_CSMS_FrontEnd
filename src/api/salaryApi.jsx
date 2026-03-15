@@ -80,3 +80,8 @@ export const getPaidSalariesByPeriod = (month, year) => {
     params: { month, year }
   });
 };
+
+// Get salary update history
+export const getSalaryHistory = (salaryId) => {
+  return apiClient.get(`/salaries/${salaryId}/history`);
+};

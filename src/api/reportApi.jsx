@@ -28,7 +28,7 @@ export const createDailyReport = async (reportData) => {
  * Get ingredient transactions (using ingredient API)
  */
 export const getIngredientTransactions = async (params = {}) => {
-  const response = await apiClient.get('/ingredients/transactions', params);
+  const response = await apiClient.get('/reports/transactions', params);
   return response.content || response;
 };
 

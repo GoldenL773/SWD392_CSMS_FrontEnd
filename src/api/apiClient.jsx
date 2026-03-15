@@ -72,11 +72,24 @@ class ApiClient {
         throw new Error('Unauthorized');
       }
 
-      // Parse JSON response
-      const data = await response.json();
+      // Parse response safely (handles 204/empty body)
+      const text = await response.text();
+      let data = null;
+      if (text && text.trim().length > 0) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          // If body isn't valid JSON and it's an error, throw generic error
+          if (!response.ok) {
+            throw new Error('Request failed');
+          }
+          // For successful non-JSON responses, return null
+          data = null;
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Request failed');
+        throw new Error((data && data.message) || 'Request failed');
       }
 
       return data;

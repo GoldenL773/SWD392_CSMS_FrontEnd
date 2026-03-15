@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useMemo } from 'react';
 import { login as apiLogin, logout as apiLogout, getCurrentUser } from '../api/authApi.jsx';
+import { getEmployeeForUser } from '../api/employeeApi.jsx';
 import { STORAGE_KEYS } from '../utils/constants.jsx';
 
 // Create Auth Context
@@ -57,7 +58,12 @@ export const AuthProvider = ({ children }) => {
 
           console.log('AuthProvider: Normalized roles:', { normalizedRoles, roleNames });
 
-          setUser({ ...parsed, roles: normalizedRoles, roleNames });
+          // Restore employeeId if it was stored
+          const userWithRoles = { ...parsed, roles: normalizedRoles, roleNames };
+          if (parsed.employeeId) {
+            userWithRoles.employeeId = parsed.employeeId;
+          }
+          setUser(userWithRoles);
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
@@ -111,6 +117,18 @@ export const AuthProvider = ({ children }) => {
       console.log('Login successful - User data:', userData);
       console.log('User roles:', userData.roles);
       console.log('User roleNames:', userData.roleNames);
+
+      // Fetch employee profile to get employeeId
+      try {
+        const employeeProfile = await getEmployeeForUser();
+        if (employeeProfile && employeeProfile.id) {
+          userData.employeeId = employeeProfile.id;
+          console.log('Employee profile fetched - employeeId:', userData.employeeId);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch employee profile:', err.message);
+        // Continue without employeeId - some roles may not have an employee profile
+      }
 
       // Store token and user data
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
