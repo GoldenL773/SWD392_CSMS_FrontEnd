@@ -48,10 +48,12 @@ const OrdersPage = () => {
       page: currentPage, 
       size: pageSize,
       status: activeStatus === 'ALL' ? undefined : activeStatus,
+      startDate: startDate ? `${startDate}T00:00:00` : undefined,
+      endDate: endDate ? `${endDate}T23:59:59` : undefined,
       sortBy: sortField,
       sortDir: sortDir
     }, 
-    [currentPage, pageSize, activeStatus, sortField, sortDir]
+    [currentPage, pageSize, activeStatus, sortField, sortDir, startDate, endDate]
   );
 
   // Lightweight meta queries for counts by status (size=1 to get totalElements)
@@ -155,41 +157,8 @@ const OrdersPage = () => {
     };
   }, [orders, totalOrders, pendingMeta, completedMeta, cancelledMeta]);
 
-  // Filter and sort orders
-  const filteredOrders = useMemo(() => {
-    if (!orders) return [];
-    
-    let filtered = [...orders];
-    
-    // Filter by status
-    if (activeStatus !== 'ALL') {
-      filtered = filtered.filter((order) => order.status === activeStatus);
-    }
-    
-    // Filter by employee
-    if (selectedEmployee !== 'ALL') {
-      filtered = filtered.filter((order) => 
-        order.employeeId === parseInt(selectedEmployee) || 
-        order.employee?.id === parseInt(selectedEmployee)
-      );
-    }
-    
-    // Filter by date range
-    if (startDate) {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
-        return orderDate >= startDate;
-      });
-    }
-    if (endDate) {
-      filtered = filtered.filter((order) => {
-        const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
-        return orderDate <= endDate;
-      });
-    }
-    
-    return filtered;
-  }, [orders, activeStatus, selectedEmployee, startDate, endDate]);
+  // No more local filtering - we let the backend handle it for correct pagination
+  const filteredOrders = orders;
   
   const handleClearFilters = () => {
     setSelectedEmployee('ALL');
@@ -227,10 +196,12 @@ const OrdersPage = () => {
           variantId: item.variantId,
           comboId: item.comboId,
           quantity: item.quantity,
-          type: item.type
+          type: item.type,
+          price: item.price 
         })),
         promotionId: orderData.promotionId,
         employeeName: orderData.employeeName,
+        totalAmount: orderData.totalAmount || orderData.finalTotal,
         note: orderData.notes || ''
       };
 
@@ -241,9 +212,28 @@ const OrdersPage = () => {
       // Show receipt modal
       setReceiptOrder(createdOrder || requestData);
       setIsReceiptOpen(true);
-    } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error(`Failed to create order: ${error.message || 'Unknown error'}`);
+    } catch (err) {
+      console.error("Error creating order:", err);
+      let errorMsg = err.message || 'Operation failed';
+      
+      // Try to parse JSON error message if it looks like one (from Saga/Feign)
+      if (errorMsg.includes(':[{') || errorMsg.includes(':[ {"')) {
+        try {
+          const jsonPart = errorMsg.substring(errorMsg.indexOf('['));
+          const parsed = JSON.parse(jsonPart);
+          if (Array.isArray(parsed) && parsed[0]?.message) {
+            errorMsg = parsed[0].message;
+          } else if (parsed?.message) {
+            errorMsg = parsed.message;
+          }
+        } catch (e) {
+          // Fallback to extraction via regex or string slice if JSON.parse fails
+          const match = errorMsg.match(/"message":"([^"]+)"/);
+          if (match && match[1]) errorMsg = match[1];
+        }
+      }
+
+      toast.error('Failed to create order: ' + errorMsg);
     }
   };
 

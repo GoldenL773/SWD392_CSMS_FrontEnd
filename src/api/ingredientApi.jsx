@@ -43,14 +43,14 @@ export const deleteIngredient = async (id) => {
  * Record ingredient transaction (import/export)
  */
 export const recordTransaction = async (transactionData) => {
-  return apiClient.post('/ingredients/transactions', transactionData);
+  return apiClient.post('/transactions', transactionData);
 };
 
 /**
  * Get ingredient transactions
  */
 export const getTransactions = async (params = {}) => {
-  const response = await apiClient.get('/ingredients/transactions', params);
+  const response = await apiClient.get('/transactions', params);
   return response.content || response;
 };
 

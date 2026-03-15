@@ -53,8 +53,8 @@ const RecipeManager = ({
     return matchesSearch && matchesCategory;
   });
 
-  // Get unique categories from products
-  const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
+  // Get unique categories from products - Fixed list per user requirement
+  const categories = ['All', 'Coffee', 'Tea', 'Cake', 'Pastry', 'Sandwich', 'Beverage', 'Other'];
 
   const handleCreateClick = () => {
     setEditingRecipe(null);

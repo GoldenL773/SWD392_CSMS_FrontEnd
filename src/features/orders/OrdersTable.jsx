@@ -88,7 +88,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
         <tbody>
           {orders.map((order) => (
             <React.Fragment key={order.id}>
-              <tr 
+              <tr
                 className={`order-row ${expandedRows.has(order.id) ? 'expanded' : ''}`}
                 onClick={() => toggleRow(order.id)}
               >
@@ -135,7 +135,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
                           <tr>
                             <th>Product</th>
                             <th>Quantity</th>
-                            <th>Unit Price</th>
+                            {/* <th>Unit Price</th> */}
                             <th>Subtotal</th>
                           </tr>
                         </thead>
@@ -144,7 +144,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
                             <tr key={item.id}>
                               <td>{item.productName || item.product?.name || 'Unknown'}</td>
                               <td className="quantity-cell">{item.quantity}</td>
-                              <td>{formatCurrency(item.price)}</td>
+                              {/* <td>{formatCurrency(item.price)}</td> */}
                               <td className="subtotal-cell">
                                 {formatCurrency(item.subtotal || (item.quantity * item.price))}
                               </td>

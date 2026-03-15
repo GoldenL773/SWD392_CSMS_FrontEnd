@@ -132,10 +132,15 @@
 
 .order-items-table th,
 .order-items-table td {
-  padding: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-sm);
   text-align: left;
   border-bottom: 1px solid var(--color-border);
 }
+
+.order-items-table th:nth-child(1), .order-items-table td:nth-child(1) { width: 40%; }
+.order-items-table th:nth-child(2), .order-items-table td:nth-child(2) { width: 15%; text-align: center; }
+.order-items-table th:nth-child(3), .order-items-table td:nth-child(3) { width: 20%; text-align: right; }
+.order-items-table th:nth-child(4), .order-items-table td:nth-child(4) { width: 25%; text-align: right; }
 
 .order-items-table tbody tr:last-child td {
   border-bottom: none;

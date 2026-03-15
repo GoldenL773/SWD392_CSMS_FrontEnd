@@ -200,17 +200,16 @@ const MenuPage = () => {
                                     onError={(e) => {
                                       e.target.onerror = null;
                                       e.target.style.display = 'none';
-                                      const placeholder = e.target.parentElement.querySelector('.image-placeholder-fallback');
-                                      if (placeholder) placeholder.style.display = 'flex';
+                                      const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                                      if (fallback) fallback.style.display = 'flex';
                                     }}
                                   />
-                                ) : null}
-                                {(!product.imageUrl || product.imageUrl === 'null') && (
+                                ) : (
                                   <div className="image-placeholder">
                                     {getCategoryIcon(product.categoryName || product.category)}
                                   </div>
                                 )}
-                                <div className="image-placeholder image-placeholder-fallback" style={{ display: 'none' }}>
+                                <div className="image-placeholder fallback-icon" style={{ display: 'none' }}>
                                   {getCategoryIcon(product.categoryName || product.category)}
                                 </div>
                                 {(!product.available && product.status !== 'Available') && (

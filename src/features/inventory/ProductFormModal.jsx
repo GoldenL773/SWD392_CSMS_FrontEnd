@@ -137,9 +137,9 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     if (variants.length === 0) {
       newErrors.variants = 'At least one variant is required';
     } else {
-      const invalidVariant = variants.some(v => !v.size || !v.price || parseFloat(v.price) <= 0);
+      const invalidVariant = variants.some(v => !v.size);
       if (invalidVariant) {
-        newErrors.variants = 'All variants must have a size and valid price';
+        newErrors.variants = 'All variants must have a size';
       }
     }
 
@@ -151,13 +151,14 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     e.preventDefault();
     if (!validate()) return;
 
+    const basePrice = parseFloat(formData.price);
     const submitData = {
       ...formData,
-      price: parseFloat(formData.price),
+      price: basePrice,
       imageUrl: formData.imageUrl || null,
       variants: variants.map(v => ({
         ...v,
-        price: parseFloat(v.price),
+        price: (v.price && parseFloat(v.price) > 0) ? parseFloat(v.price) : basePrice,
         id: typeof v.id === 'string' ? v.id : undefined 
       })),
       ingredients: productIngredients.map(pi => ({

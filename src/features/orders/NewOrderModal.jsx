@@ -7,14 +7,14 @@ import { getAllIngredients } from '../../api/ingredientApi.jsx';
 import Modal from '../../components/common/Modal/index.jsx';
 import Button from '../../components/common/Button/index.jsx';
 import { formatCurrency } from '../../utils/formatters.jsx';
-import { 
-  Coffee, 
-  Wine, 
-  Cake, 
-  Bread, 
-  Hamburger, 
-  ForkKnife, 
-  Package, 
+import {
+  Coffee,
+  Wine,
+  Cake,
+  Bread,
+  Hamburger,
+  ForkKnife,
+  Package,
   Tag,
   Plus,
   Minus,
@@ -55,7 +55,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     const list = ingredientsData?.content || ingredientsData || [];
     const map = new Map();
     list.forEach((ing) => {
-      map.set(String(ing.id), { name: ing.name, quantity: Number(ing.quantity ?? 0), unit: ing.unit || '' });
+      map.set(String(ing.id), { name: ing.name, currentStock: Number(ing.currentStock ?? 0), unit: ing.unit || '' });
     });
     return map;
   }, [ingredientsData]);
@@ -66,7 +66,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     const map = new Map();
     list.forEach((ing) => {
       if (ing.name) {
-        map.set(ing.name.toLowerCase(), { quantity: Number(ing.quantity ?? 0), unit: ing.unit || '' });
+        map.set(ing.name.toLowerCase(), { currentStock: Number(ing.currentStock ?? 0), unit: ing.unit || '' });
       }
     });
     return map;
@@ -76,8 +76,8 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     if (!products) return [];
     return products.filter(p => {
       const isAvailable = p.available !== false && p.isAvailable !== false;
-      const statusCheck = !p.status || 
-                          ['AVAILABLE', 'IN_STOCK', 'ACTIVE'].includes((p.status || '').toUpperCase());
+      const statusCheck = !p.status ||
+        ['AVAILABLE', 'IN_STOCK', 'ACTIVE'].includes((p.status || '').toUpperCase());
       return isAvailable && statusCheck;
     });
   }, [products]);
@@ -123,12 +123,12 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
       const ingId = String(pi.ingredientId);
       const stock = ingredientLookup.get(ingId);
       const name = stock?.name || pi.ingredientName || `Ing #${pi.ingredientId}`;
-      const stockQty = stock?.quantity ?? 0;
+      const stockQty = stock?.currentStock ?? 0;
       const required = Number(pi.quantity ?? 0);
       const unit = stock?.unit || pi.unit || '';
       let status = 'ok';
       if (stockQty <= 0) status = 'out';
-      else if (stockQty < required * 5) status = 'low';
+      else if (stockQty < required * 2) status = 'low'; // Adjusted threshold for low stock
       return { name, stockQty, required, unit, status };
     });
   };
@@ -199,18 +199,18 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
 
   const discountValue = Number(selectedPromotion?.discountValue || 0);
   const discountPct = Number(selectedPromotion?.discountPercentage || 0);
-  
+
   const discountAmount = useMemo(() => {
     if (!selectedPromotion) return 0;
-    
+
     const val = Number(selectedPromotion.discountValue);
     const pct = Number(selectedPromotion.discountPercentage);
-    
+
     // Type-specific logic
     if (selectedPromotion.discountType === 'FIXED') {
       return isNaN(val) ? 0 : val;
     }
-    
+
     // Percentage logic - prefer discountPercentage, fallback to discountValue if it looks like a percentage
     let percentage = 0;
     if (!isNaN(pct)) {
@@ -218,7 +218,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     } else if (!isNaN(val) && val <= 100) {
       percentage = val;
     }
-    
+
     return totalAmount * (percentage / 100);
   }, [selectedPromotion, totalAmount]);
 
@@ -231,7 +231,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
       alert('Please add at least one item to the order');
       return;
     }
-    
+
     const finalItems = selectedItems.map(item => ({
       productId: item.productId,
       variantId: item.variantId,
@@ -338,13 +338,13 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
           {/* Product/Combo Selection */}
           <div className="selection-area">
             <div className="selection-tabs">
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'PRODUCTS' ? 'active' : ''}`}
                 onClick={() => setActiveTab('PRODUCTS')}
               >
                 <Package size={20} /> Products
               </button>
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'COMBOS' ? 'active' : ''}`}
                 onClick={() => setActiveTab('COMBOS')}
               >
@@ -377,15 +377,30 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                         const isOutOfStock = product.availabilityStatus === 'OUT_OF_STOCK';
                         const ingStatus = getIngredientStatus(product);
                         return (
-                          <div 
-                            key={product.id} 
+                          <div
+                            key={product.id}
                             className={`product-card ${isOutOfStock ? 'disabled' : ''}`}
                             onClick={() => !isOutOfStock && handleProductClick(product)}
                           >
                             <div className="product-icon-wrapper">
-                              {product.imageUrl ? (
-                                <img src={product.imageUrl} alt={product.name} style={{width: 40, height: 40, borderRadius: '50%', objectFit: 'cover'}} />
-                              ) : getIcon(product.category || product.categoryName)}
+                              {product.imageUrl && product.imageUrl !== 'null' ? (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.style.display = 'none';
+                                    const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                                    if (fallback) fallback.style.display = 'flex';
+                                  }}
+                                />
+                              ) : (
+                                getIcon(product.category || product.categoryName)
+                              )}
+                              <div className="fallback-icon" style={{ display: 'none', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                                {getIcon(product.category || product.categoryName)}
+                              </div>
                             </div>
                             <div className="product-info">
                               <h4>{product.name}</h4>
@@ -401,7 +416,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                               <div className="product-ingredients">
                                 {ingStatus.slice(0, 3).map((ing, i) => (
                                   <span key={i} className={`ing-${ing.status}`}>
-                                    {ing.name}: {ing.stockQty.toFixed(1)} {ing.unit} {ing.status === 'out' ? '⚠' : ''}
+                                    {ing.name}: {ing.required}/{ing.stockQty.toFixed(1)} {ing.unit} {ing.status === 'out' ? '⚠' : ''}
                                   </span>
                                 ))}
                                 {ingStatus.length > 3 && <span>+{ingStatus.length - 3} more</span>}
@@ -433,15 +448,30 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                       <div className="no-results">No combos found</div>
                     ) : (
                       paginatedCombos.map((combo) => (
-                        <div 
-                          key={combo.id} 
+                        <div
+                          key={combo.id}
                           className="product-card"
                           onClick={() => addCombo(combo)}
                         >
                           <div className="product-icon-wrapper combo-icon">
-                            {combo.imageUrl ? (
-                              <img src={combo.imageUrl} alt={combo.name} style={{width: 40, height: 40, borderRadius: '50%', objectFit: 'cover'}} />
-                            ) : <Tag size={24} weight="fill" />}
+                            {combo.imageUrl && combo.imageUrl !== 'null' ? (
+                              <img
+                                src={combo.imageUrl}
+                                alt={combo.name}
+                                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.style.display = 'none';
+                                  const fallback = e.target.parentElement.querySelector('.fallback-icon');
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                              />
+                            ) : (
+                              <Tag size={24} weight="fill" />
+                            )}
+                            <div className="fallback-icon" style={{ display: 'none', width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                              <Tag size={24} weight="fill" />
+                            </div>
                           </div>
                           <div className="product-info">
                             <h4>{combo.name}</h4>
@@ -484,19 +514,19 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
               <>
                 <div className="order-items-table">
                   <div className="table-header">
-                    <div 
+                    <div
                       className={`header-cell sortable ${sortConfig.key === 'productName' ? 'active' : ''}`}
                       onClick={() => requestSort('productName')}
                     >
                       Item {sortConfig.key === 'productName' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </div>
-                    <div 
+                    <div
                       className={`header-cell sortable ${sortConfig.key === 'quantity' ? 'active' : ''}`}
                       onClick={() => requestSort('quantity')}
                     >
                       Qty {sortConfig.key === 'quantity' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </div>
-                    <div 
+                    <div
                       className={`header-cell sortable ${sortConfig.key === 'price' ? 'active' : ''}`}
                       onClick={() => requestSort('price')}
                     >
@@ -548,26 +578,26 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
 
                 <div className="promotion-section">
-                   <h4><Ticket size={18} /> Promotions</h4>
-                   <select 
-                     className="promotion-select"
-                     value={selectedPromotion?.id || ''}
-                     onChange={(e) => {
-                       const promo = (promotionsData || []).find(p => p.id === parseInt(e.target.value));
-                       setSelectedPromotion(promo || null);
-                     }}
-                   >
-                     <option value="">No promotion</option>
-                      {(promotionsData || []).filter(p => p.status === 'ACTIVE').map(promo => {
-                        const val = Number(promo.discountValue || 0);
-                        const displayVal = isNaN(val) ? '0' : (promo.discountType === 'PERCENTAGE' ? `${val}%` : formatCurrency(val));
-                        return (
-                          <option key={promo.id} value={promo.id}>
-                            {promo.name} ({displayVal} off)
-                          </option>
-                        );
-                      })}
-                   </select>
+                  <h4><Ticket size={18} /> Promotions</h4>
+                  <select
+                    className="promotion-select"
+                    value={selectedPromotion?.id || ''}
+                    onChange={(e) => {
+                      const promo = (promotionsData || []).find(p => p.id === parseInt(e.target.value));
+                      setSelectedPromotion(promo || null);
+                    }}
+                  >
+                    <option value="">No promotion</option>
+                    {(promotionsData || []).filter(p => p.status === 'ACTIVE').map(promo => {
+                      const val = Number(promo.discountValue || 0);
+                      const displayVal = isNaN(val) ? '0' : (promo.discountType === 'PERCENTAGE' ? `${val}%` : formatCurrency(val));
+                      return (
+                        <option key={promo.id} value={promo.id}>
+                          {promo.name} ({displayVal} off)
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
 
                 <div className="order-summary-footer">
@@ -577,7 +607,7 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
                   </div>
                   {selectedPromotion && (
                     <div className="summary-row discount">
-                      <span>Discount ({selectedPromotion.discountType === 'PERCENTAGE' ? `${discountPct}%` : 'Fixed'}):</span>
+                      <span>Discount ({selectedPromotion.discountType === 'PERCENTAGE' ? `%` : 'Fixed'}):</span>
                       <span>-{formatCurrency(discountAmount)}</span>
                     </div>
                   )}
@@ -603,8 +633,8 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
               <div className="variant-list">
                 {activeVariantSelection.variants.map(variant => (
-                  <div 
-                    key={variant.id} 
+                  <div
+                    key={variant.id}
                     className="variant-option"
                     onClick={() => addVariant(activeVariantSelection, variant)}
                   >

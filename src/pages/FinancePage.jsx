@@ -105,7 +105,7 @@ const FinancePage = () => {
 
     if (allOrders && allOrders.length > 0) {
       const completedOrders = allOrders.filter(order => {
-        if (order.status !== ORDER_STATUS.COMPLETED) return false;
+        if (order.status !== ORDER_STATUS.COMPLETED && order.status !== ORDER_STATUS.PROCESSING) return false;
         const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
         if (startDate && orderDate < startDate) return false;
         if (endDate && orderDate > endDate) return false;
@@ -263,7 +263,7 @@ const FinancePage = () => {
         case 'baseSalary': return Number(row.baseSalary) || 0;
         case 'bonus': return Number(row.bonus) || 0;
         case 'deductions': return Number(row.deductions) || 0;
-        case 'totalSalary': return Number(row.totalSalary) || 0;
+        case 'totalSalary': return Number((row.baseSalary || 0) + (row.bonus || 0) - (row.deductions || 0)) || 0;
         case 'status': return (row.status || '').toLowerCase();
         case 'paymentDate': return row.paymentDate || '';
         default: return (row.employeeName || '').toLowerCase();
@@ -503,7 +503,7 @@ const FinancePage = () => {
                         <td>{formatCurrency(salary.baseSalary)}</td>
                         <td className="bonus-cell">{formatCurrency(salary.bonus || 0)}</td>
                         <td className="deduction-cell">{formatCurrency(salary.deductions || 0)}</td>
-                        <td className="total-cell">{formatCurrency(salary.totalSalary)}</td>
+                        <td className="total-cell">{formatCurrency((salary.baseSalary || 0) + (salary.bonus || 0) - (salary.deductions || 0))}</td>
                         <td>
                           <span className={`status-badge status-${salary.status.toLowerCase()}`}>
                             {salary.status}

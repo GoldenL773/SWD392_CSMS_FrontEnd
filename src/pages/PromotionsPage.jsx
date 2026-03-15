@@ -310,11 +310,12 @@ const PromotionsPage = () => {
                     value={formData.discountValue}
                     onChange={e => setFormData({ ...formData, discountValue: e.target.value })}
                     min="0.01"
-                    step={formData.discountType === 'PERCENTAGE' ? '0.1' : '1000'}
+                    step={formData.discountType === 'PERCENTAGE' ? '1' : '1000'}
                     max={formData.discountType === 'PERCENTAGE' ? '100' : undefined}
-                    placeholder={formData.discountType === 'PERCENTAGE' ? '10' : '50000'}
+                    placeholder={formData.discountType === 'PERCENTAGE' ? '20' : '50000'}
                     className={formErrors.discountValue ? 'input-error' : ''}
                   />
+                  {formData.discountType === 'PERCENTAGE' && <small className="form-help">Enter a whole number (e.g. 20 for 20%)</small>}
                   {formErrors.discountValue && <span className="err">{formErrors.discountValue}</span>}
                 </div>
               </div>

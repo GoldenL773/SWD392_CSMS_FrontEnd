@@ -94,7 +94,7 @@ const TransactionModal = ({ isOpen, onClose, onSubmit }) => {
       employeeId: user?.id || 1, // Include logged-in user's ID
       type: transactionType,
       quantity: parseFloat(item.quantity),
-      transactionDate: transactionDate
+      transactionDate: `${transactionDate}T00:00:00`
     }));
 
     console.log('Submitting transactions with employee:', transactions);
