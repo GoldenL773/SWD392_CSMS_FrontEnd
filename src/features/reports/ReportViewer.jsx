@@ -32,16 +32,20 @@ const ReportViewer = ({
   };
 
   const formatDate = (date) => {
+    if (date == null || date === '') return '—';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '—';
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(new Date(date));
+    }).format(d);
   };
 
   const formatFileSize = (bytes) => {
+    if (bytes == null || bytes === '' || Number.isNaN(Number(bytes))) return '—';
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -58,7 +62,7 @@ const ReportViewer = ({
 
   const handleDownload = (report) => {
     if (onDownload) {
-      onDownload(report.id);
+      onDownload(report.id, report.fileName || report.title);
     }
   };
 
@@ -76,8 +80,11 @@ const ReportViewer = ({
     })
     .sort((a, b) => {
       switch (sortBy) {
-        case 'Date':
-          return new Date(b.uploadedAt) - new Date(a.uploadedAt);
+        case 'Date': {
+          const tA = new Date(a.uploadedAt).getTime();
+          const tB = new Date(b.uploadedAt).getTime();
+          return (Number.isNaN(tB) ? 0 : tB) - (Number.isNaN(tA) ? 0 : tA);
+        }
         case 'Title':
           return a.title.localeCompare(b.title);
         case 'Type':

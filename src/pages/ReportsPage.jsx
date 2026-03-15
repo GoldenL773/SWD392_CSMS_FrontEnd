@@ -459,14 +459,12 @@ const ReportsPage = () => {
 
       {activeTab === 'files' && (
         <div className="files-section">
-          {/* Accountant/Finance/Admin can upload */}
-          {isFinance && (
+          {/* Manager/Finance/Admin can upload and view/download */}
+          {isManager && (
             <Card title="Upload Report">
               <ReportUpload onUpload={(file, metadata) => handleUploadReport({ file, metadata })} />
             </Card>
           )}
-
-          {/* Manager/Finance/Admin can view/download */}
           {isManager && (
             <Card title="Uploaded Reports">
               {uploadedReportsLoading ? (

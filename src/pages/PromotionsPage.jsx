@@ -85,8 +85,8 @@ const PromotionsPage = () => {
     if (!formData.name.trim()) errs.name = 'Promotion name is required';
 
     const value = parseFloat(formData.discountValue);
-    if (!formData.discountValue || value <= 0) {
-      errs.discountValue = 'Discount value must be greater than 0';
+    if (isNaN(value) || value < 0) {
+      errs.discountValue = 'Discount value must be 0 or greater';
     }
     if (formData.discountType === 'PERCENTAGE' && value > 100) {
       errs.discountValue = 'Percentage discount cannot exceed 100%';
@@ -309,13 +309,13 @@ const PromotionsPage = () => {
                     type="number"
                     value={formData.discountValue}
                     onChange={e => setFormData({ ...formData, discountValue: e.target.value })}
-                    min="0.01"
-                    step={formData.discountType === 'PERCENTAGE' ? '1' : '1000'}
+                    min="0"
+                    step={formData.discountType === 'PERCENTAGE' ? '0.01' : '1000'}
                     max={formData.discountType === 'PERCENTAGE' ? '100' : undefined}
                     placeholder={formData.discountType === 'PERCENTAGE' ? '20' : '50000'}
                     className={formErrors.discountValue ? 'input-error' : ''}
                   />
-                  {formData.discountType === 'PERCENTAGE' && <small className="form-help">Enter a whole number (e.g. 20 for 20%)</small>}
+                  {formData.discountType === 'PERCENTAGE' && <small className="form-help">Enter a value from 0 to 100 (e.g., 20 or 5.5)</small>}
                   {formErrors.discountValue && <span className="err">{formErrors.discountValue}</span>}
                 </div>
               </div>

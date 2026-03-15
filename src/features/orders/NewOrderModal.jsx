@@ -206,21 +206,57 @@ const NewOrderModal = ({ isOpen, onClose, onSubmit }) => {
     const val = Number(selectedPromotion.discountValue);
     const pct = Number(selectedPromotion.discountPercentage);
 
-    // Type-specific logic
-    if (selectedPromotion.discountType === 'FIXED') {
-      return isNaN(val) ? 0 : val;
-    }
-
-    // Percentage logic - prefer discountPercentage, fallback to discountValue if it looks like a percentage
+    // Get the effective percentage or fixed value
+    let isPercentage = selectedPromotion.discountType === 'PERCENTAGE' || !isNaN(pct) && pct > 0;
     let percentage = 0;
-    if (!isNaN(pct)) {
-      percentage = pct;
-    } else if (!isNaN(val) && val <= 100) {
-      percentage = val;
+    let fixedVal = 0;
+
+    if (selectedPromotion.discountType === 'FIXED') {
+      fixedVal = isNaN(val) ? 0 : val;
+    } else {
+      if (!isNaN(pct) && pct > 0) percentage = pct;
+      else if (!isNaN(val) && val <= 100) percentage = val;
     }
 
-    return totalAmount * (percentage / 100);
-  }, [selectedPromotion, totalAmount]);
+    const applyTo = (selectedPromotion.applyTo || 'ALL').toUpperCase();
+    let totalDiscount = 0;
+
+    if (applyTo === 'ALL' || applyTo === 'ORDER') {
+      if (isPercentage) {
+        totalDiscount = totalAmount * (percentage / 100);
+      } else {
+        totalDiscount = fixedVal;
+      }
+    } else {
+      // Item-specific discount
+      selectedItems.forEach(item => {
+        let isMatch = false;
+        if (applyTo === 'PRODUCT' && item.productId && item.productId === selectedPromotion.targetId) {
+          isMatch = true;
+        } else if (applyTo === 'COMBO' && item.comboId && item.comboId === selectedPromotion.targetId) {
+          isMatch = true;
+        }
+
+        if (isMatch) {
+          const itemSubtotal = (Number(item.price) || 0) * item.quantity;
+          let itemDiscount = 0;
+          if (isPercentage) {
+            itemDiscount = itemSubtotal * (percentage / 100);
+          } else {
+            itemDiscount = fixedVal; // Note: fixed value per item? usually applies globally, but follows BE
+          }
+          totalDiscount += itemDiscount;
+        }
+      });
+    }
+
+    // Cap at totalAmount
+    if (totalDiscount > totalAmount) {
+      totalDiscount = totalAmount;
+    }
+
+    return totalDiscount;
+  }, [selectedPromotion, totalAmount, selectedItems]);
 
   const finalTotal = Math.max(0, totalAmount - (Number(discountAmount) || 0));
 

@@ -11,12 +11,23 @@ export const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+// Chuẩn hóa ISO string (cắt bớt phần lẻ > 3 chữ số để Date parse được)
+function parseDateSafe(value) {
+  if (!value) return null;
+  if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+  const s = String(value).trim();
+  if (!s) return null;
+  const normalized = s.replace(/(\.\d{3})\d+/g, '$1');
+  const date = new Date(normalized);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 /**
- * Format a date string to readable format
+ * Format a date string to readable format (dd/MM/yyyy)
  */
 export const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
+  const date = parseDateSafe(dateString);
+  if (!date) return '—';
   return new Intl.DateTimeFormat('vi-VN', {
     year: 'numeric',
     month: '2-digit',
@@ -28,8 +39,8 @@ export const formatDate = (dateString) => {
  * Format a datetime string to readable format
  */
 export const formatDateTime = (dateTimeString) => {
-  if (!dateTimeString) return '-';
-  const date = new Date(dateTimeString);
+  const date = parseDateSafe(dateTimeString);
+  if (!date) return '—';
   return new Intl.DateTimeFormat('vi-VN', {
     year: 'numeric',
     month: '2-digit',
@@ -41,15 +52,17 @@ export const formatDateTime = (dateTimeString) => {
 };
 
 /**
- * Format a time string (HH:mm:ss or HH:mm)
+ * Format time from ISO datetime or HH:mm - hiển thị giờ:phút dễ đọc
  */
 export const formatTime = (timeString) => {
-  if (!timeString) return '-';
-  // If it's already in HH:mm format, return as is
-  if (timeString.length === 5) return timeString;
-  // If it's HH:mm:ss, remove seconds
-  if (timeString.length === 8) return timeString.substring(0, 5);
-  return timeString;
+  const date = parseDateSafe(timeString);
+  if (!date) return '—';
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(date);
 };
 
 /**

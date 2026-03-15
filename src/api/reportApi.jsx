@@ -77,29 +77,46 @@ export const getUploadedReports = async (params = {}) => {
 /**
  * Download a report file
  */
-export const downloadReportFile = async (id) => {
-  // For download, we might need a blob response or just get a signed URL
-  // Assuming the API returns a URL or we redirect
-  const response = await apiClient.get(`/reports/files/${id}/download`, {
-    responseType: 'blob'
-  });
-  
-  // Create a blob link to download
-  const url = window.URL.createObjectURL(new Blob([response.data]));
-  const link = document.createElement('a');
-  link.href = url;
-  
-  // Try to get filename from content-disposition header
-  const contentDisposition = response.headers['content-disposition'];
-  let fileName = `report-${id}.pdf`; // Default
-  if (contentDisposition) {
-    const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
-    if (fileNameMatch && fileNameMatch.length === 2)
-      fileName = fileNameMatch[1];
+export const downloadReportFile = async (id, fallbackName) => {
+  try {
+    // We cannot use standard ApiClient.get for blob since it tries to parse JSON.
+    // Let's use direct fetch to get a Blob.
+    const token = localStorage.getItem('csms_auth_token');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`http://localhost:8080/api/reports/files/${id}/download`, {
+      method: 'GET',
+      headers: headers
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    let fileName = fallbackName || `report-${id}.pdf`;
+    const contentDisposition = response.headers.get('content-disposition');
+    if (contentDisposition) {
+      const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+      if (fileNameMatch && fileNameMatch.length === 2) {
+        fileName = fileNameMatch[1];
+      }
+    }
+    
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    throw error;
   }
-  
-  link.setAttribute('download', fileName);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
 };

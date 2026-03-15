@@ -65,6 +65,10 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
     );
   }
 
+  // Avoid duplicate client sorting if server is taking care of it,
+  // but we can retain it as a fallback if needed. In this case, simply use orders array.
+  const sortedOrders = orders;
+
   return (
     <div className="table-container">
       <table className="orders-table">
@@ -86,7 +90,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {sortedOrders.map((order) => (
             <React.Fragment key={order.id}>
               <tr
                 className={`order-row ${expandedRows.has(order.id) ? 'expanded' : ''}`}

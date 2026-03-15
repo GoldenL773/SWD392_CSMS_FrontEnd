@@ -14,34 +14,19 @@ const IngredientsTable = ({
   ingredients, 
   onEdit, 
   onDelete,
-  loading 
+  loading,
+  sortField,
+  sortDir,
+  onSort
 }) => {
-  const [sortField, setSortField] = useState('name');
-  const [sortDirection, setSortDirection] = useState('asc');
-
   const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+    if (onSort) {
+      onSort(field);
     }
   };
 
-  const sortedIngredients = [...ingredients].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    
-    if (typeof aValue === 'string') {
-      return sortDirection === 'asc' 
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
-    }
-    
-    return sortDirection === 'asc' 
-      ? (Number(aValue) || 0) - (Number(bValue) || 0)
-      : (Number(bValue) || 0) - (Number(aValue) || 0);
-  });
+  // We only rely on server sorting now, no more client-side duplicate sorting
+  const sortedIngredients = ingredients;
 
   const getStockStatus = (quantity) => {
     if (quantity <= 0) return 'out-of-stock';
@@ -72,19 +57,19 @@ const IngredientsTable = ({
         <thead>
           <tr>
             <th onClick={() => handleSort('id')} className="sortable center-col">
-              ID {sortField === 'id' && (sortDirection === 'asc' ? '↑' : '↓')}
+              ID {sortField === 'id' && (sortDir === 'asc' ? '↑' : '↓')}
             </th>
             <th onClick={() => handleSort('name')} className="sortable">
-              Name {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
+              Name {sortField === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
             </th>
             <th onClick={() => handleSort('unit')} className="sortable center-col">
-              Unit {sortField === 'unit' && (sortDirection === 'asc' ? '↑' : '↓')}
+              Unit {sortField === 'unit' && (sortDir === 'asc' ? '↑' : '↓')}
             </th>
             <th onClick={() => handleSort('currentStock')} className="sortable right-col">
-              Quantity {sortField === 'currentStock' && (sortDirection === 'asc' ? '↑' : '↓')}
+              Quantity {sortField === 'currentStock' && (sortDir === 'asc' ? '↑' : '↓')}
             </th>
             <th onClick={() => handleSort('unitCost')} className="sortable right-col">
-              Price/Unit {sortField === 'unitCost' && (sortDirection === 'asc' ? '↑' : '↓')}
+              Price/Unit {sortField === 'unitCost' && (sortDir === 'asc' ? '↑' : '↓')}
             </th>
             <th className="right-col">Total Value</th>
             <th className="center-col">Actions</th>

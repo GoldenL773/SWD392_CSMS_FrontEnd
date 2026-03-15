@@ -4,19 +4,30 @@ import apiClient from './apiClient.jsx';
  * Attendance API endpoints
  */
 
-// Check-in
-export const checkIn = (employeeId) => {
-  return apiClient.post(`/attendance/check-in/${employeeId}`);
+// Check-in (date = yyyy-MM-dd theo múi giờ local để lưu đúng ngày user)
+export const checkIn = (employeeId, date) => {
+  const options = date ? { params: { date } } : {};
+  return apiClient.post(`/attendance/check-in/${employeeId}`, null, options);
 };
 
-// Check-out
-export const checkOut = (employeeId) => {
-  return apiClient.post(`/attendance/check-out/${employeeId}`);
+// Check-out (date = yyyy-MM-dd theo múi giờ local)
+export const checkOut = (employeeId, date) => {
+  const options = date ? { params: { date } } : {};
+  return apiClient.post(`/attendance/check-out/${employeeId}`, null, options);
 };
 
 // Get today's attendance
-export const getTodayAttendance = (employeeId) => {
-  return apiClient.get(`/attendance/date/${new Date().toISOString().split('T')[0]}`, { employeeId }, { ignoreUnauthorized: true });
+export const getTodayAttendance = async (employeeId) => {
+  if (!employeeId) return null;
+  // Use local date instead of UTC to avoid timezone issues (e.g., UTC might be previous day)
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const localDate = `${year}-${month}-${day}`;
+  
+  const response = await apiClient.get(`/attendance/date/${localDate}`, { employeeId }, { ignoreUnauthorized: true });
+  return Array.isArray(response) && response.length > 0 ? response[0] : null;
 };
 
 // Get attendance by ID

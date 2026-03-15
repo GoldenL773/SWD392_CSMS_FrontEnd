@@ -312,11 +312,10 @@ const ReportUpload = ({
               </label>
               <input
                 id="report-period"
-                type="text"
+                type="date"
                 value={metadata.reportPeriod}
                 onChange={(e) => setMetadata({ ...metadata, reportPeriod: e.target.value })}
                 className={metadataErrors.reportPeriod ? 'error' : ''}
-                placeholder="e.g., January 2024, Q1 2024"
                 disabled={uploading}
               />
               {metadataErrors.reportPeriod && (

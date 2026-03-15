@@ -41,7 +41,7 @@ const OrdersPage = () => {
   const [newOrderNotification, setNewOrderNotification] = useState(null);
   const [showNotificationToast, setShowNotificationToast] = useState(false);
   
-  // Fetch data
+  // Fetch data (Spring Pageable expects sort=field,direction)
   const { data: ordersData, loading: ordersLoading, refetch: refetchOrders } = useApiQuery(
     getAllOrders, 
     { 
@@ -50,8 +50,7 @@ const OrdersPage = () => {
       status: activeStatus === 'ALL' ? undefined : activeStatus,
       startDate: startDate ? `${startDate}T00:00:00` : undefined,
       endDate: endDate ? `${endDate}T23:59:59` : undefined,
-      sortBy: sortField,
-      sortDir: sortDir
+      sort: `${sortField},${sortDir.toLowerCase()}`
     }, 
     [currentPage, pageSize, activeStatus, sortField, sortDir, startDate, endDate]
   );
@@ -76,10 +75,10 @@ const OrdersPage = () => {
     { enabled: true }
   );
 
-  // Reset pagination when filters/sort change
+  // Reset pagination when filters changes (not on sort change)
   React.useEffect(() => {
     setCurrentPage(0);
-  }, [activeStatus, sortField, sortDir]);
+  }, [activeStatus]);
   
   // Handle new order notification
   const handleNewOrder = useCallback((order) => {

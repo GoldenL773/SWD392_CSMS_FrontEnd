@@ -35,34 +35,43 @@ const InventoryPage = () => {
   const [productSearch, setProductSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [ingredientSearch, setIngredientSearch] = useState('');
+  
+  // Sort state
+  const [productSortField, setProductSortField] = useState('name');
+  const [productSortDir, setProductSortDir] = useState('asc');
+  const [ingredientSortField, setIngredientSortField] = useState('name');
+  const [ingredientSortDir, setIngredientSortDir] = useState('asc');
 
   // Reset pages when filters change
   React.useEffect(() => {
     setProductPage(0);
   }, [productSearch, categoryFilter]);
+
   React.useEffect(() => {
     setIngredientPage(0);
   }, [ingredientSearch]);
 
-  // Fetch data with server-side pagination and filtering
+  // Fetch data with server-side pagination, filtering, and sorting
   const { data: productsData, loading: productsLoading, refetch: refetchProducts } = useApiQuery(
     getAllProducts,
     {
       page: productPage,
       size: pageSize,
       search: productSearch || undefined,
-      category: categoryFilter === 'ALL' ? undefined : categoryFilter
+      category: categoryFilter === 'ALL' ? undefined : categoryFilter,
+      sort: `${productSortField},${productSortDir}`
     },
-    [productPage, pageSize, productSearch, categoryFilter]
+    [productPage, pageSize, productSearch, categoryFilter, productSortField, productSortDir]
   );
   const { data: ingredientsData, loading: ingredientsLoading, refetch: refetchIngredients } = useApiQuery(
     getAllIngredients,
     {
       page: ingredientPage,
       size: pageSize,
-      search: ingredientSearch || undefined
+      search: ingredientSearch || undefined,
+      sort: `${ingredientSortField},${ingredientSortDir}`
     },
-    [ingredientPage, pageSize, ingredientSearch]
+    [ingredientPage, pageSize, ingredientSearch, ingredientSortField, ingredientSortDir]
   );
   
   // Extract content from paginated response
@@ -273,6 +282,16 @@ const InventoryPage = () => {
               setIsProductModalOpen(true);
             }}
             onDelete={(id) => handleDeleteClick(id, 'product')}
+            sortField={productSortField}
+            sortDir={productSortDir}
+            onSort={(field) => {
+              if (productSortField === field) {
+                setProductSortDir(productSortDir === 'asc' ? 'desc' : 'asc');
+              } else {
+                setProductSortField(field);
+                setProductSortDir('asc');
+              }
+            }}
           />
           {totalProductPages > 1 && (
             <div className="pagination-controls">
@@ -346,6 +365,16 @@ const InventoryPage = () => {
               setIsIngredientModalOpen(true);
             }}
             onDelete={(id) => handleDeleteClick(id, 'ingredient')}
+            sortField={ingredientSortField}
+            sortDir={ingredientSortDir}
+            onSort={(field) => {
+              if (ingredientSortField === field) {
+                setIngredientSortDir(ingredientSortDir === 'asc' ? 'desc' : 'asc');
+              } else {
+                setIngredientSortField(field);
+                setIngredientSortDir('asc');
+              }
+            }}
           />
           {totalIngredientPages > 1 && (
             <div className="pagination-controls">
