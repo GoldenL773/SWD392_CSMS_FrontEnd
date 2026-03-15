@@ -88,13 +88,13 @@ const TransactionModal = ({ isOpen, onClose, onSubmit }) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // Submit array of transactions with employeeId
+    // Submit array of transactions
     const transactions = ingredientItems.map(item => ({
       ingredientId: parseInt(item.ingredientId),
-      employeeId: user?.id || 1, // Include logged-in user's ID
-      type: transactionType,
+      transactionType: transactionType,
       quantity: parseFloat(item.quantity),
-      transactionDate: `${transactionDate}T00:00:00`
+      transactionDate: `${transactionDate}T00:00:00`,
+      note: `Recorded by user ${user?.id || 1}`
     }));
 
     console.log('Submitting transactions with employee:', transactions);

@@ -486,7 +486,7 @@ const FinancePage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {displayedSalaries.map((salary) => (
+                    {paginatedSalaries.map((salary) => (
                       <tr key={salary.id} onClick={() => { setDetailEmployee({ employeeId: salary.employeeId, employeeName: salary.employeeName }); setShowEmployeeDetail(true); }} style={{ cursor: 'pointer' }}>
                         {!showPaidSalaries && (
                           <td>
@@ -540,10 +540,10 @@ const FinancePage = () => {
                   </tbody>
                 </table>
                 {displayedSalaries.length > pageSize && (
-                  <div className="pagination">
-                    <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>Previous</button>
-                    <span>Page {page + 1} of {totalPages}</span>
-                    <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next</button>
+                  <div className="pagination-controls">
+                    <Button variant="secondary" size="small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>&lt; Previous</Button>
+                    <span className="page-info">Page {page + 1} of {totalPages || 1}</span>
+                    <Button variant="secondary" size="small" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next &gt;</Button>
                   </div>
                 )}
               </div>

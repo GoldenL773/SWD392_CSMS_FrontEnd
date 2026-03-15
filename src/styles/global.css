@@ -416,3 +416,20 @@ img, video {
   width: 48px;
   height: 48px;
 }
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl) 0;
+  margin-top: var(--spacing-lg);
+  border-top: 2px solid rgba(242, 127, 13, 0.1);
+}
+
+.page-info {
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-body);
+  color: var(--color-text-sub);
+  font-weight: var(--font-weight-medium);
+}

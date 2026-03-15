@@ -55,14 +55,38 @@ const EmployeesPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    
+    // Manual validation since button onClick bypasses HTML5 form validation
+    if (!formData.firstName || !formData.firstName.trim()) {
+      toast.error('First name is required');
+      return;
+    }
+    if (!formData.lastName || !formData.lastName.trim()) {
+      toast.error('Last name is required');
+      return;
+    }
+    if (!formData.position) {
+      toast.error('Position is required');
+      return;
+    }
+    if (!formData.hireDate) {
+      toast.error('Hire date is required');
+      return;
+    }
+
     try {
+      // Clean up empty string values that will fail backend validation
+      const payload = { ...formData };
+      if (payload.baseSalary === '') payload.baseSalary = null;
+      if (payload.userId === '') payload.userId = null;
+      
       if (editingEmployee) {
-        await updateEmployee(editingEmployee.id, { ...formData, userId: formData.userId ? parseInt(formData.userId) : null });
+        await updateEmployee(editingEmployee.id, { ...payload, userId: payload.userId ? parseInt(payload.userId) : null });
         toast.success('Employee updated successfully');
       } else {
         // 1. Register account first
-        let finalUserId = formData.userId ? parseInt(formData.userId) : null;
+        let finalUserId = payload.userId ? parseInt(payload.userId) : null;
         
         if (!finalUserId && formData.username && formData.password) {
           const roleMap = {
@@ -85,7 +109,7 @@ const EmployeesPage = () => {
         }
 
         // 2. Create employee profile
-        await createEmployee({ ...formData, userId: finalUserId });
+        await createEmployee({ ...payload, userId: finalUserId });
         toast.success('Employee profile created successfully');
       }
       setIsModalOpen(false);
@@ -253,10 +277,10 @@ const EmployeesPage = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="pagination">
-                <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>&lt; Previous</button>
-                <span>Page {page + 1} of {totalPages || 1}</span>
-                <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next &gt;</button>
+              <div className="pagination-controls">
+                <Button variant="secondary" size="small" disabled={page === 0} onClick={() => setPage(p => p - 1)}>&lt; Previous</Button>
+                <span className="page-info">Page {page + 1} of {totalPages || 1}</span>
+                <Button variant="secondary" size="small" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next &gt;</Button>
               </div>
             </>
           )}
@@ -321,9 +345,10 @@ const EmployeesPage = () => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Hire Date</label>
+              <label className="form-label">Hire Date *</label>
               <input 
                 type="date" 
+                required
                 className="form-input"
                 value={formData.hireDate} 
                 onChange={e => setFormData({...formData, hireDate: e.target.value})} 
