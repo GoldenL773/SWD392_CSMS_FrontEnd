@@ -8,6 +8,7 @@ export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
+  ADMIN: '/admin',
   INVENTORY: '/inventory',
   EMPLOYEES: '/employees',
   ORDERS: '/orders',
@@ -21,6 +22,7 @@ export const ROUTES = {
   FINANCE: '/finance',
   SETTINGS: '/settings',
   PROMOTIONS: '/promotions',
+  REGISTER: '/register',
   NOT_FOUND: '/404'
 };
 

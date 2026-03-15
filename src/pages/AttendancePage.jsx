@@ -31,6 +31,12 @@ const AttendancePage = () => {
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [currentTime, setCurrentTime] = useState(new Date());
   
+  // Sorting & Pagination
+  const [sortField, setSortField] = useState('checkInTime');
+  const [sortDirection, setSortDirection] = useState('DESC');
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
+  
   // Update current time every second
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -104,12 +110,47 @@ const AttendancePage = () => {
     }
     
     const totalDays = attendanceHistory.length;
-    const presentDays = attendanceHistory.filter(a => a.status === 'Present').length;
-    const lateDays = attendanceHistory.filter(a => a.status === 'Late').length;
+    const presentDays = attendanceHistory.filter(a => (a.status || '').toLowerCase() === 'present').length;
+    const lateDays = attendanceHistory.filter(a => (a.status || '').toLowerCase() === 'late').length;
     const totalHours = attendanceHistory.reduce((sum, a) => sum + (a.totalHours || 0), 0);
     
     return { totalDays, presentDays, lateDays, totalHours };
   }, [attendanceHistory]);
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'ASC' ? 'DESC' : 'ASC');
+    } else {
+      setSortField(field);
+      setSortDirection('ASC');
+    }
+    setPage(0);
+  };
+
+  const sortedHistory = useMemo(() => {
+    if (!attendanceHistory) return [];
+    return [...attendanceHistory].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      
+      // Special handling for nested or null values
+      if (sortField === 'checkInTime' || sortField === 'checkOutTime') {
+        aVal = aVal ? new Date(aVal).getTime() : 0;
+        bVal = bVal ? new Date(bVal).getTime() : 0;
+      }
+      
+      if (aVal < bVal) return sortDirection === 'ASC' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'ASC' ? 1 : -1;
+      return 0;
+    });
+  }, [attendanceHistory, sortField, sortDirection]);
+
+  const paginatedHistory = useMemo(() => {
+    const start = page * pageSize;
+    return sortedHistory.slice(start, start + pageSize);
+  }, [sortedHistory, page]);
+
+  const totalPages = Math.ceil(sortedHistory.length / pageSize);
   
   const canCheckIn = !todayAttendance;
   const canCheckOut = todayAttendance && !todayAttendance.checkOutTime;
@@ -228,9 +269,10 @@ const AttendancePage = () => {
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            label="Date Range"
+            onChange={(start, end) => {
+              setStartDate(start ? new Date(start).toISOString().split('T')[0] : '');
+              setEndDate(end ? new Date(end).toISOString().split('T')[0] : '');
+            }}
           />
         </div>
         
@@ -248,22 +290,32 @@ const AttendancePage = () => {
             <table className="attendance-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Check In</th>
-                  <th>Check Out</th>
-                  <th>Hours</th>
-                  <th>Status</th>
+                  <th onClick={() => handleSort('checkInTime')} className="sortable">
+                    Date {sortField === 'checkInTime' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                  </th>
+                  <th onClick={() => handleSort('checkInTime')} className="sortable">
+                    Check In {sortField === 'checkInTime' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                  </th>
+                  <th onClick={() => handleSort('checkOutTime')} className="sortable">
+                    Check Out {sortField === 'checkOutTime' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                  </th>
+                  <th onClick={() => handleSort('totalHours')} className="sortable">
+                    Hours {sortField === 'totalHours' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                  </th>
+                  <th onClick={() => handleSort('status')} className="sortable">
+                    Status {sortField === 'status' && (sortDirection === 'ASC' ? '↑' : '↓')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {attendanceHistory.map((record) => (
+                {paginatedHistory.map((record) => (
                   <tr key={record.id}>
                     <td>{formatDate(record.checkInTime)}</td>
                     <td>{formatTime(record.checkInTime)}</td>
                     <td>{record.checkOutTime ? formatTime(record.checkOutTime) : '-'}</td>
                     <td>{record.totalHours ? `${record.totalHours.toFixed(2)}h` : '-'}</td>
                     <td>
-                      <span className={`status-badge status-${record.status.toLowerCase()}`}>
+                      <span className={`status-badge status-${record.status?.toLowerCase()}`}>
                         {record.status}
                       </span>
                     </td>
@@ -271,6 +323,11 @@ const AttendancePage = () => {
                 ))}
               </tbody>
             </table>
+            <div className="pagination">
+                <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>&lt; Previous</button>
+                <span>Page {page + 1} of {totalPages || 1}</span>
+                <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next &gt;</button>
+            </div>
           </div>
         )}
       </Card>

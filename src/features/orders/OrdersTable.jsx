@@ -10,7 +10,7 @@ import './OrdersTable.css';
  * Entity: Order (id, employee, orderDate, totalAmount, status, orderItems)
  * Entity: OrderItem (id, product, quantity, price)
  */
-const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
+const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSort }) => {
   const [expandedRows, setExpandedRows] = useState(new Set());
 
   const toggleRow = (orderId) => {
@@ -71,10 +71,16 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
         <thead>
           <tr>
             <th style={{ width: '50px' }}></th>
-            <th>Order ID</th>
+            <th onClick={() => onSort?.('id')} className="sortable">
+              Order ID {sortField === 'id' && (sortDir === 'ASC' ? '↑' : '↓')}
+            </th>
             <th>Employee</th>
-            <th>Date</th>
-            <th>Total Amount</th>
+            <th onClick={() => onSort?.('orderDate')} className="sortable">
+              Date {sortField === 'orderDate' && (sortDir === 'ASC' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => onSort?.('totalAmount')} className="sortable">
+              Total Amount {sortField === 'totalAmount' && (sortDir === 'ASC' ? '↑' : '↓')}
+            </th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
@@ -167,24 +173,12 @@ const OrdersTable = ({ orders, loading, onUpdateStatus }) => {
 };
 
 OrdersTable.propTypes = {
-  orders: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    employee: PropTypes.object,
-    employeeName: PropTypes.string,
-    orderDate: PropTypes.string.isRequired,
-    totalAmount: PropTypes.number.isRequired,
-    status: PropTypes.string.isRequired,
-    items: PropTypes.arrayOf(PropTypes.shape({
-      id: PropTypes.number.isRequired,
-      productName: PropTypes.string,
-      quantity: PropTypes.number.isRequired,
-      price: PropTypes.number.isRequired,
-      subtotal: PropTypes.number
-    })),
-    orderItems: PropTypes.array // Fallback for old format
-  })).isRequired,
+  orders: PropTypes.array,
   loading: PropTypes.bool,
-  onUpdateStatus: PropTypes.func
+  onUpdateStatus: PropTypes.func,
+  sortField: PropTypes.string,
+  sortDir: PropTypes.string,
+  onSort: PropTypes.func
 };
 
 export default OrdersTable;

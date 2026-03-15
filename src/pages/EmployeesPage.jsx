@@ -19,6 +19,10 @@ const EmployeesPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [sortField, setSortField] = useState('lastName');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
   const toast = useToast();
 
   const { data: employeesData, loading, refetch: refetchEmployees } = useApiQuery(getAllEmployees, { size: 1000 }, []);
@@ -26,7 +30,7 @@ const EmployeesPage = () => {
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', position: '', phone: '', address: '', userId: '', hireDate: '',
-    username: '', password: '', email: ''
+    username: '', password: '', email: '', baseSalary: ''
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -34,7 +38,7 @@ const EmployeesPage = () => {
     setEditingEmployee(null); 
     setFormData({ 
       firstName: '', lastName: '', position: '', phone: '', address: '', userId: '', hireDate: '',
-      username: '', password: '', email: ''
+      username: '', password: '', email: '', baseSalary: ''
     }); 
     setIsModalOpen(true); 
   };
@@ -44,7 +48,8 @@ const EmployeesPage = () => {
     setFormData({ 
       firstName: emp.firstName || '', lastName: emp.lastName || '', position: emp.position || '', 
       phone: emp.phone || '', address: emp.address || '', userId: emp.userId || '', 
-      hireDate: emp.hireDate || '', username: '', password: '', email: '' 
+      hireDate: emp.hireDate || '', username: '', password: '', email: '',
+      baseSalary: emp.baseSalary || ''
     }); 
     setIsModalOpen(true); 
   };
@@ -116,6 +121,33 @@ const EmployeesPage = () => {
     );
   }, [employees, searchTerm]);
 
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setPage(0);
+  };
+
+  const sortedEmployees = useMemo(() => {
+    return [...employees].sort((a, b) => {
+      const aVal = (a[sortField] || '').toString().toLowerCase();
+      const bVal = (b[sortField] || '').toString().toLowerCase();
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [employees, sortField, sortDirection]);
+
+  const paginatedEmployees = useMemo(() => {
+    const start = page * pageSize;
+    return sortedEmployees.slice(start, start + pageSize);
+  }, [sortedEmployees, page]);
+
+  const totalPages = Math.ceil(sortedEmployees.length / pageSize);
+
   return (
     <div className="employees-page page-container">
       <div className="page-header">
@@ -183,35 +215,50 @@ const EmployeesPage = () => {
         <div className="employees-manage-table table-container">
           {loading && (<div className="loading-container"><div className="loading"></div><p>Loading...</p></div>)}
           {!loading && (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Position</th>
-                  <th>Phone</th>
-                  <th>Hire Date</th>
-                  <th className="text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map(emp => (
-                  <tr key={emp.id}>
-                    <td>{emp.firstName} {emp.lastName}</td>
-                    <td>{emp.position}</td>
-                    <td>{emp.phone}</td>
-                    <td>{emp.hireDate}</td>
-                    <td className="actions-cell text-center">
-                      <button className="btn-icon" onClick={() => openEdit(emp)} title="Edit">
-                        <PencilSimple size={20}/>
-                      </button>
-                      <button className="btn-icon btn-danger" onClick={() => setDeleteConfirmId(emp.id)} title="Delete">
-                        <Trash size={20}/>
-                      </button>
-                    </td>
+            <>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th onClick={() => handleSort('firstName')} className="sortable">
+                      Name {sortField === 'firstName' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => handleSort('position')} className="sortable">
+                      Position {sortField === 'position' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => handleSort('phone')} className="sortable">
+                      Phone {sortField === 'phone' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th onClick={() => handleSort('hireDate')} className="sortable">
+                      Hire Date {sortField === 'hireDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    </th>
+                    <th className="text-center">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {paginatedEmployees.map(emp => (
+                    <tr key={emp.id}>
+                      <td>{emp.firstName} {emp.lastName}</td>
+                      <td>{emp.position}</td>
+                      <td>{emp.phone}</td>
+                      <td>{emp.hireDate}</td>
+                      <td className="actions-cell text-center">
+                        <button className="btn-icon" onClick={() => openEdit(emp)} title="Edit">
+                          <PencilSimple size={20}/>
+                        </button>
+                        <button className="btn-icon btn-danger" onClick={() => setDeleteConfirmId(emp.id)} title="Delete">
+                          <Trash size={20}/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="pagination">
+                <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>&lt; Previous</button>
+                <span>Page {page + 1} of {totalPages || 1}</span>
+                <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next &gt;</button>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -335,6 +382,17 @@ const EmployeesPage = () => {
                   value={formData.email} 
                   onChange={e => setFormData({...formData, email: e.target.value})} 
                   placeholder="employee@example.com" 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Base Salary (VND) *</label>
+                <input 
+                  type="number" 
+                  required
+                  className="form-input"
+                  value={formData.baseSalary} 
+                  onChange={e => setFormData({...formData, baseSalary: e.target.value})} 
+                  placeholder="e.g. 5000000" 
                 />
               </div>
               <div className="divider"><span>OR</span></div>

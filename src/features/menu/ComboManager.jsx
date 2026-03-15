@@ -53,12 +53,17 @@ const ComboManager = ({
 
   const handleOpenEdit = (combo) => {
     setEditingCombo(combo);
+    const items = combo.items || combo.products || [];
     setFormData({
       name: combo.name,
       description: combo.description,
       price: combo.price.toString(),
       imageUrl: combo.imageUrl || '',
-      products: combo.products || []
+      products: items.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        variantId: item.variantId || ''
+      }))
     });
     setIsFormOpen(true);
   };
@@ -126,12 +131,15 @@ const ComboManager = ({
       description: formData.description,
       price: parseFloat(formData.price),
       imageUrl: formData.imageUrl,
-      products: formData.products,
-      available: true
+      items: formData.products.map(p => ({
+        productId: parseInt(p.productId) || p.productId,
+        quantity: parseInt(p.quantity) || 1
+      })),
+      status: "AVAILABLE"
     };
 
     if (editingCombo) {
-      onEditCombo(editingCombo.id, comboData);
+      onEditCombo(parseInt(editingCombo.id), comboData);
     } else {
       onCreateCombo(comboData);
     }
@@ -220,7 +228,7 @@ const ComboManager = ({
                   <div className="combo-products">
                     <span className="products-label">Includes:</span>
                     <ul>
-                      {combo.products?.map((p, idx) => (
+                      {(combo.items || combo.products || []).map((p, idx) => (
                         <li key={idx}>
                           {p.quantity}x {getProductName(p.productId)}
                         </li>

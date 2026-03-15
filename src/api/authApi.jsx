@@ -11,8 +11,8 @@ export const login = async (username, password) => {
   const response = await apiClient.post('/auth/login', { username, password });
   
   // Store token and user data
-  if (response.token) {
-    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
+  if (response.accessToken || response.token) {
+    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.accessToken || response.token);
     localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response));
   }
   

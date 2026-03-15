@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { getAllProducts } from '../api/productApi.jsx';
+import { getAllCombos } from '../api/comboApi.jsx';
 import { PRODUCT_CATEGORIES } from '../utils/constants.jsx';
 import { formatCurrency } from '../utils/formatters.jsx';
 import heroBanner from '../assets/images/hero-banner.png';
@@ -23,26 +24,27 @@ import './HomePage.css';
 /**
  * HomePage Component
  * Public-facing homepage with cafe information and menu
- * Redesigned following UI-MASTER-PROMPT.md guidelines
  */
 const HomePage = () => {
-  const { data: productsData, loading } = useApiQuery(getAllProducts, { size: 1000 }, []);
+  const { data: productsData, loading: productsLoading } = useApiQuery(getAllProducts, { size: 1000 }, []);
+  const { data: combosData, loading: combosLoading } = useApiQuery(getAllCombos, { size: 100 }, []);
 
-  // Extract products from paginated response
+  // Extract products and combos
   const products = productsData?.content || productsData || [];
+  const combos = combosData?.content || combosData || [];
   
   // Filter only available products
-  const availableProducts = products.filter(p =>
+  const availableProducts = products.filter((p: any) =>
     p.status && (p.status.toUpperCase() === 'AVAILABLE' || p.status === 'Available')
   );
 
-  const getProductsByCategory = (category) => {
-    return availableProducts.filter(p => p.category === category);
+  const getProductsByCategory = (category: string) => {
+    return availableProducts.filter((p: any) => (p.categoryName || p.category) === category);
   };
 
-  const getCategoryIcon = (category) => {
-    const iconProps = { size: 32, weight: "thin" };
-    const icons = {
+  const getCategoryIcon = (category: string) => {
+    const iconProps = { size: 32, weight: "thin" as const };
+    const icons: Record<string, JSX.Element> = {
       'Coffee': <Coffee {...iconProps} />,
       'Tea': <Wine {...iconProps} />,
       'Cake': <Cake {...iconProps} />,
@@ -72,7 +74,7 @@ const HomePage = () => {
         </div>
       </header>
 
-      {/* Hero Banner with Image */}
+      {/* Hero Banner */}
       <section className="hero-banner">
         <div className="hero-decorative-blur hero-decorative-blur-1"></div>
         <div className="hero-decorative-blur hero-decorative-blur-2"></div>
@@ -112,16 +114,6 @@ const HomePage = () => {
               Learn More
             </a>
           </div>
-          <div className="hero-features">
-            <span className="hero-feature-item">
-              <Coffee size={16} weight="fill" className="hero-feature-icon" />
-              30-Day Money Back Guarantee
-            </span>
-            <span className="hero-feature-item">
-              <Coffee size={16} weight="fill" className="hero-feature-icon" />
-              100% Organic Ingredients
-            </span>
-          </div>
         </div>
       </section>
 
@@ -139,10 +131,6 @@ const HomePage = () => {
                 CSMS Coffee was founded with a passion for exceptional coffee and warm hospitality.
                 We source the finest beans from around the world and craft each cup with care.
               </p>
-              <p className="about-paragraph">
-                Our cozy cafe is the perfect place to relax, work, or catch up with friends.
-                We pride ourselves on creating a welcoming atmosphere where everyone feels at home.
-              </p>
               <div className="about-stats">
                 <div className="stat-item">
                   <div className="stat-number">10+</div>
@@ -155,35 +143,6 @@ const HomePage = () => {
                 <div className="stat-item">
                   <div className="stat-number">1000+</div>
                   <div className="stat-label">Happy Customers</div>
-                </div>
-              </div>
-            </div>
-            <div className="about-features">
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <Coffee size={40} weight="thin" className="feature-icon" />
-                </div>
-                <div className="feature-content">
-                  <h4 className="feature-title">Premium Coffee</h4>
-                  <p className="feature-description">Sourced from the best farms worldwide</p>
-                </div>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <Bread size={40} weight="thin" className="feature-icon" />
-                </div>
-                <div className="feature-content">
-                  <h4 className="feature-title">Fresh Pastries</h4>
-                  <p className="feature-description">Baked daily in-house with love</p>
-                </div>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon-wrapper">
-                  <ForkKnife size={40} weight="thin" className="feature-icon" />
-                </div>
-                <div className="feature-content">
-                  <h4 className="feature-title">Cozy Atmosphere</h4>
-                  <p className="feature-description">Perfect for work or relaxation</p>
                 </div>
               </div>
             </div>
@@ -200,7 +159,7 @@ const HomePage = () => {
             <p className="section-subtitle">Discover our delicious offerings</p>
           </div>
 
-          {loading ? (
+          {productsLoading || combosLoading ? (
             <div className="loading-container">
               <div className="loading-spinner"></div>
               <p className="loading-text">Loading menu...</p>
@@ -219,7 +178,7 @@ const HomePage = () => {
                       <div className="category-line"></div>
                     </div>
                     <div className="menu-items">
-                      {categoryProducts.map(product => (
+                      {categoryProducts.map((product: any) => (
                         <div key={product.id} className="menu-item">
                           <div className="menu-item-content">
                             <div className="menu-item-header">
@@ -237,6 +196,31 @@ const HomePage = () => {
                   </div>
                 );
               })}
+              
+              {/* Dynamic Combos Section */}
+              {combos.length > 0 && (
+                <div className="menu-category">
+                  <div className="category-header">
+                    <span className="category-icon"><ForkKnife size={32} weight="thin" /></span>
+                    <h3 className="category-title">Special Combos</h3>
+                    <div className="category-line"></div>
+                  </div>
+                  <div className="menu-items">
+                    {combos.map((combo: any) => (
+                      <div key={combo.id} className="menu-item">
+                        <div className="menu-item-content">
+                          <div className="menu-item-header">
+                            <h4 className="menu-item-name">{combo.name}</h4>
+                            <span className="menu-item-price">{formatCurrency(combo.price)}</span>
+                          </div>
+                          <p className="menu-item-description">{combo.description}</p>
+                        </div>
+                        <div className="menu-item-hover-effect"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -271,22 +255,6 @@ const HomePage = () => {
                   <p className="info-text">Saturday - Sunday: 8:00 AM - 11:00 PM</p>
                 </div>
               </div>
-              <div className="info-item">
-                <div className="info-icon-wrapper">
-                  <Phone size={32} weight="thin" className="info-icon" />
-                </div>
-                <div className="info-details">
-                  <h4 className="info-title">Contact</h4>
-                  <p className="info-text">Phone: (028) 1234 5678</p>
-                  <p className="info-text">Email: hello@csmscoffee.com</p>
-                </div>
-              </div>
-            </div>
-            <div className="contact-map">
-              <div className="map-placeholder">
-                <MapPin size={80} weight="thin" className="map-icon" />
-                <p className="map-text">Map Location</p>
-              </div>
             </div>
           </div>
         </div>
@@ -299,9 +267,6 @@ const HomePage = () => {
             <div className="footer-section footer-brand">
               <h3 className="footer-logo">CSMS</h3>
               <p className="footer-tagline">Your favorite coffee destination</p>
-              <p className="footer-description">
-                Crafting exceptional coffee experiences since 2015
-              </p>
             </div>
             <div className="footer-section">
               <h4 className="footer-heading">Quick Links</h4>
@@ -311,20 +276,6 @@ const HomePage = () => {
                 <li><a href="#contact">Contact</a></li>
                 <li><a href="/login">Staff Login</a></li>
               </ul>
-            </div>
-            <div className="footer-section">
-              <h4 className="footer-heading">Follow Us</h4>
-              <div className="social-links">
-                <a href="https://facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                  <FacebookLogo size={24} weight="fill" />
-                </a>
-                <a href="https://instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                  <InstagramLogo size={24} weight="fill" />
-                </a>
-                <a href="https://twitter.com" aria-label="Twitter" target="_blank" rel="noopener noreferrer">
-                  <TwitterLogo size={24} weight="fill" />
-                </a>
-              </div>
             </div>
           </div>
           <div className="footer-bottom">

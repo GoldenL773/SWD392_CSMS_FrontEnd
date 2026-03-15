@@ -16,22 +16,8 @@ const LoginPage = () => {
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated() && user) {
-      const hasRole = (r) => {
-        const normalize = (x) => (x || '').toString().toUpperCase().replace(/^ROLE_/, '');
-        const target = normalize(r);
-        return user.roleNames ? user.roleNames.includes(target) : 
-               user.roles?.some(role => normalize(typeof role === 'string' ? role : role.name) === target);
-      };
-
-      if (hasRole('STAFF')) {
-        navigate(ROUTES.ATTENDANCE);
-      } else if (hasRole('BARISTA')) {
-        navigate(ROUTES.ORDER_QUEUE);
-      } else if (hasRole('FINANCE')) {
-        navigate(ROUTES.FINANCE);
-      } else {
-        navigate(ROUTES.DASHBOARD);
-      }
+      // Navigate to dashboard after login
+      navigate(ROUTES.DASHBOARD);
     }
   }, [user, isAuthenticated, navigate]);
   
@@ -56,23 +42,8 @@ const LoginPage = () => {
     try {
       const userData = await login(formData.username, formData.password);
       
-      // Redirect based on user role - normalize role checks to support both string and object shapes
-      const hasRole = (r) => {
-        if (!userData?.roles) return false;
-        const normalize = (x) => (x || '').toString().toUpperCase().replace(/^ROLE_/, '');
-        const target = normalize(r);
-        return userData.roles.some(role => normalize(typeof role === 'string' ? role : role.name) === target);
-      };
-
-      if (hasRole('STAFF')) {
-        navigate(ROUTES.ATTENDANCE);
-      } else if (hasRole('BARISTA')) {
-        navigate(ROUTES.ORDER_QUEUE);
-      } else if (hasRole('FINANCE')) {
-        navigate(ROUTES.FINANCE);
-      } else {
-        navigate(ROUTES.DASHBOARD);
-      }
+      // Navigate to dashboard after login
+      navigate(ROUTES.DASHBOARD);
     } catch (err) {
       setLoginError(err.message || 'Login failed. Please try again.');
     }

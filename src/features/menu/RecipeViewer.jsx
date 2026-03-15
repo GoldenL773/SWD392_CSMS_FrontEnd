@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ClockIcon } from '../../utils/icons.js';
+import { Clock } from '@phosphor-icons/react';
 import './RecipeViewer.css';
 
 /**
@@ -44,7 +44,7 @@ const RecipeViewer = ({ recipe, mode = 'view' }) => {
         <h3 className="recipe-product-name">{productName}</h3>
         {prepTime && mode === 'view' && (
           <div className="recipe-prep-time">
-            <ClockIcon size={16} weight="regular" />
+            <Clock size={16} weight="regular" />
             <span>{prepTime} min</span>
           </div>
         )}
@@ -63,6 +63,11 @@ const RecipeViewer = ({ recipe, mode = 'view' }) => {
                 <span className="ingredient-quantity">
                   {ingredient.quantity || ingredient.quantityRequired} {ingredient.unit}
                 </span>
+                {ingredient.currentStock !== undefined && (
+                  <span className="ingredient-stock">
+                    (Stock: {ingredient.currentStock} {ingredient.unit})
+                  </span>
+                )}
               </div>
             ))}
           </div>

@@ -25,7 +25,8 @@ const OrdersPage = () => {
   const [activeStatus, setActiveStatus] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState('ALL');
-  const [sortBy, setSortBy] = useState('date'); // date, amount-asc, amount-desc
+  const [sortField, setSortField] = useState('orderDate');
+  const [sortDir, setSortDir] = useState('DESC');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -47,10 +48,10 @@ const OrdersPage = () => {
       page: currentPage, 
       size: pageSize,
       status: activeStatus === 'ALL' ? undefined : activeStatus,
-      sortBy: (sortBy === 'amount-asc' || sortBy === 'amount-desc') ? 'totalAmount' : 'orderDate',
-      sortDir: (sortBy === 'amount-asc') ? 'ASC' : 'DESC'
+      sortBy: sortField,
+      sortDir: sortDir
     }, 
-    [currentPage, pageSize, activeStatus, sortBy]
+    [currentPage, pageSize, activeStatus, sortField, sortDir]
   );
 
   // Lightweight meta queries for counts by status (size=1 to get totalElements)
@@ -76,7 +77,7 @@ const OrdersPage = () => {
   // Reset pagination when filters/sort change
   React.useEffect(() => {
     setCurrentPage(0);
-  }, [activeStatus, sortBy]);
+  }, [activeStatus, sortField, sortDir]);
   
   // Handle new order notification
   const handleNewOrder = useCallback((order) => {
@@ -187,24 +188,15 @@ const OrdersPage = () => {
       });
     }
     
-    // Sort orders
-    if (sortBy === 'amount-asc') {
-      filtered.sort((a, b) => a.totalAmount - b.totalAmount);
-    } else if (sortBy === 'amount-desc') {
-      filtered.sort((a, b) => b.totalAmount - a.totalAmount);
-    } else {
-      // Sort by date (newest first)
-      filtered.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
-    }
-    
     return filtered;
-  }, [orders, activeStatus, selectedEmployee, startDate, endDate, sortBy]);
+  }, [orders, activeStatus, selectedEmployee, startDate, endDate]);
   
   const handleClearFilters = () => {
     setSelectedEmployee('ALL');
     setStartDate('');
     setEndDate('');
-    setSortBy('date');
+    setSortField('orderDate');
+    setSortDir('DESC');
     setCurrentPage(0);
   };
 
@@ -229,11 +221,16 @@ const OrdersPage = () => {
       }
 
       const requestData = {
-        userId: user?.id, // Backend expects userId from Auth
+        userId: user?.id,
         items: orderData.orderItems.map(item => ({
           productId: item.productId,
-          quantity: item.quantity
+          variantId: item.variantId,
+          comboId: item.comboId,
+          quantity: item.quantity,
+          type: item.type
         })),
+        promotionId: orderData.promotionId,
+        employeeName: orderData.employeeName,
         note: orderData.notes || ''
       };
 
@@ -319,28 +316,39 @@ const OrdersPage = () => {
                 </div>
               )}
 
-              <div className="filter-group">
-                <label htmlFor="sort-filter">Sort By</label>
-                <select
-                  id="sort-filter"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="date">Date (Newest First)</option>
-                  <option value="amount-desc">Amount (High to Low)</option>
-                  <option value="amount-asc">Amount (Low to High)</option>
-                </select>
-              </div>
+                <div className="filter-group">
+                  <label>Sort By (Quick)</label>
+                  <select
+                    value={sortField === 'totalAmount' ? (sortDir === 'ASC' ? 'amount-asc' : 'amount-desc') : 'date'}
+                    onChange={(e) => {
+                      if (e.target.value === 'date') {
+                        setSortField('orderDate');
+                        setSortDir('DESC');
+                      } else if (e.target.value === 'amount-asc') {
+                        setSortField('totalAmount');
+                        setSortDir('ASC');
+                      } else {
+                        setSortField('totalAmount');
+                        setSortDir('DESC');
+                      }
+                    }}
+                    className="filter-select"
+                  >
+                    <option value="date">Date (Newest First)</option>
+                    <option value="amount-desc">Amount (High to Low)</option>
+                    <option value="amount-asc">Amount (Low to High)</option>
+                  </select>
+                </div>
             </div>
 
             <div className="filter-row">
               <DateRangePicker
                 startDate={startDate}
                 endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-                label="Order Date Range"
+                onChange={(start, end) => {
+                  setStartDate(start ? new Date(start).toISOString().split('T')[0] : '');
+                  setEndDate(end ? new Date(end).toISOString().split('T')[0] : '');
+                }}
               />
             </div>
 
@@ -361,6 +369,16 @@ const OrdersPage = () => {
           orders={filteredOrders}
           loading={ordersLoading}
           onUpdateStatus={handleUpdateStatus}
+          sortField={sortField}
+          sortDir={sortDir}
+          onSort={(field) => {
+            if (sortField === field) {
+              setSortDir(sortDir === 'ASC' ? 'DESC' : 'ASC');
+            } else {
+              setSortField(field);
+              setSortDir('DESC');
+            }
+          }}
         />
         {totalOrders > pageSize && (
           <div className="pagination-controls">

@@ -84,7 +84,8 @@ class ApiClient {
           if (window.location.pathname !== '/login' && window.location.pathname !== (ROUTES.LOGIN || '/login')) {
             localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-            window.location.href = '/login';
+            // We dispatch an event here so the auth context can pick it up
+            window.dispatchEvent(new CustomEvent('auth:unauthorized'));
           }
         }
         throw new Error('Unauthorized');
@@ -117,6 +118,9 @@ class ApiClient {
         throw error;
       }
       
+      // Handle the case where error might be thrown above inside the try block
+      // or by fetch itself (network error)
+      
       // Log the final URL to help debug duplicate-prefix issues
       console.error('API Request Error:', error, 'Request URL:', url);
       throw error;
@@ -133,6 +137,12 @@ class ApiClient {
     );
     const queryString = new URLSearchParams(cleanedParams).toString();
     const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+    
+    // Add ignoreUnauthorized specifically for "me" endpoint 
+    // to prevent aggressive logging out/redirecting if token expires naturally
+    if (endpoint === '/employees/me' || endpoint === 'employees/me') {
+        options.ignoreUnauthorized = true;
+    }
     
     return this.request(url, {
       method: 'GET',

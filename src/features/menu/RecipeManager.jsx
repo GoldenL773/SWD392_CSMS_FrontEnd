@@ -36,7 +36,8 @@ const RecipeManager = ({
   onCreateRecipe,
   onUpdateRecipe,
   onDeleteRecipe,
-  loading = false
+  loading = false,
+  viewOnlyIngredients = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -105,14 +106,16 @@ const RecipeManager = ({
           </div>
         </div>
         <div className="page-header-actions">
-          <Button 
-            variant="primary" 
-            onClick={handleCreateClick}
-            disabled={loading}
-          >
-            <Plus size={20} weight="regular" />
-            Create Recipe
-          </Button>
+          {!viewOnlyIngredients && (
+            <Button 
+              variant="primary" 
+              onClick={handleCreateClick}
+              disabled={loading}
+            >
+              <Plus size={20} weight="regular" />
+              Create Recipe
+            </Button>
+          )}
         </div>
       </div>
 
@@ -155,14 +158,15 @@ const RecipeManager = ({
           </div>
         ) : (
           <div className="recipe-cards">
-            {filteredRecipes.map(recipe => (
-              <RecipeCard
-                key={recipe.id}
-                recipe={recipe}
-                onEdit={() => handleEditClick(recipe)}
-                onDelete={() => handleDeleteClick(recipe)}
-              />
-            ))}
+              {filteredRecipes.map(recipe => (
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  onEdit={() => handleEditClick(recipe)}
+                  onDelete={() => handleDeleteClick(recipe)}
+                  viewOnly={viewOnlyIngredients}
+                />
+              ))}
           </div>
         )}
       </div>
@@ -215,7 +219,7 @@ const RecipeManager = ({
  * RecipeCard Component
  * Displays individual recipe in the list
  */
-const RecipeCard = ({ recipe, onEdit, onDelete }) => {
+const RecipeCard = ({ recipe, onEdit, onDelete, viewOnly = false }) => {
   const ingredientCount = recipe.ingredients?.length || 0;
   const hasInstructions = recipe.instructions && recipe.instructions.trim().length > 0;
 
@@ -223,22 +227,24 @@ const RecipeCard = ({ recipe, onEdit, onDelete }) => {
     <div className="recipe-card">
       <div className="recipe-card-header">
         <h3 className="recipe-card-title">{recipe.productName}</h3>
-        <div className="recipe-card-actions">
-          <button
-            className="btn-icon btn-edit"
-            onClick={onEdit}
-            title="Edit recipe"
-          >
-            <PencilSimple size={18} weight="regular" />
-          </button>
-          <button
-            className="btn-icon btn-delete"
-            onClick={onDelete}
-            title="Delete recipe"
-          >
-            <Trash size={18} weight="regular" />
-          </button>
-        </div>
+        {!viewOnly && (
+          <div className="recipe-card-actions">
+            <button
+              className="btn-icon btn-edit"
+              onClick={onEdit}
+              title="Edit recipe"
+            >
+              <PencilSimple size={18} weight="regular" />
+            </button>
+            <button
+              className="btn-icon btn-delete"
+              onClick={onDelete}
+              title="Delete recipe"
+            >
+              <Trash size={18} weight="regular" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="recipe-card-body">
@@ -346,13 +352,15 @@ const RecipeFormModal = ({
     const fetchProductIngredients = async () => {
       if (formData.productId && !recipe) { // Only auto-populate for new recipes
         try {
+          console.log(`Fetching product ingredients for productId: ${formData.productId}`);
           const productIngredients = await getProductIngredients(formData.productId);
+          console.log(`Received product ingredients:`, productIngredients);
           if (productIngredients && productIngredients.length > 0) {
             setRecipeIngredients(productIngredients.map(ing => ({
               id: generateId(),
-              ingredientId: ing.ingredientId,
+              ingredientId: ing.ingredientId || ing.ingredient?.id || '',
               quantity: ing.quantity || ing.quantityRequired || '',
-              unit: ing.unit || ''
+              unit: ing.unit || ing.ingredient?.unit || ''
             })));
           } else {
             // Default to one empty row if no ingredients found
@@ -494,32 +502,26 @@ const RecipeFormModal = ({
           )}
         </div>
 
-        {/* Ingredients Editor */}
         <div className="form-section">
           <div className="form-section-header">
             <h4 className="form-section-title">Ingredients *</h4>
-            <Button
-              type="button"
-              variant="secondary"
-              size="small"
+            <Button 
+              type="button" 
+              variant="secondary" 
+              size="small" 
               onClick={addIngredient}
             >
-              <Plus size={16} weight="regular" />
               Add Ingredient
             </Button>
           </div>
-
-          {errors.ingredients && (
-            <div className="error-message section-error">{errors.ingredients}</div>
-          )}
 
           <div className="ingredients-table-container">
             <table className="ingredients-table">
               <thead>
                 <tr>
-                  <th>Ingredient *</th>
-                  <th>Quantity *</th>
-                  <th>Unit *</th>
+                  <th>Ingredient</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -545,8 +547,7 @@ const RecipeFormModal = ({
                         type="number"
                         value={ing.quantity}
                         onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
-                        placeholder="0"
-                        min="0"
+                        placeholder="0.0"
                         step="0.1"
                         className="ingredient-input"
                       />
@@ -556,7 +557,7 @@ const RecipeFormModal = ({
                         type="text"
                         value={ing.unit}
                         onChange={(e) => handleIngredientChange(index, 'unit', e.target.value)}
-                        placeholder="e.g., kg, ml, cups"
+                        placeholder="Unit"
                         className="ingredient-input"
                       />
                     </td>
@@ -573,6 +574,13 @@ const RecipeFormModal = ({
                     </td>
                   </tr>
                 ))}
+                {recipeIngredients.length === 0 && (
+                  <tr>
+                    <td colSpan="3" style={{ textAlign: 'center', py: 2 }}>
+                      No ingredients defined for this product.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

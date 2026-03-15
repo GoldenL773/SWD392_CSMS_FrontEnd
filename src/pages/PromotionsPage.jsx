@@ -10,7 +10,7 @@ import { Tag, Plus, PencilSimple, Trash, CheckCircle, XCircle, Warning } from '@
 import './PromotionsPage.css';
 
 const DISCOUNT_TYPES = ['PERCENTAGE', 'FIXED'];
-const APPLY_TO_TYPES = ['PRODUCT', 'COMBO'];
+const APPLY_TO_TYPES = ['PRODUCT', 'COMBO', 'CATEGORY'];
 const STATUS_OPTIONS = ['ACTIVE', 'INACTIVE'];
 
 const emptyForm = {
@@ -30,6 +30,19 @@ const PromotionsPage = () => {
   const { data: rawPromotions, loading, refetch } = useApiQuery(getAllPromotions, {}, []);
   const { data: productsData } = useApiQuery(getAllProducts, { size: 1000 }, []);
   const { data: combosData } = useApiQuery(getAllCombos, {}, []);
+  const [categoriesData, setCategoriesData] = useState([]);
+  
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const cats = await getAllCategories();
+        setCategoriesData(cats);
+      } catch (e) {
+        console.error("Failed to fetch categories", e);
+      }
+    };
+    fetchCats();
+  }, []);
 
   const promotions = Array.isArray(rawPromotions) ? rawPromotions : rawPromotions?.content || [];
   const products = productsData?.content || productsData || [];
@@ -42,6 +55,7 @@ const PromotionsPage = () => {
 
   const [formData, setFormData] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
+  const [detailPromotion, setDetailPromotion] = useState(null);
 
   const openCreate = () => {
     setEditingPromotion(null);
@@ -98,7 +112,9 @@ const PromotionsPage = () => {
       applyTo: formData.applyTo,
       ...(formData.applyTo === 'PRODUCT'
         ? { productId: parseInt(formData.targetId) }
-        : { comboId: parseInt(formData.targetId) }),
+        : formData.applyTo === 'COMBO'
+          ? { comboId: parseInt(formData.targetId) }
+          : { categoryId: parseInt(formData.targetId) }),
       targetId: parseInt(formData.targetId),
       startDate: formData.startDate ? formData.startDate + 'T00:00:00' : null,
       endDate: formData.endDate ? formData.endDate + 'T23:59:59' : null,
@@ -144,8 +160,36 @@ const PromotionsPage = () => {
   const isExpired = (endDate) => endDate && new Date(endDate) < new Date();
 
   const filtered = filterStatus === 'ALL' ? promotions : promotions.filter(p => p.status === filterStatus);
+  
+  const categories = categoriesData;
 
-  const targetOptions = formData.applyTo === 'PRODUCT' ? products : combos;
+  const targetOptions = formData.applyTo === 'PRODUCT' ? products : (formData.applyTo === 'COMBO' ? combos : categories);
+
+  // Helper: get target name for a promotion
+  const getTargetName = (promo) => {
+    if (promo.productName) return promo.productName;
+    if (promo.comboName) return promo.comboName;
+    if (promo.targetName) return promo.targetName;
+    const id = promo.targetId || promo.productId || promo.comboId;
+    if (!id) return '—';
+    if (promo.applyTo === 'COMBO') {
+      const c = combos.find(x => String(x.id) === String(id));
+      return c ? c.name : `Combo #${id}`;
+    }
+    if (promo.applyTo === 'CATEGORY') {
+      const cat = categories.find(x => String(x.id) === String(id));
+      return cat ? cat.name : `Category #${id}`;
+    }
+    const p = products.find(x => String(x.id) === String(id));
+    return p ? p.name : `Product #${id}`;
+  };
+
+  const getDiscountDisplay = (promo) => {
+    const val = Number(promo.discountValue);
+    if (isNaN(val)) return '—';
+    if (promo.discountType === 'PERCENTAGE') return `${val}%`;
+    return formatCurrency(val);
+  };
 
   return (
     <div className="promotions-page">
@@ -195,7 +239,7 @@ const PromotionsPage = () => {
             </thead>
             <tbody>
               {filtered.map(promo => (
-                <tr key={promo.id} className={isExpired(promo.endDate) ? 'promo-row--expired' : ''}>
+                <tr key={promo.id} className={isExpired(promo.endDate) ? 'promo-row--expired' : ''} onClick={() => setDetailPromotion(promo)} style={{cursor:'pointer'}}>
                   <td>
                     <div className="promo-name">{promo.name}</div>
                     {isExpired(promo.endDate) && (
@@ -203,14 +247,12 @@ const PromotionsPage = () => {
                     )}
                   </td>
                   <td>
-                    {promo.discountType === 'PERCENTAGE'
-                      ? `${promo.discountValue}%`
-                      : formatCurrency(promo.discountValue)}
+                    {getDiscountDisplay(promo)}
                     <span className="promo-type-badge">{promo.discountType === 'PERCENTAGE' ? '%' : 'Fixed'}</span>
                   </td>
                   <td>
                     <span className="promo-apply-badge">{promo.applyTo}</span>
-                    <div className="promo-target-name">{promo.targetName || promo.productName || promo.comboName || ''}</div>
+                    <div className="promo-target-name">{getTargetName(promo)}</div>
                   </td>
                   <td className="promo-period">
                     <div>{promo.startDate ? new Date(promo.startDate).toLocaleDateString('vi-VN') : '—'}</div>
@@ -219,8 +261,8 @@ const PromotionsPage = () => {
                   <td>{getStatusBadge(promo.status)}</td>
                   <td>
                     <div className="promo-actions">
-                      <button onClick={() => openEdit(promo)} className="btn-icon" title="Edit"><PencilSimple size={18} /></button>
-                      <button onClick={() => setDeleteConfirmId(promo.id)} className="btn-icon btn-icon--danger" title="Delete"><Trash size={18} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); openEdit(promo); }} className="btn-icon" title="Edit"><PencilSimple size={18} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(promo.id); }} className="btn-icon btn-icon--danger" title="Delete"><Trash size={18} /></button>
                     </div>
                   </td>
                 </tr>
@@ -284,10 +326,11 @@ const PromotionsPage = () => {
                   <select value={formData.applyTo} onChange={e => setFormData({ ...formData, applyTo: e.target.value, targetId: '' })}>
                     <option value="PRODUCT">Product</option>
                     <option value="COMBO">Combo</option>
+                    <option value="CATEGORY">Category</option>
                   </select>
                 </div>
                 <div className="promo-form-group">
-                  <label>Select {formData.applyTo === 'PRODUCT' ? 'Product' : 'Combo'} *</label>
+                  <label>Select {formData.applyTo === 'PRODUCT' ? 'Product' : (formData.applyTo === 'COMBO' ? 'Combo' : 'Category')} *</label>
                   <select
                     value={formData.targetId}
                     onChange={e => setFormData({ ...formData, targetId: e.target.value })}
@@ -364,6 +407,28 @@ const PromotionsPage = () => {
       )}
 
       <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+
+      {/* Detail Modal */}
+      {detailPromotion && (
+        <div className="modal-overlay" onClick={() => setDetailPromotion(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div className="modal-header">
+              <h3>Promotion Details</h3>
+              <button className="btn-close" onClick={() => setDetailPromotion(null)}>✕</button>
+            </div>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div><strong>Name:</strong> {detailPromotion.name}</div>
+              <div><strong>Discount:</strong> {getDiscountDisplay(detailPromotion)} <span className="promo-type-badge">{detailPromotion.discountType === 'PERCENTAGE' ? 'Percentage' : 'Fixed'}</span></div>
+              <div><strong>Apply To:</strong> <span className="promo-apply-badge">{detailPromotion.applyTo}</span> — {getTargetName(detailPromotion)}</div>
+              <div><strong>Period:</strong> {detailPromotion.startDate ? new Date(detailPromotion.startDate).toLocaleDateString('vi-VN') : '—'} → {detailPromotion.endDate ? new Date(detailPromotion.endDate).toLocaleDateString('vi-VN') : '—'}</div>
+              <div><strong>Status:</strong> {getStatusBadge(detailPromotion.status)} {isExpired(detailPromotion.endDate) ? '⚠ Expired' : ''}</div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 20px', borderTop: '1px solid var(--border-color)' }}>
+              <button onClick={() => setDetailPromotion(null)} style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', background: 'var(--color-accent)', color: '#fff', fontWeight: 600 }}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

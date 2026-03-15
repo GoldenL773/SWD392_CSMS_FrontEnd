@@ -7,6 +7,7 @@ import RoleBasedRedirect from './RoleBasedRedirect.jsx';
 // Lazy load pages
 const HomePage = React.lazy(() => import('../pages/HomePage.tsx'));
 const LoginPage = React.lazy(() => import('../pages/LoginPage.jsx'));
+const RegisterPage = React.lazy(() => import('../pages/RegisterPage.jsx'));
 const DashboardPage = React.lazy(() => import('../pages/DashboardPage.jsx'));
 const InventoryPage = React.lazy(() => import('../pages/InventoryPage.jsx'));
 const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.jsx'));
@@ -34,17 +35,29 @@ const AppRoutes = () => {
       {/* Public Routes */}
       <Route path={ROUTES.HOME} element={
         <React.Suspense fallback={<div className="loading" />}>
-          <RoleBasedRedirect defaultElement={<HomePage />} />
+          <HomePage />
         </React.Suspense>
       } />
-      <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.LOGIN} element={
+        <React.Suspense fallback={<div className="loading" />}>
+          <LoginPage />
+        </React.Suspense>
+      } />
+      <Route path={ROUTES.REGISTER} element={
+        <React.Suspense fallback={<div className="loading" />}>
+          <RegisterPage />
+        </React.Suspense>
+      } />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
+        {/* Redirect for the root of protected area if needed */}
+        <Route path="/app" element={<RoleBasedRedirect />} />
+        
         {/* Common routes - accessible by all authenticated users */}
+        <Route path={ROUTES.MENU} element={<MenuPage />} />
         <Route path={ROUTES.ORDERS} element={<OrdersPage />} />
         <Route path={ROUTES.ORDER_QUEUE} element={<OrderQueuePage />} />
-        <Route path={ROUTES.MENU} element={<MenuPage />} />
         <Route path={ROUTES.ATTENDANCE} element={<AttendancePage />} />
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         <Route path={ROUTES.PAYMENT} element={<PaymentPage />} />

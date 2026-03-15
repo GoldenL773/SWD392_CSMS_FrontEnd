@@ -65,5 +65,6 @@ export const getLowStockIngredients = async () => {
  * Get ingredients for a specific product
  */
 export const getProductIngredients = async (productId) => {
-  return apiClient.get(`/product-ingredients/product/${productId}`);
+  const response = await apiClient.get(`/product-ingredients/product/${productId}`);
+  return response?.content || response || [];
 };

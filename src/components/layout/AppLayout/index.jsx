@@ -29,7 +29,9 @@ const AppLayout = ({ children }) => {
       
       <main className="app-layout__main">
         <div className="app-layout__content">
-          {children}
+          <React.Suspense fallback={<div className="loading-container-global"><div className="loading-spinner"></div></div>}>
+            {children}
+          </React.Suspense>
         </div>
       </main>
 

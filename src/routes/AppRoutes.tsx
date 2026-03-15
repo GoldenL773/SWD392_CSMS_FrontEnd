@@ -1,10 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ROUTES } from '../utils/constants.tsx';
+import { ROUTES } from '../utils/constants.jsx';
 import ProtectedRoute from './ProtectedRoute.tsx';
 
 // Lazy load pages
 const LoginPage = React.lazy(() => import('../pages/LoginPage.tsx'));
+const RegisterPage = React.lazy(() => import('../pages/RegisterPage.jsx'));
 const DashboardPage = React.lazy(() => import('../pages/DashboardPage.tsx'));
 const InventoryPage = React.lazy(() => import('../pages/InventoryPage.tsx'));
 const EmployeesPage = React.lazy(() => import('../pages/EmployeesPage.tsx'));
@@ -24,6 +25,11 @@ const AppRoutes = () => {
     <Routes>
       {/* Public Routes */}
       <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+      <Route path={ROUTES.REGISTER} element={
+        <React.Suspense fallback={<div className="loading" />}>
+          <RegisterPage />
+        </React.Suspense>
+      } />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
@@ -35,8 +41,8 @@ const AppRoutes = () => {
         <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         
         {/* Admin Only Routes */}
-        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} />}>
-          <Route path={ROUTES.ADMIN} element={<AdminPage />} />
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER'] as any} />}>
+          <Route path={(ROUTES as any).ADMIN} element={<AdminPage />} />
           <Route path={ROUTES.FINANCE} element={<FinancePage />} />
         </Route>
       </Route>

@@ -38,3 +38,9 @@ export const updateProduct = async (id, productData) => {
 export const deleteProduct = async (id) => {
   return apiClient.delete(`/products/${id}`);
 };
+/**
+ * Get all categories
+ */
+export const getAllCategories = async () => {
+  return apiClient.get('/products/categories');
+};

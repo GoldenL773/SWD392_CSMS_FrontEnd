@@ -160,6 +160,12 @@
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .unavailable-badge {
   position: absolute;
   top: var(--spacing-md);

@@ -22,7 +22,7 @@ import './FinancePage.css';
 import SalaryHistoryModal from '../components/salary/SalaryHistoryModal.jsx';
 import EmployeeDetailModal from '../components/finance/EmployeeDetailModal.jsx';
 import { AuthContext } from '../context/AuthProvider.jsx';
-import { Bank } from '@phosphor-icons/react';
+import { Bank, CaretDown, CaretUp, Check, ClockCounterClockwise, PencilSimple } from '@phosphor-icons/react';
 
 const FinancePage = () => {
   const toast = useToast();
@@ -40,6 +40,8 @@ const FinancePage = () => {
   // Sorting state
   const [sortKey, setSortKey] = useState('employeeName');
   const [sortDir, setSortDir] = useState('asc'); // 'asc' | 'desc'
+  const [page, setPage] = useState(0);
+  const pageSize = 10;
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -48,6 +50,7 @@ const FinancePage = () => {
       setSortKey(key);
       setSortDir('asc');
     }
+    setPage(0);
   };
   
   // Date range for financial period
@@ -275,6 +278,24 @@ const FinancePage = () => {
     return arr;
   }, [showPaidSalaries, paidSalaries, pendingSalaries, sortKey, sortDir]);
 
+  const paginatedSalaries = useMemo(() => {
+    const start = page * pageSize;
+    return displayedSalaries.slice(start, start + pageSize);
+  }, [displayedSalaries, page]);
+
+  const totalPages = Math.ceil(displayedSalaries.length / pageSize);
+
+  const SortHeader = ({ label, sortKey: key }) => (
+    <th onClick={() => handleSort(key)} className="sortable-header">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {label}
+        {sortKey === key ? (
+          sortDir === 'asc' ? <CaretUp size={14} /> : <CaretDown size={14} />
+        ) : <div style={{ width: 14 }} />}
+      </div>
+    </th>
+  );
+
   return (
     <div className="finance-page">
       <div className="page-header">
@@ -311,9 +332,10 @@ const FinancePage = () => {
               <DateRangePicker
                 startDate={startDate}
                 endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-                label="Financial Period"
+                onChange={(start, end) => {
+                  setStartDate(start ? new Date(start).toISOString().split('T')[0] : '');
+                  setEndDate(end ? new Date(end).toISOString().split('T')[0] : '');
+                }}
               />
               <div className="filter-actions">
                 <Button variant="secondary" onClick={handleClearFilters}>
@@ -501,28 +523,29 @@ const FinancePage = () => {
                               >
                                 Edit
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="small"
-                                onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(salary.id); }}
-                                disabled={marking}
-                              >
-                                {marking ? 'Processing...' : 'Mark Paid'}
-                              </Button>
+                              <button className="btn-icon" onClick={() => handleEditSalary(salary)} title="Adjust">
+                                <PencilSimple size={18} />
+                              </button>
+                              <button className="btn-icon btn-success" onClick={() => handleMarkAsPaid(salary.id)} title="Pay">
+                                <Check size={18} />
+                              </button>
                             </>
                           )}
-                          <Button 
-                            variant="ghost" 
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); setHistorySalary(salary); setShowHistory(true); }}
-                          >
-                            History
-                          </Button>
+                          <button className="btn-icon" onClick={() => { setHistorySalary(salary); setShowHistory(true); }} title="History">
+                            <ClockCounterClockwise size={18} />
+                          </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {displayedSalaries.length > pageSize && (
+                  <div className="pagination">
+                    <button disabled={page === 0} onClick={() => setPage(p => p - 1)}>Previous</button>
+                    <span>Page {page + 1} of {totalPages}</span>
+                    <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Next</button>
+                  </div>
+                )}
               </div>
             )}
           </Card>

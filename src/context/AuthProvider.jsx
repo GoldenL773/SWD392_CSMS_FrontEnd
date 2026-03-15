@@ -75,6 +75,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
+    
+    // Listen for unauthorized events from apiClient
+    const handleUnauthorized = () => {
+      setUser(null);
+      // Optional: you could add a toast here or rely on the login page
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    };
   }, []);
 
   /**
@@ -102,7 +113,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const userData = {
-        id: response.id,
+        id: response.userId || response.id,
         username: response.username,
         fullName: response.fullName,
         roles: rolesArray.map(role => {
@@ -119,7 +130,7 @@ export const AuthProvider = ({ children }) => {
       console.log('User roleNames:', userData.roleNames);
 
       // Store token and user data immediately so navigation works
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.accessToken || response.token);
       localStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
       
       // Set user and clear error/loading immediately to allow UI to proceed

@@ -24,7 +24,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     category: PRODUCT_CATEGORIES[0],
     price: '',
     status: PRODUCT_STATUS.AVAILABLE,
-    description: ''
+    description: '',
+    imageUrl: ''
   });
   
   const [variants, setVariants] = useState([]);
@@ -37,12 +38,19 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     if (product) {
       setFormData({
         name: product.name || '',
-        category: product.category || PRODUCT_CATEGORIES[0],
+        category: product.categoryName || product.category || PRODUCT_CATEGORIES[0],
         price: product.price?.toString() || '',
         status: product.status || PRODUCT_STATUS.AVAILABLE,
-        description: product.description || ''
+        description: product.description || '',
+        imageUrl: product.imageUrl || ''
       });
-      setProductIngredients(product.productIngredients || []);
+      // Backend returns 'ingredients', not 'productIngredients'
+      const ings = product.ingredients || product.productIngredients || [];
+      setProductIngredients(ings.map(i => ({
+        ingredientId: i.ingredientId || '',
+        quantityRequired: i.quantity || i.quantityRequired || '',
+        unit: i.unit || 'g'
+      })));
       setVariants(product.variants || []);
     } else {
       setFormData({
@@ -50,7 +58,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
         category: PRODUCT_CATEGORIES[0],
         price: '',
         status: PRODUCT_STATUS.AVAILABLE,
-        description: ''
+        description: '',
+        imageUrl: ''
       });
       setProductIngredients([]);
       // Default variant if creating new
@@ -100,7 +109,8 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
   const addIngredient = () => {
     setProductIngredients([...productIngredients, {
       ingredientId: ingredients[0]?.id || '',
-      quantityRequired: ''
+      quantityRequired: '',
+      unit: ingredients[0]?.unit || 'g'
     }]);
   };
 
@@ -144,16 +154,17 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     const submitData = {
       ...formData,
       price: parseFloat(formData.price),
+      imageUrl: formData.imageUrl || null,
       variants: variants.map(v => ({
         ...v,
         price: parseFloat(v.price),
-        // Remove temp ID if it's new (backend handles ID)
         id: typeof v.id === 'string' ? v.id : undefined 
       })),
-      productIngredients: productIngredients.map(pi => ({
+      ingredients: productIngredients.map(pi => ({
         ingredientId: parseInt(pi.ingredientId),
-        quantityRequired: parseFloat(pi.quantityRequired)
-      })).filter(pi => pi.ingredientId && pi.quantityRequired > 0)
+        quantity: parseFloat(pi.quantityRequired),
+        unit: pi.unit || 'g'
+      })).filter(pi => pi.ingredientId && pi.quantity > 0)
     };
 
     onSubmit(submitData);
@@ -237,6 +248,18 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 onChange={handleChange}
                 rows="2"
                 placeholder="Product description..."
+              />
+            </div>
+
+            <div className="form-group form-group--full">
+              <label htmlFor="imageUrl">Image URL</label>
+              <input
+                type="text"
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/image.jpg"
               />
             </div>
           </div>
@@ -364,12 +387,17 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 <div key={index} className="ingredient-row">
                   <select
                     value={pi.ingredientId}
-                    onChange={(e) => updateIngredient(index, 'ingredientId', e.target.value)}
+                    onChange={(e) => {
+                      const ingId = e.target.value;
+                      const ing = ingredients.find(i => i.id === parseInt(ingId));
+                      updateIngredient(index, 'ingredientId', ingId);
+                      if (ing) updateIngredient(index, 'unit', ing.unit);
+                    }}
                     className="ingredient-select"
                     required
                   >
                     <option value="">-- Select Ingredient --</option>
-                    {filteredIngredients?.map(ing => (
+                    {ingredients?.map(ing => (
                       <option key={ing.id} value={ing.id}>
                         {ing.name} ({ing.unit})
                       </option>
@@ -377,12 +405,19 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                   </select>
                   <input
                     type="number"
-                    placeholder="Quantity"
+                    placeholder="Qty"
                     value={pi.quantityRequired}
                     onChange={(e) => updateIngredient(index, 'quantityRequired', e.target.value)}
                     min="0"
                     step="0.01"
                     className="quantity-input"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Unit"
+                    value={pi.unit}
+                    onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                    className="unit-input-small"
                   />
                   <button
                     type="button"

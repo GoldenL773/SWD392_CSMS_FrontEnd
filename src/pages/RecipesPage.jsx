@@ -55,6 +55,7 @@ const RecipesPage = () => {
 
   return (
     <div className="recipes-page">
+
       <RecipeManager
         recipes={recipes}
         ingredients={ingredients}

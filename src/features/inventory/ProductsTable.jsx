@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { CaretDown, CaretRight, Plus, PencilSimple, Trash } from '@phosphor-icons/react';
+import { CaretDown, CaretRight, Plus, PencilSimple, Trash, Coffee, Cake, Hamburger, Martini, Bread, Package } from '@phosphor-icons/react';
 import { formatCurrency } from '../../utils/formatters.jsx';
 import { PRODUCT_STATUS } from '../../utils/constants.jsx';
 import Button from '../../components/common/Button/index.jsx';
@@ -20,6 +20,17 @@ const ProductsTable = ({
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
   const [expandedProducts, setExpandedProducts] = useState(new Set());
+  
+  const getCategoryIcon = (category) => {
+    if (!category) return <Package size={24} />;
+    const cat = category.toLowerCase();
+    if (cat.includes('coffee')) return <Coffee size={24} />;
+    if (cat.includes('cake') || cat.includes('dessert')) return <Cake size={24} />;
+    if (cat.includes('food') || cat.includes('burger')) return <Hamburger size={24} />;
+    if (cat.includes('drink') || cat.includes('beverage')) return <Martini size={24} />;
+    if (cat.includes('bread') || cat.includes('pastry')) return <Bread size={24} />;
+    return <Package size={24} />;
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -93,6 +104,7 @@ const ProductsTable = ({
         <thead>
           <tr>
             <th className="expand-col"></th>
+            <th className="image-col">Image</th>
             <th onClick={() => handleSort('id')} className="sortable">
               ID {sortField === 'id' && (sortDirection === 'asc' ? '↑' : '↓')}
             </th>
@@ -127,6 +139,29 @@ const ProductsTable = ({
                       <CaretRight size={16} weight="bold" />
                     )}
                   </button>
+                </td>
+                <td className="image-cell">
+                  {product.imageUrl && product.imageUrl !== 'null' ? (
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name} 
+                      className="product-thumb" 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                        const placeholder = e.target.parentElement.querySelector('.category-icon-placeholder-fallback');
+                        if (placeholder) placeholder.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  {(!product.imageUrl || product.imageUrl === 'null') && (
+                    <div className="product-thumb-placeholder category-icon-placeholder">
+                      {getCategoryIcon(product.categoryName || product.category)}
+                    </div>
+                  )}
+                  <div className="product-thumb-placeholder category-icon-placeholder category-icon-placeholder-fallback" style={{ display: 'none' }}>
+                    {getCategoryIcon(product.categoryName || product.category)}
+                  </div>
                 </td>
                 <td>{product.id}</td>
                 <td className="product-name">
@@ -175,7 +210,7 @@ const ProductsTable = ({
               
               {expandedProducts.has(product.id) && (
                 <tr className="variants-row">
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div className="variants-container">
                       <div className="variants-header">
                         <h4>Variants</h4>

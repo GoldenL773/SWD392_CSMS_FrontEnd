@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { BookOpen } from '@phosphor-icons/react';
+import { 
+  BookOpen, 
+  Coffee, 
+  Wine, 
+  Cake, 
+  Bread, 
+  Hamburger, 
+  ForkKnife,
+  Package 
+} from '@phosphor-icons/react';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { useApiMutation } from '../hooks/useApiMutation.jsx';
@@ -42,13 +51,10 @@ const MenuPage = () => {
     onSuccess: () => refetchCombos()
   });
 
-  const { mutate: handleUpdateCombo } = useApiMutation(
-    ({ id, data }) => updateCombo(id, data),
-    {
-      successMessage: 'Combo updated successfully',
-      onSuccess: () => refetchCombos()
-    }
-  );
+  const { mutate: handleUpdateCombo } = useApiMutation(updateCombo, {
+    successMessage: 'Combo updated successfully',
+    onSuccess: () => refetchCombos()
+  });
 
   const { mutate: handleDeleteCombo } = useApiMutation(deleteCombo, {
     successMessage: 'Combo deleted successfully',
@@ -97,6 +103,17 @@ const MenuPage = () => {
       style: 'currency',
       currency: 'VND'
     }).format(price);
+  };
+
+  const getCategoryIcon = (category) => {
+    if (!category) return <Package size={40} weight="thin" />;
+    const cat = category.toLowerCase();
+    if (cat.includes('coffee')) return <Coffee size={40} weight="thin" />;
+    if (cat.includes('cake') || cat.includes('dessert')) return <Cake size={40} weight="thin" />;
+    if (cat.includes('food') || cat.includes('burger')) return <Hamburger size={40} weight="thin" />;
+    if (cat.includes('drink') || cat.includes('beverage') || cat.includes('tea')) return <Wine size={40} weight="thin" />;
+    if (cat.includes('bread') || cat.includes('pastry')) return <Bread size={40} weight="thin" />;
+    return <Package size={40} weight="thin" />;
   };
 
   return (
@@ -175,14 +192,26 @@ const MenuPage = () => {
                               onKeyPress={(e) => e.key === 'Enter' && handleProductClick(product.id)}
                             >
                               <div className="product-image">
-                                <div className="image-placeholder">
-                                  {(product.categoryName || product.category) === 'Coffee' && '☕'}
-                                  {(product.categoryName || product.category) === 'Tea' && '🍵'}
-                                  {(product.categoryName || product.category) === 'Cake' && '🍰'}
-                                  {(product.categoryName || product.category) === 'Pastry' && '🥐'}
-                                  {(product.categoryName || product.category) === 'Sandwich' && '🥪'}
-                                  {(product.categoryName || product.category) === 'Beverage' && '🥤'}
-                                  {(product.categoryName || product.category) === 'Other' && '🍴'}
+                                {product.imageUrl && product.imageUrl !== 'null' ? (
+                                  <img 
+                                    src={product.imageUrl} 
+                                    alt={product.name} 
+                                    className="product-img" 
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.style.display = 'none';
+                                      const placeholder = e.target.parentElement.querySelector('.image-placeholder-fallback');
+                                      if (placeholder) placeholder.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                {(!product.imageUrl || product.imageUrl === 'null') && (
+                                  <div className="image-placeholder">
+                                    {getCategoryIcon(product.categoryName || product.category)}
+                                  </div>
+                                )}
+                                <div className="image-placeholder image-placeholder-fallback" style={{ display: 'none' }}>
+                                  {getCategoryIcon(product.categoryName || product.category)}
                                 </div>
                                 {(!product.available && product.status !== 'Available') && (
                                   <div className="unavailable-badge">Out of Stock</div>
@@ -200,7 +229,10 @@ const MenuPage = () => {
                               </div>
                               <div className="product-info">
                                 <h3 className="product-name">{product.name}</h3>
-                                <p className="product-price">{formatPrice(product.price)}</p>
+                                <div className="product-meta">
+                                  <span className="product-category-name">{product.categoryName || product.category}</span>
+                                  <span className="product-price">{formatPrice(product.price)}</span>
+                                </div>
                                 <span className={`status-badge ${product.available !== false && product.status !== 'Unavailable' ? 'available' : 'unavailable'}`}>
                                   {product.status}
                                 </span>
@@ -229,16 +261,28 @@ const MenuPage = () => {
                         onKeyPress={(e) => e.key === 'Enter' && handleProductClick(product.id)}
                       >
                         <div className="product-image">
-                          <div className="image-placeholder">
-                            {product.category === 'Coffee' && '☕'}
-                            {product.category === 'Tea' && '🍵'}
-                            {product.category === 'Cake' && '🍰'}
-                            {product.category === 'Pastry' && '🥐'}
-                            {product.category === 'Sandwich' && '🥪'}
-                            {product.category === 'Beverage' && '🥤'}
-                            {product.category === 'Other' && '🍴'}
+                          {product.imageUrl && product.imageUrl !== 'null' ? (
+                            <img 
+                              src={product.imageUrl} 
+                              alt={product.name} 
+                              className="product-img" 
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.style.display = 'none';
+                                const placeholder = e.target.parentElement.querySelector('.image-placeholder-fallback');
+                                if (placeholder) placeholder.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          {(!product.imageUrl || product.imageUrl === 'null') && (
+                            <div className="image-placeholder">
+                              {getCategoryIcon(product.categoryName || product.category)}
+                            </div>
+                          )}
+                          <div className="image-placeholder image-placeholder-fallback" style={{ display: 'none' }}>
+                            {getCategoryIcon(product.categoryName || product.category)}
                           </div>
-                          {product.status === 'Unavailable' && (
+                          {(!product.available && product.status !== 'Available') && (
                             <div className="unavailable-badge">Out of Stock</div>
                           )}
                           
@@ -254,7 +298,10 @@ const MenuPage = () => {
                         </div>
                         <div className="product-info">
                           <h3 className="product-name">{product.name}</h3>
-                          <p className="product-price">{formatPrice(product.price)}</p>
+                          <div className="product-meta">
+                            <span className="product-category-name">{product.categoryName || product.category}</span>
+                            <span className="product-price">{formatPrice(product.price)}</span>
+                          </div>
                           <span className={`status-badge ${product.status === 'Available' ? 'available' : 'unavailable'}`}>
                             {product.status}
                           </span>
@@ -293,7 +340,7 @@ const MenuPage = () => {
               combos={combos}
               products={products}
               onCreateCombo={handleCreateCombo}
-              onEditCombo={(id, data) => handleUpdateCombo({ id, data })}
+              onEditCombo={(id, data) => handleUpdateCombo(id, data)}
               onDeleteCombo={handleDeleteCombo}
               isReadOnly={!isManager}
             />

@@ -50,8 +50,7 @@ export const useApiQuery = (apiFunction, params = {}, dependencies = [], options
     try {
       setLoading(true);
       setError(null);
-      const fn = apiFunctionRef.current;
-      const result = await fn(paramsRef.current);
+      const result = await apiFunction(params);
 
       if (mountedRef.current) {
         setData(result);

@@ -46,8 +46,8 @@ const ReportsPage = () => {
     return date.toISOString().split('T')[0];
   };
   
-  const [startDate, setStartDate] = useState(getDefaultStartDate());
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(new Date(new Date().setDate(new Date().getDate() - 30)));
+  const [endDate, setEndDate] = useState(new Date());
   
   // Queries
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useApiQuery(
@@ -101,9 +101,13 @@ const ReportsPage = () => {
     return allOrders.filter(order => {
       const orderStatus = (order.status || '').toString().toUpperCase();
       if (orderStatus !== 'COMPLETED') return false;
-      const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
+      const orderDate = new Date(order.orderDate);
       if (startDate && orderDate < startDate) return false;
-      if (endDate && orderDate > endDate) return false;
+      if (endDate) {
+          const endAt = new Date(endDate);
+          endAt.setHours(23, 59, 59, 999);
+          if (orderDate > endAt) return false;
+      }
       return true;
     });
   }, [allOrders, startDate, endDate]);
@@ -112,8 +116,12 @@ const ReportsPage = () => {
   const filteredDailyReports = useMemo(() => {
     if (!reports) return [];
     let filtered = [...reports];
-    if (startDate) filtered = filtered.filter(r => r.reportDate >= startDate);
-    if (endDate) filtered = filtered.filter(r => r.reportDate <= endDate);
+    if (startDate) filtered = filtered.filter(r => new Date(r.reportDate) >= startDate);
+    if (endDate) {
+        const endAt = new Date(endDate);
+        endAt.setHours(23, 59, 59, 999);
+        filtered = filtered.filter(r => new Date(r.reportDate) <= endAt);
+    }
     return filtered;
   }, [reports, startDate, endDate]);
   
@@ -267,8 +275,8 @@ const ReportsPage = () => {
   }, [reports, selectedDate, allOrders]);
 
   const handleClearFilters = () => {
-    setStartDate(getDefaultStartDate());
-    setEndDate(new Date().toISOString().split('T')[0]);
+    setStartDate(new Date(new Date().setDate(new Date().getDate() - 30)));
+    setEndDate(new Date());
   };
 
   const CurrencyLabel = (props) => {
@@ -339,22 +347,14 @@ const ReportsPage = () => {
 
       {/* Date Filter */}
       {activeTab !== 'files' && (
-        <Card>
-          <div className="filter-section">
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onStartDateChange={setStartDate}
-              onEndDateChange={setEndDate}
-              label="Filter Reports by Date Range"
-            />
-            <div className="filter-actions">
-              <Button variant="secondary" onClick={handleClearFilters}>
-                Reset to Last 30 Days
-              </Button>
-            </div>
-          </div>
-        </Card>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(start, end) => {
+            setStartDate(start ? new Date(start).toISOString().split('T')[0] : '');
+            setEndDate(end ? new Date(end).toISOString().split('T')[0] : '');
+          }}
+        />
       )}
 
       {/* Tabs */}

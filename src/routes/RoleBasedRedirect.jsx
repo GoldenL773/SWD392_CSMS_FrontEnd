@@ -6,14 +6,21 @@ import { ROUTES } from '../utils/constants.jsx';
 /**
  * RoleBasedRedirect Component
  * Redirects users to appropriate default page based on their role
+ * Or shows the default element if provided and no redirect is needed
  */
 const RoleBasedRedirect = () => {
   const { user, hasAnyRole } = useAuth();
 
+  // If not logged in, redirect to login
+  if (!user || !user.roles || user.roles.length === 0) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
+  }
+
   // Determine default route based on role
   const getDefaultRoute = () => {
-    if (!user || !user.roles || user.roles.length === 0) {
-      return null; // Don't redirect if not logged in
+    // Manager/Admin default: /dashboard
+    if (hasAnyRole(['MANAGER', 'ADMIN'])) {
+      return ROUTES.DASHBOARD;
     }
 
     // Staff default: /attendance
@@ -31,18 +38,11 @@ const RoleBasedRedirect = () => {
       return ROUTES.ORDER_QUEUE;
     }
 
-    // Manager/Admin default: /dashboard
-    if (hasAnyRole(['MANAGER', 'ADMIN'])) {
-      return ROUTES.DASHBOARD;
-    }
-
     // Fallback
     return ROUTES.DASHBOARD;
   };
 
   const route = getDefaultRoute();
-  if (!route) return null;
-
   return <Navigate to={route} replace />;
 };
 
