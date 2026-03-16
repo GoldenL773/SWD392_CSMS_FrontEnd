@@ -288,7 +288,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                 <tr>
                   <th>Size *</th>
                   <th>Temperature</th>
-                  <th>Price *</th>
+                  <th>Price</th>
                   <th>SKU</th>
                   <th>Action</th>
                 </tr>

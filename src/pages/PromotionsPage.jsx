@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApiQuery } from '../hooks/useApiQuery.jsx';
 import { useToast } from '../hooks/useToast.jsx';
 import { getAllPromotions, createPromotion, updatePromotion, deletePromotion } from '../api/promotionApi.jsx';
-import { getAllProducts } from '../api/productApi.jsx';
+import { getAllProducts, getAllCategories } from '../api/productApi.jsx';
 import { getAllCombos } from '../api/comboApi.jsx';
 import { formatCurrency } from '../utils/formatters.jsx';
 import ToastContainer from '../components/common/Toast/ToastContainer.jsx';

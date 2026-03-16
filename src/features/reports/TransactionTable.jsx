@@ -16,14 +16,20 @@ const TransactionTable = ({ transactions = [], loading }) => {
 
   const filteredTransactions = filterType === 'ALL' 
     ? safeTransactions 
-    : safeTransactions.filter(t => t.type === filterType);
+    : safeTransactions.filter(t => {
+        const type = (t.type || t.transactionType)?.toUpperCase();
+        if (filterType === TRANSACTION_TYPE.EXPORT) {
+          return type === 'EXPORT' || type === 'USAGE';
+        }
+        return type === filterType.toUpperCase();
+      });
 
   const getTypeClass = (type) => {
-    return type === TRANSACTION_TYPE.IMPORT ? 'type-import' : 'type-export';
+    return type?.toUpperCase() === 'IMPORT' ? 'type-import' : 'type-export';
   };
 
   const getTypeIcon = (type) => {
-    return type === TRANSACTION_TYPE.IMPORT ? '↓' : '↑';
+    return type?.toUpperCase() === 'IMPORT' ? '↓' : '↑';
   };
 
   if (loading) {
@@ -56,13 +62,16 @@ const TransactionTable = ({ transactions = [], loading }) => {
           className={`filter-chip ${filterType === TRANSACTION_TYPE.IMPORT ? 'active' : ''}`}
           onClick={() => setFilterType(TRANSACTION_TYPE.IMPORT)}
         >
-          Import ({safeTransactions.filter(t => t.type === TRANSACTION_TYPE.IMPORT).length})
+          Import ({safeTransactions.filter(t => (t.type || t.transactionType)?.toUpperCase() === 'IMPORT').length})
         </button>
         <button
           className={`filter-chip ${filterType === TRANSACTION_TYPE.EXPORT ? 'active' : ''}`}
           onClick={() => setFilterType(TRANSACTION_TYPE.EXPORT)}
         >
-          Export ({safeTransactions.filter(t => t.type === TRANSACTION_TYPE.EXPORT).length})
+          Export ({safeTransactions.filter(t => {
+             const tp = (t.type || t.transactionType)?.toUpperCase();
+             return tp === 'EXPORT' || tp === 'USAGE';
+          }).length})
         </button>
       </div>
 
@@ -72,28 +81,35 @@ const TransactionTable = ({ transactions = [], loading }) => {
             <tr>
               <th>Type</th>
               <th>Ingredient</th>
-              <th>Employee</th>
+              <th>Note / Employee</th>
               <th>Quantity</th>
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
-            {filteredTransactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => {
+              const actualType = transaction.type || transaction.transactionType;
+              const isImport = actualType?.toUpperCase() === 'IMPORT';
+              return (
               <tr key={transaction.id}>
                 <td>
-                  <span className={`type-badge ${getTypeClass(transaction.type)}`}>
-                    <span className="type-icon">{getTypeIcon(transaction.type)}</span>
-                    {transaction.type}
+                  <span className={`type-badge ${isImport ? 'type-import' : 'type-export'}`}>
+                    <span className="type-icon">{isImport ? '↓' : '↑'}</span>
+                    {actualType}
                   </span>
                 </td>
                 <td className="ingredient-name">{transaction.ingredientName || 'N/A'}</td>
-                <td>{transaction.employeeName || 'N/A'}</td>
+                <td>
+                  {transaction.note 
+                    ? transaction.note.replace(/Recorded by user (\d+)/i, 'Employee #$1')
+                    : (transaction.employeeName || '—')}
+                </td>
                 <td className="quantity-cell">
                   {formatNumber(transaction.quantity, 2)}
                 </td>
-                <td>{formatDateTime(transaction.transactionDate)}</td>
+                <td>{formatDateTime(transaction.transactionDate || transaction.createdAt)}</td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

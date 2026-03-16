@@ -5,13 +5,29 @@ import { getEmployeeAttendance } from '../../api/employeeApi.jsx';
 import { getEmployeeSalary } from '../../api/employeeApi.jsx';
 import { formatCurrency, formatDate } from '../../utils/formatters.jsx';
 
-const EmployeeDetailModal = ({ open, onClose, employee, startDate, endDate }) => {
+const EmployeeDetailModal = ({ open, onClose, employee, startDate: propStartDate, endDate: propEndDate }) => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [salary, setSalary] = useState(null);
-  const month = useMemo(() => (startDate ? new Date(startDate).getMonth() + 1 : undefined), [startDate]);
-  const year = useMemo(() => (startDate ? new Date(startDate).getFullYear() : undefined), [startDate]);
+
+  const month = useMemo(() => employee?.month || (propStartDate ? new Date(propStartDate).getMonth() + 1 : undefined), [employee?.month, propStartDate]);
+  const year = useMemo(() => employee?.year || (propStartDate ? new Date(propStartDate).getFullYear() : undefined), [employee?.year, propStartDate]);
+
+  const startDate = useMemo(() => {
+    if (employee?.month && employee?.year) {
+      return `${employee.year}-${String(employee.month).padStart(2, '0')}-01`;
+    }
+    return propStartDate;
+  }, [employee?.month, employee?.year, propStartDate]);
+
+  const endDate = useMemo(() => {
+    if (employee?.month && employee?.year) {
+      const lastDay = new Date(employee.year, employee.month, 0).getDate();
+      return `${employee.year}-${String(employee.month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    }
+    return propEndDate;
+  }, [employee?.month, employee?.year, propEndDate]);
 
   useEffect(() => {
     let active = true;

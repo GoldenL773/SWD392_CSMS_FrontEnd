@@ -360,6 +360,9 @@ const RecipeDisplayModal = ({ isOpen, onClose, productId }) => {
 
   if (!isOpen) return null;
 
+  // Lấy list recipe của product, lấy phần tử đầu tiên
+  const recipeItem = Array.isArray(recipe) && recipe.length > 0 ? recipe[0] : (recipe && !Array.isArray(recipe) ? recipe : null);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -374,7 +377,7 @@ const RecipeDisplayModal = ({ isOpen, onClose, productId }) => {
         </div>
       ) : (
         <>
-          <RecipeViewer recipe={recipe} mode="view" />
+          <RecipeViewer recipe={recipeItem} mode="view" />
           <div className="modal-actions" style={{ justifyContent: 'flex-end', marginTop: '1rem' }}>
             <Button variant="secondary" onClick={onClose}>Close</Button>
           </div>

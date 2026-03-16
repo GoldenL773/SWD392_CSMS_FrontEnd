@@ -487,7 +487,7 @@ const FinancePage = () => {
                   </thead>
                   <tbody>
                     {paginatedSalaries.map((salary) => (
-                      <tr key={salary.id} onClick={() => { setDetailEmployee({ employeeId: salary.employeeId, employeeName: salary.employeeName }); setShowEmployeeDetail(true); }} style={{ cursor: 'pointer' }}>
+                      <tr key={salary.id} onClick={() => { setDetailEmployee({ employeeId: salary.employeeId, employeeName: salary.employeeName, month: salary.month, year: salary.year }); setShowEmployeeDetail(true); }} style={{ cursor: 'pointer' }}>
                         {!showPaidSalaries && (
                           <td>
                             <input 

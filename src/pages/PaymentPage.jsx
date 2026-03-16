@@ -22,7 +22,13 @@ const PaymentPage = () => {
 
   const orders = ordersData?.content || ordersData || [];
   const totalElements = ordersData?.totalElements ?? orders.length;
-  const totalPages = ordersData?.totalPages ?? Math.ceil(totalElements / pageSize);
+    const totalPages = ordersData?.totalPages ?? Math.ceil(totalElements / pageSize);
+
+  React.useEffect(() => {
+    if (orders.length > 0) {
+      console.log('Sample Order for PaymentPage:', orders[0]);
+    }
+  }, [orders]);
 
   // Client-side filter by period
   const filteredOrders = useMemo(() => {
@@ -42,6 +48,12 @@ const PaymentPage = () => {
   }, [orders, periodFilter]);
 
   const totalForPeriod = filteredOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+
+  const getTotalQuantity = (order) => {
+    const list = order.items || order.orderItems || [];
+    if (list.length === 0) return 0;
+    return list.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  };
 
   return (
     <div className="payment-page">
@@ -115,7 +127,7 @@ const PaymentPage = () => {
                   <td className="order-id">#{order.id}</td>
                   <td>{order.orderDate ? new Date(order.orderDate).toLocaleString('vi-VN') : '—'}</td>
                   <td>{order.employeeName || order.employee?.fullName || '—'}</td>
-                  <td>{(order.items || order.orderItems || []).length} item(s)</td>
+                  <td>{getTotalQuantity(order) > 0 ? `${getTotalQuantity(order)} item(s)` : '—'}</td>
                   <td className="order-amount">{formatCurrency(order.totalAmount || 0)}</td>
                   <td><span className="status-badge status-completed">{order.status}</span></td>
                 </tr>
