@@ -54,11 +54,7 @@ export const uploadReportFile = async (file, metadata) => {
   formData.append('reportType', metadata.reportType);
   formData.append('reportPeriod', metadata.reportPeriod);
 
-  return await apiClient.post('/reports/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  return await apiClient.post('/reports/upload', formData);
 };
 
 /**

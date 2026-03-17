@@ -73,8 +73,11 @@ const ReportViewer = ({
   // Filter and sort reports
   const filteredReports = reports
     .filter(report => {
-      const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           report.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      const title = (report.title || report.fileName || '').toLowerCase();
+      const description = (report.description || '').toLowerCase();
+      const search = searchTerm.toLowerCase();
+      
+      const matchesSearch = title.includes(search) || description.includes(search);
       const matchesType = typeFilter === 'All' || report.reportType === typeFilter;
       return matchesSearch && matchesType;
     })

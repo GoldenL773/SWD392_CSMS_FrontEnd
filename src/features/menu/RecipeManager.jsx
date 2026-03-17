@@ -12,6 +12,7 @@ import {
 } from '@phosphor-icons/react';
 import { generateId } from '../../utils/formatters.jsx';
 import { getProductIngredients } from '../../api/ingredientApi.jsx';
+import SearchableSelect from '../../components/common/SearchableSelect/index.jsx';
 import './RecipeManager.css';
 
 /**
@@ -529,18 +530,14 @@ const RecipeFormModal = ({
                 {recipeIngredients.map((ing, index) => (
                   <tr key={ing.id}>
                     <td>
-                      <select
+                      <SearchableSelect
                         value={ing.ingredientId}
                         onChange={(e) => handleIngredientChange(index, 'ingredientId', e.target.value)}
+                        options={ingredients.map(ingredient => ({ value: ingredient.id, label: ingredient.name }))}
+                        placeholder="Select ingredient"
                         className="ingredient-input"
-                      >
-                        <option value="">Select ingredient</option>
-                        {ingredients.map(ingredient => (
-                          <option key={ingredient.id} value={ingredient.id}>
-                            {ingredient.name}
-                          </option>
-                        ))}
-                      </select>
+                        clearLabel="Select ingredient"
+                      />
                     </td>
                     <td>
                       <input

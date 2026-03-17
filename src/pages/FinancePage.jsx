@@ -105,7 +105,7 @@ const FinancePage = () => {
 
     if (allOrders && allOrders.length > 0) {
       const completedOrders = allOrders.filter(order => {
-        if (order.status !== ORDER_STATUS.COMPLETED && order.status !== ORDER_STATUS.PROCESSING) return false;
+        if (order.status !== ORDER_STATUS.COMPLETED) return false;
         const orderDate = new Date(order.orderDate).toISOString().split('T')[0];
         if (startDate && orderDate < startDate) return false;
         if (endDate && orderDate > endDate) return false;

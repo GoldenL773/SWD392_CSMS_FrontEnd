@@ -68,7 +68,7 @@ const ReportsPage = () => {
 
   // Upload Mutation
   const { mutate: handleUploadReport } = useApiMutation(
-    ({ file, metadata }) => uploadReportFile(file, metadata),
+    (file, metadata) => uploadReportFile(file, metadata),
     {
       successMessage: 'Report uploaded successfully',
       onSuccess: () => refetchUploadedReports()
@@ -462,7 +462,7 @@ const ReportsPage = () => {
           {/* Manager/Finance/Admin can upload and view/download */}
           {isManager && (
             <Card title="Upload Report">
-              <ReportUpload onUpload={(file, metadata) => handleUploadReport({ file, metadata })} />
+              <ReportUpload onUpload={handleUploadReport} />
             </Card>
           )}
           {isManager && (

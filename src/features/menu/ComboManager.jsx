@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Package, Plus, Pencil, Trash, X, Check } from '@phosphor-icons/react';
+import SearchableSelect from '../../components/common/SearchableSelect/index.jsx';
 import './ComboManager.css';
 
 /**
@@ -393,18 +394,14 @@ const ComboManager = ({
                         {formData.products.map((product, index) => (
                           <tr key={index}>
                             <td>
-                              <select
+                              <SearchableSelect
                                 value={product.productId}
                                 onChange={(e) => handleProductChange(index, 'productId', e.target.value)}
+                                options={products.map(p => ({ value: p.id, label: p.name }))}
+                                placeholder="Select product..."
                                 className={errors[`product_${index}`] ? 'error' : ''}
-                              >
-                                <option value="">Select product...</option>
-                                {products.map(p => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.name}
-                                  </option>
-                                ))}
-                              </select>
+                                clearLabel="Select product..."
+                              />
                               {errors[`product_${index}`] && (
                                 <span className="error-message">{errors[`product_${index}`]}</span>
                               )}

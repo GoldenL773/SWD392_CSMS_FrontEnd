@@ -4,6 +4,7 @@ import { useApiQuery } from '../../hooks/useApiQuery.jsx';
 import { getAllIngredients } from '../../api/ingredientApi.jsx';
 import Modal from '../../components/common/Modal/index.jsx';
 import Button from '../../components/common/Button/index.jsx';
+import SearchableSelect from '../../components/common/SearchableSelect/index.jsx';
 import { PRODUCT_CATEGORIES, PRODUCT_STATUS } from '../../utils/constants.jsx';
 import './ProductFormModal.css';
 
@@ -114,9 +115,9 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
     }]);
   };
 
-  const updateIngredient = (index, field, value) => {
+  const updateIngredient = (index, updates) => {
     const updated = [...productIngredients];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], ...updates };
     setProductIngredients(updated);
   };
 
@@ -386,29 +387,24 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
             <div className="ingredients-list">
               {productIngredients.map((pi, index) => (
                 <div key={index} className="ingredient-row">
-                  <select
+                  <SearchableSelect
                     value={pi.ingredientId}
                     onChange={(e) => {
                       const ingId = e.target.value;
                       const ing = ingredients.find(i => i.id === parseInt(ingId));
-                      updateIngredient(index, 'ingredientId', ingId);
-                      if (ing) updateIngredient(index, 'unit', ing.unit);
+                      const updates = { ingredientId: ingId };
+                      if (ing) updates.unit = ing.unit;
+                      updateIngredient(index, updates);
                     }}
+                    options={ingredients?.map(ing => ({ value: ing.id, label: `${ing.name} (${ing.unit})` })) || []}
+                    placeholder="Select Ingredient"
                     className="ingredient-select"
-                    required
-                  >
-                    <option value="">-- Select Ingredient --</option>
-                    {ingredients?.map(ing => (
-                      <option key={ing.id} value={ing.id}>
-                        {ing.name} ({ing.unit})
-                      </option>
-                    ))}
-                  </select>
+                  />
                   <input
                     type="number"
                     placeholder="Qty"
                     value={pi.quantityRequired}
-                    onChange={(e) => updateIngredient(index, 'quantityRequired', e.target.value)}
+                    onChange={(e) => updateIngredient(index, { quantityRequired: e.target.value })}
                     min="0"
                     step="0.01"
                     className="quantity-input"
@@ -417,7 +413,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                     type="text"
                     placeholder="Unit"
                     value={pi.unit}
-                    onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
+                    onChange={(e) => updateIngredient(index, { unit: e.target.value })}
                     className="unit-input-small"
                   />
                   <button

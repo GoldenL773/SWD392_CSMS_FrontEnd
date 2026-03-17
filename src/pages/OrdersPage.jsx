@@ -15,12 +15,13 @@ import StatusFilter from '../features/orders/StatusFilter.jsx';
 import OrdersTable from '../features/orders/OrdersTable.jsx';
 import NewOrderModal from '../features/orders/NewOrderModal.jsx';
 import DateRangePicker from '../components/common/DateRangePicker/index.jsx';
+import SearchableSelect from '../components/common/SearchableSelect/index.jsx';
 import { formatCurrency } from '../utils/formatters.jsx';
 import { ShoppingCart } from '@phosphor-icons/react';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
-  const { user } = useAuth();
+  const { user, hasAnyRole } = useAuth();
   const toast = useToast();
   const [activeStatus, setActiveStatus] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,11 +49,12 @@ const OrdersPage = () => {
       page: currentPage, 
       size: pageSize,
       status: activeStatus === 'ALL' ? undefined : activeStatus,
+      userId: selectedEmployee === 'ALL' ? undefined : selectedEmployee,
       startDate: startDate ? `${startDate}T00:00:00` : undefined,
       endDate: endDate ? `${endDate}T23:59:59` : undefined,
       sort: `${sortField},${sortDir.toLowerCase()}`
     }, 
-    [currentPage, pageSize, activeStatus, sortField, sortDir, startDate, endDate]
+    [currentPage, pageSize, activeStatus, selectedEmployee, sortField, sortDir, startDate, endDate]
   );
 
   // Lightweight meta queries for counts by status (size=1 to get totalElements)
@@ -124,10 +126,8 @@ const OrdersPage = () => {
     console.log('OrdersPage - totalOrders:', totalOrders);
   }, [ordersData, orders, totalOrders]);
 
-  // Only fetch employees if user has ADMIN or MANAGER role (STAFF users can't access this endpoint)
-  const hasEmployeeAccess = user?.roles?.some(role =>
-    role.name === 'ROLE_ADMIN' || role.name === 'ROLE_MANAGER'
-  );
+  // Only fetch employees if user has ADMIN or MANAGER role
+  const hasEmployeeAccess = hasAnyRole(['ADMIN', 'MANAGER']);
   const { data: employees } = useApiQuery(
     getAllEmployees,
     {},
@@ -288,20 +288,14 @@ const OrdersPage = () => {
               {/* Only show employee filter for ADMIN/MANAGER users */}
               {hasEmployeeAccess && (
                 <div className="filter-group">
-                  <label htmlFor="employee-filter">Employee</label>
-                  <select
-                    id="employee-filter"
+                  <label>Employee</label>
+                  <SearchableSelect
+                    options={employees?.map(emp => ({ value: emp.userId, label: `${emp.firstName} ${emp.lastName}` })) || []}
                     value={selectedEmployee}
                     onChange={(e) => setSelectedEmployee(e.target.value)}
-                    className="filter-select"
-                  >
-                    <option value="ALL">All Employees</option>
-                    {employees?.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.fullName}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="All Employees"
+                    clearLabel="All Employees"
+                  />
                 </div>
               )}
 
