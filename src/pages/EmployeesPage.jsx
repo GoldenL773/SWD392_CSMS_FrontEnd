@@ -93,9 +93,9 @@ const EmployeesPage = () => {
             'Manager': 'MANAGER',
             'Barista': 'BARISTA',
             'Cashier': 'STAFF',
-            'Kitchen Staff': 'STAFF',
+            'Staff': 'STAFF',
             'Cleaner': 'STAFF',
-            'Finance': 'FINANCE'
+            'Accountant': 'FINANCE'
           };
           
           const regResponse = await register({

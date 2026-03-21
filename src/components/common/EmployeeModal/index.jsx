@@ -101,10 +101,10 @@ const EmployeeModal = ({ isOpen, onClose, onSubmit, employee }) => {
     // Map position to role
     const positionToRole = {
       'Manager': 'MANAGER',
-      'Finance': 'FINANCE',
+      'Accountant': 'FINANCE',
       'Barista': 'BARISTA',
       'Cashier': 'STAFF',
-      'Kitchen Staff': 'STAFF',
+      'Staff': 'STAFF',
       'Cleaner': 'STAFF'
     };
 

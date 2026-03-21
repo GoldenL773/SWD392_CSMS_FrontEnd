@@ -99,10 +99,8 @@ export const INGREDIENT_UNITS = [
 export const EMPLOYEE_POSITIONS = [
   'Manager',
   'Barista',
-  'Cashier',
-  'Kitchen Staff',
-  'Cleaner',
-  'Finance'
+  'Staff',
+  'Accountant'
 ];
 
 // Pagination
