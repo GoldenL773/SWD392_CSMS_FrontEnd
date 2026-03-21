@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { createPortal } from 'react-dom';
 import './SearchableSelect.css';
 
 const SearchableSelect = ({ 
@@ -8,15 +9,20 @@ const SearchableSelect = ({
   onChange, 
   placeholder = 'Select an option...',
   clearLabel = '-- Select / Clear --',
+  clearValue = 'ALL',
   className = '',
   disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dropdownStyle, setDropdownStyle] = useState({});
   const wrapperRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Find selected option
-  const selectedOption = options.find(opt => opt.value === value) || null;
+  const selectedOption = useMemo(() => {
+    return options.find(opt => String(opt?.value) === String(value)) || null;
+  }, [options, value]);
 
   // Filter options
   const filteredOptions = options.filter(opt => 
@@ -26,13 +32,36 @@ const SearchableSelect = ({
   // Click outside to close
   useEffect(() => {
     function handleClickOutside(event) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+      const clickedOutsideWrapper = wrapperRef.current && !wrapperRef.current.contains(event.target);
+      const clickedOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(event.target);
+      if (clickedOutsideWrapper && clickedOutsideDropdown) {
         setIsOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen || !wrapperRef.current) return;
+
+    const updateDropdownPosition = () => {
+      const rect = wrapperRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+
+    updateDropdownPosition();
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+    };
+  }, [isOpen]);
 
   const handleSelect = (optionValue) => {
     onChange({ target: { value: optionValue } });
@@ -50,8 +79,12 @@ const SearchableSelect = ({
         <span className="dropdown-arrow">▼</span>
       </div>
 
-      {isOpen && (
-        <div className="searchable-select-dropdown">
+      {isOpen && createPortal(
+        <div
+          className="searchable-select-dropdown searchable-select-dropdown-portal"
+          ref={dropdownRef}
+          style={dropdownStyle}
+        >
           <input
             type="text"
             className="searchable-select-search"
@@ -63,8 +96,8 @@ const SearchableSelect = ({
           />
           <ul className="searchable-select-options">
             <li 
-               className={`searchable-select-option ${value === '' || value === 'ALL' ? 'selected' : ''}`}
-               onClick={() => handleSelect('ALL')}
+               className={`searchable-select-option ${String(value) === String(clearValue) ? 'selected' : ''}`}
+               onClick={() => handleSelect(clearValue)}
             >
                {clearLabel}
             </li>
@@ -74,7 +107,7 @@ const SearchableSelect = ({
               filteredOptions.map((opt) => (
                 <li
                   key={opt.value}
-                  className={`searchable-select-option ${value === opt.value ? 'selected' : ''}`}
+                  className={`searchable-select-option ${String(value) === String(opt.value) ? 'selected' : ''}`}
                   onClick={() => handleSelect(opt.value)}
                 >
                   {opt.label}
@@ -82,7 +115,8 @@ const SearchableSelect = ({
               ))
             )}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -96,6 +130,8 @@ SearchableSelect.propTypes = {
   value: PropTypes.any,
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
+  clearLabel: PropTypes.string,
+  clearValue: PropTypes.any,
   className: PropTypes.string,
   disabled: PropTypes.bool
 };

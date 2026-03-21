@@ -537,6 +537,7 @@ const RecipeFormModal = ({
                         placeholder="Select ingredient"
                         className="ingredient-input"
                         clearLabel="Select ingredient"
+                        clearValue=""
                       />
                     </td>
                     <td>

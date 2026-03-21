@@ -401,6 +401,7 @@ const ComboManager = ({
                                 placeholder="Select product..."
                                 className={errors[`product_${index}`] ? 'error' : ''}
                                 clearLabel="Select product..."
+                                clearValue=""
                               />
                               {errors[`product_${index}`] && (
                                 <span className="error-message">{errors[`product_${index}`]}</span>

@@ -49,6 +49,12 @@
   flex-direction: column;
 }
 
+.searchable-select-dropdown-portal {
+  position: fixed;
+  z-index: 10000;
+  margin-top: 0;
+}
+
 .searchable-select-search {
   padding: 0.5rem;
   border: none;

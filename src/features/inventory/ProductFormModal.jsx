@@ -399,6 +399,7 @@ const ProductFormModal = ({ isOpen, onClose, onSubmit, product }) => {
                     options={ingredients?.map(ing => ({ value: ing.id, label: `${ing.name} (${ing.unit})` })) || []}
                     placeholder="Select Ingredient"
                     className="ingredient-select"
+                    clearValue=""
                   />
                   <input
                     type="number"
