@@ -70,7 +70,7 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
   const sortedOrders = orders;
 
   return (
-    <div className="table-container">
+    <div className="table-container orders-table-container">
       <table className="orders-table">
         <thead>
           <tr>
@@ -130,43 +130,37 @@ const OrdersTable = ({ orders, loading, onUpdateStatus, sortField, sortDir, onSo
                 </td>
               </tr>
               {expandedRows.has(order.id) && (
-                <tr className="order-items-row">
-                  <td colSpan="7">
-                    <div className="order-items-container">
-                      <h4>Order Items</h4>
-                      <table className="order-items-table">
-                        <thead>
-                          <tr>
-                            <th style={{ textAlign: 'left', width: '50%' }}>Product</th>
-                            <th style={{ textAlign: 'center', width: '20%' }}>Quantity</th>
-                            {/* <th>Unit Price</th> */}
-                            <th style={{ textAlign: 'right', width: '30%' }}>Subtotal</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(order.items || order.orderItems)?.map((item) => (
-                            <tr key={item.id}>
-                              <td>{item.productName || item.product?.name || 'Unknown'}</td>
-                              <td className="quantity-cell" style={{ textAlign: 'center' }}>{item.quantity}</td>
-                              {/* <td>{formatCurrency(item.price)}</td> */}
-                              <td className="subtotal-cell" style={{ textAlign: 'right' }}>
-                                {formatCurrency(item.subtotal || (item.quantity * item.price))}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr>
-                            <td colSpan="2" className="total-label" style={{ textAlign: 'right', paddingRight: '1rem', fontWeight: 'bold' }}>Total:</td>
-                            <td className="total-amount" style={{ textAlign: 'right', fontWeight: 'bold', color: '#e67e22' }}>
-                              {formatCurrency(order.totalAmount)}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </td>
-                </tr>
+                <>
+                  <tr className="order-items-section-title">
+                    <td></td>
+                    <td colSpan="6">Order Items</td>
+                  </tr>
+                  <tr className="order-items-subheader">
+                    <td></td>
+                    <td colSpan="3">Product</td>
+                    <td className="align-center">Quantity</td>
+                    <td colSpan="2" className="align-right">Subtotal</td>
+                  </tr>
+                  {(order.items || order.orderItems)?.map((item) => (
+                    <tr key={`${order.id}-${item.id}`} className="order-item-detail-row">
+                      <td></td>
+                      <td colSpan="3" className="item-product-cell">
+                        {item.productName || item.product?.name || 'Unknown'}
+                      </td>
+                      <td className="quantity-cell align-center">{item.quantity}</td>
+                      <td colSpan="2" className="subtotal-cell align-right">
+                        {formatCurrency(item.subtotal || (item.quantity * item.price))}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="order-items-total-row">
+                    <td></td>
+                    <td colSpan="4" className="total-label">Total:</td>
+                    <td colSpan="2" className="total-amount align-right">
+                      {formatCurrency(order.totalAmount)}
+                    </td>
+                  </tr>
+                </>
               )}
             </React.Fragment>
           ))}

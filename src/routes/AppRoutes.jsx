@@ -73,9 +73,13 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER']} withLayout={false} />}>
           <Route path={ROUTES.INVENTORY} element={<InventoryPage />} />
           <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
-          <Route path={ROUTES.RECIPES} element={<RecipesPage />} />
           <Route path={ROUTES.SUPPLIERS} element={<SuppliersPage />} />
           <Route path={ROUTES.PROMOTIONS} element={<PromotionsPage />} />
+        </Route>
+
+        {/* Recipes for manager/admin/barista */}
+        <Route element={<ProtectedRoute requiredRoles={['ADMIN', 'MANAGER', 'BARISTA']} withLayout={false} />}>
+          <Route path={ROUTES.RECIPES} element={<RecipesPage />} />
         </Route>
       </Route>
 

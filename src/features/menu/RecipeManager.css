@@ -18,7 +18,7 @@
   flex: 1;
 }
 
-.page-title {
+.recipe-manager .page-title {
   font-family: var(--font-family-heading);
   font-size: 32px;
   font-weight: 700;
@@ -26,7 +26,7 @@
   margin: 0 0 8px 0;
 }
 
-.page-subtitle {
+.recipe-manager .page-subtitle {
   font-family: var(--font-family-body);
   font-size: 16px;
   color: var(--color-text-secondary);
@@ -58,7 +58,7 @@
   pointer-events: none;
 }
 
-.search-input {
+.recipe-manager .search-input {
   width: 100%;
   padding: 10px 12px 10px 40px;
   border: 1px solid var(--color-border);
@@ -70,12 +70,12 @@
   transition: border-color 0.2s;
 }
 
-.search-input:focus {
+.recipe-manager .search-input:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.search-input::placeholder {
+.recipe-manager .search-input::placeholder {
   color: var(--color-text-secondary);
 }
 
@@ -246,7 +246,7 @@
 }
 
 /* Empty State */
-.empty-state {
+.recipe-manager .empty-state {
   text-align: center;
   padding: 60px 20px;
   background-color: var(--color-surface);
@@ -254,13 +254,13 @@
   border-radius: 12px;
 }
 
-.empty-state p {
+.recipe-manager .empty-state p {
   font-size: 16px;
   color: var(--color-text-secondary);
   margin: 0 0 8px 0;
 }
 
-.empty-state-hint {
+.recipe-manager .empty-state-hint {
   font-size: 14px;
   color: var(--color-text-secondary);
 }
@@ -272,22 +272,22 @@
   gap: 20px;
 }
 
-.form-group {
+.recipe-manager .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form-group label {
+.recipe-manager .form-group label {
   font-family: var(--font-family-body);
   font-size: 14px;
   font-weight: 600;
   color: var(--color-text-primary);
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.recipe-manager .form-group input,
+.recipe-manager .form-group select,
+.recipe-manager .form-group textarea {
   padding: 10px 12px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
@@ -298,21 +298,21 @@
   transition: border-color 0.2s;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.recipe-manager .form-group input:focus,
+.recipe-manager .form-group select:focus,
+.recipe-manager .form-group textarea:focus {
   outline: none;
   border-color: var(--color-accent);
 }
 
-.form-group input.error,
-.form-group select.error,
-.form-group textarea.error {
+.recipe-manager .form-group input.error,
+.recipe-manager .form-group select.error,
+.recipe-manager .form-group textarea.error {
   border-color: var(--color-error);
 }
 
-.form-group input:disabled,
-.form-group select:disabled {
+.recipe-manager .form-group input:disabled,
+.recipe-manager .form-group select:disabled {
   background-color: var(--color-background);
   cursor: not-allowed;
   opacity: 0.6;
@@ -325,7 +325,7 @@
   font-style: italic;
 }
 
-.error-message {
+.recipe-manager .error-message {
   font-size: 12px;
   color: var(--color-error);
   margin: 0;
@@ -458,7 +458,7 @@
   font-weight: 500;
 }
 
-.modal-actions {
+.recipe-manager .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;

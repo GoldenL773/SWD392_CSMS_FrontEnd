@@ -85,7 +85,7 @@ const ProductsTable = ({
   }
 
   return (
-    <div className="table-container">
+    <div className="table-container products-table-container">
       <table className="products-table">
         <thead>
           <tr>
